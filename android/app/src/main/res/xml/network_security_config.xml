@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Force HTTPS pour tous les domaines -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Configuration spécifique pour votre API de sync -->
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.ecclesiastes.cd</domain>
+    </domain-config>
+</network-security-config>

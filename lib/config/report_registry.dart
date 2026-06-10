@@ -1,0 +1,331 @@
+import 'package:flutter/material.dart';
+import '../models/report_config.dart';
+
+class ReportRegistry {
+  static const Map<String, ReportConfig> all = {
+    // 1. SACRISTIE
+    'sacristie': ReportConfig(
+      id: 'sacristie', title: 'Rapport de Sacristie', icon: Icons.cleaning_services,
+      kpis: [KPIConfig(label: 'Membres présents', target: 80, unit: '%', directiveRef: '§13.5')],
+      fields: [
+        ReportField(key: 'membres', label: 'Membres présents', type: FieldType.number, required: true),
+        ReportField(key: 'visiteurs', label: 'Visiteurs', type: FieldType.number),
+        ReportField(key: 'ordre_eglise', label: 'Ordre dans l\'église', type: FieldType.header),
+        ReportField(key: 'proprete', label: 'Propreté vérifiée', type: FieldType.checkbox, options: ['Oui']),
+        ReportField(key: 'sonorisation', label: 'Sonorisation testée', type: FieldType.checkbox, options: ['Oui']),
+        ReportField(key: 'offrandes_fc', label: 'Offrandes FC', type: FieldType.number, required: true),
+        ReportField(key: 'offrandes_devise', label: 'Offrandes Devises', type: FieldType.number),
+        ReportField(key: 'cas_malades', label: 'Cas de malades signalés', type: FieldType.textarea, maxLines: 2),
+      ],
+      recommendations: ['Vérifier les calices avant chaque SD', 'Signaler immédiatement tout incident technique'],
+      libraryRefs: ['Directives §4.2.1', 'Guide Sacristie v2'],
+    ),
+
+    // 2. SERVICE DIVIN
+    'service_divin': ReportConfig(
+      id: 'service_divin', title: 'Rapport de Service Divin', icon: Icons.church,
+      kpis: [KPIConfig(label: 'Durée moyenne', target: 60, unit: 'min', directiveRef: '§4.4')],
+      fields: [
+        ReportField(key: 'date', label: 'Date', type: FieldType.date, required: true),
+        ReportField(key: 'type', label: 'Type', type: FieldType.dropdown, options: ['Dimanche', 'Fête', 'Semaine', 'Jeunesse', 'Défunts'], required: true),
+        ReportField(key: 'officiant', label: 'Officiant', type: FieldType.text, required: true),
+        ReportField(key: 'texte_biblique', label: 'Texte biblique', type: FieldType.text, required: true),
+        ReportField(key: 'presences', label: 'Présences totales', type: FieldType.number, required: true),
+        ReportField(key: 'actes', label: 'Actes dispensés', type: FieldType.checkbox, options: ['Baptême', 'Scellé', 'Confirmation', 'Sainte-Cène']),
+      ],
+      recommendations: ['Respecter la liturgie officielle (§4.5)', 'Limiter la prédication à 15-20 min'],
+      libraryRefs: ['Directives §4.5', 'Liturgie officielle'],
+    ),
+
+    // 3. SAINTS-SCELLES
+    'saints_scelles': ReportConfig(
+      id: 'saints_scelles', title: 'Liste des Saints-Scellés', icon: Icons.verified_user,
+      kpis: [KPIConfig(label: 'Taux de conformité', target: 100, unit: '%', directiveRef: '§6.3')],
+      fields: [
+        ReportField(key: 'total', label: 'Total âmes scellées', type: FieldType.number, required: true),
+        ReportField(key: 'liste_noms', label: 'Noms & Post-noms', type: FieldType.textarea, maxLines: 5),
+        ReportField(key: 'apotre', label: 'Nom de l\'Apôtre', type: FieldType.text, required: true),
+      ],
+      recommendations: ['Vérifier l\'âge & consentement parental (§6.3.1)', 'Confidentialité stricte (§3.20.6)'],
+      libraryRefs: ['Directives §6.3', 'Registre des sacrements'],
+    ),
+
+    // 4. FUNERAILLE
+    'funeraille': ReportConfig(
+      id: 'funeraille', title: 'Rapport Funéraire', icon: Icons.local_florist,
+      kpis: [KPIConfig(label: 'Respect délais', target: 100, unit: '%', directiveRef: '§4.6.7')],
+      fields: [
+        ReportField(key: 'defunt_nom', label: 'Nom du défunt', type: FieldType.text, required: true),
+        ReportField(key: 'date_deces', label: 'Date décès', type: FieldType.date, required: true),
+        ReportField(key: 'officiant', label: 'Officiant', type: FieldType.text, required: true),
+      ],
+      recommendations: ['Accompagnement familial prioritaire', 'Archiver le curriculum vitae'],
+      libraryRefs: ['Directives §4.6.7', 'Guide Pastoral Funérailles'],
+    ),
+
+    // 5. COMMUNIQUE
+    'communique': ReportConfig(
+      id: 'communique', title: 'Communiqué Officiel', icon: Icons.announcement,
+      kpis: [KPIConfig(label: 'Points publiés', target: 20, unit: '', directiveRef: '§9')],
+      fields: [
+        ReportField(key: 'contenu', label: 'Points du communiqué', type: FieldType.textarea, maxLines: 10),
+      ],
+      recommendations: ['Valider par le conducteur avant diffusion', 'Respecter le ton pastoral'],
+      libraryRefs: ['Directives §9.2', 'Charte communication'],
+    ),
+
+    // 6. PRESENCE REUNION
+    'presence_reunion': ReportConfig(
+      id: 'presence_reunion', title: 'Liste de Présence', icon: Icons.how_to_reg,
+      kpis: [KPIConfig(label: 'Taux participation', target: 75, unit: '%', directiveRef: '§3.20.7')],
+      fields: [
+        ReportField(key: 'theme', label: 'Thème réunion', type: FieldType.text, required: true),
+        ReportField(key: 'liste_participants', label: 'Participants', type: FieldType.textarea, maxLines: 6),
+      ],
+      recommendations: ['Noter absences excusées', 'Archiver pour audit ministériel'],
+      libraryRefs: ['Directives §3.20.7', 'Règlement intérieur'],
+    ),
+
+    // 7. FEUILLE DE ROUTE
+    'feuille_route': ReportConfig(
+      id: 'feuille_route', title: 'Feuille de Route', icon: Icons.route,
+      kpis: [KPIConfig(label: 'Autorisations valides', target: 100, unit: '%', directiveRef: '§3.4.2')],
+      fields: [
+        ReportField(key: 'autorise', label: 'Personne autorisée', type: FieldType.text, required: true),
+        ReportField(key: 'trajet', label: 'Trajet (De → À)', type: FieldType.text, required: true),
+        ReportField(key: 'motif', label: 'Motif', type: FieldType.textarea, maxLines: 2),
+      ],
+      recommendations: ['Obtenir consentement apostolat si hors champ (§3.4.2)'],
+      libraryRefs: ['Directives §3.4.2', 'Formulaire officiel'],
+    ),
+
+    // 8. VISITE PASTORALE
+    'visite_pastorale': ReportConfig(
+      id: 'visite_pastorale', title: 'Rapport de Visite Pastorale', icon: Icons.home,
+      kpis: [KPIConfig(label: 'Visites/mois', target: 15, unit: '', directiveRef: '§7.5')],
+      fields: [
+        ReportField(key: 'visiteurs', label: 'Visiteur(s)', type: FieldType.text, required: true),
+        ReportField(key: 'motif', label: 'Motif', type: FieldType.dropdown, options: ['Régulière', 'Maladie', 'Deuil', 'Soutien', 'Nouveau membre', 'Préparation sacrement', 'Autre'], required: true),
+        ReportField(key: 'contenu', label: 'Contenu (Confidentiel)', type: FieldType.textarea, maxLines: 4),
+      ],
+      recommendations: ['Respecter §3.20.6 Confidentialité', 'Ne pas divulguer sans consentement'],
+      libraryRefs: ['Directives §7.5', 'Guide Entretien Pastoral'],
+    ),
+
+    // 9. ECODIM
+    'ecodim': ReportConfig(
+      id: 'ecodim', title: 'Rapport École du Dimanche (Ecodim)', icon: Icons.child_care,
+      kpis: [
+        KPIConfig(label: 'Présence enfants', target: 85, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Moniteurs formés', target: 4, unit: '', directiveRef: 'Annexe 5')
+      ],
+      fields: [
+        ReportField(key: 'header_age', label: '1. EFFECTIFS PAR TRANCHE D\'ÂGE', type: FieldType.header),
+        ReportField(key: 'age_3_5', label: 'Enfants (3-5 ans)', type: FieldType.number),
+        ReportField(key: 'age_6_8', label: 'Enfants (6-8 ans)', type: FieldType.number),
+        ReportField(key: 'age_9_11', label: 'Enfants (9-11 ans)', type: FieldType.number),
+        ReportField(key: 'age_12_14', label: 'Jeunes (12-14 ans)', type: FieldType.number),
+        ReportField(key: 'header_pedagogie', label: '2. PÉDAGOGIE & MATÉRIEL', type: FieldType.header),
+        ReportField(key: 'lecon_numero', label: 'Leçon N° traitée', type: FieldType.number, required: true),
+        ReportField(key: 'lecon_titre', label: 'Titre de la leçon', type: FieldType.text),
+        ReportField(key: 'cahier_eleve', label: 'Utilisation du cahier "Moi aussi..."', type: FieldType.checkbox, options: ['Cahier distribué et utilisé']),
+        ReportField(key: 'manuel_maitre', label: 'Utilisation du Manuel du Maître', type: FieldType.checkbox, options: ['Méthode dialogique respectée']),
+        ReportField(key: 'header_resolution', label: '3. RÉSOLUTION & SPIRITUEL', type: FieldType.header),
+        ReportField(key: 'resolution', label: 'Résolution prise (Moi aussi, je veux...)', type: FieldType.textarea, maxLines: 2, required: true),
+      ],
+      recommendations: ['Utiliser cahier "Moi aussi..." (§7.8)', 'Préparer la leçon 48h avant'],
+      libraryRefs: ['Manuel Catéchisme Prof', 'Directives §7.8'],
+    ),
+
+    // 10. ECOLE DE CONFIRMATION (RAPPORT TRIMESTRIEL COMPLET)
+    'confirmation': ReportConfig(
+      id: 'confirmation', 
+      title: 'Rapport Trimestriel - École de Confirmation', 
+      icon: Icons.school,
+      kpis: [
+        KPIConfig(label: 'Taux présence', target: 80, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Maîtrise Articles', target: 100, unit: '%', directiveRef: '§6.5.2'),
+        KPIConfig(label: 'Implication Parents', target: 60, unit: '%', directiveRef: 'Leçon 1'),
+      ],
+      fields: [
+        ReportField(key: 'h1', label: 'I. INFORMATIONS GÉNÉRALES', type: FieldType.header),
+        ReportField(key: 'responsable', label: 'Responsable de catéchèse', type: FieldType.text, required: true),
+        ReportField(key: 'cycle', label: 'Cycle de formation', type: FieldType.dropdown, options: ['1ère année', '2ème année', 'Cycle complet'], required: true),
+        ReportField(key: 'effectif', label: 'Effectif total inscrit', type: FieldType.number, required: true),
+        ReportField(key: 'presence_moy', label: 'Présence moyenne (%)', type: FieldType.number),
+        ReportField(key: 'cahiers_dist', label: 'Cahiers "Moi aussi..." distribués', type: FieldType.text),
+        
+        ReportField(key: 'h2', label: 'II. PROGRESSION PÉDAGOGIQUE (35 LEÇONS)', type: FieldType.header),
+        ReportField(key: 'bloc1', label: 'Bloc 1: Fondements de la foi (Leçons 1-6) - % Réalisé', type: FieldType.number, directiveRef: 'p.19'),
+        ReportField(key: 'bloc2', label: 'Bloc 2: Vie chrétienne & Loi (Leçons 7-18) - % Réalisé', type: FieldType.number, directiveRef: 'p.50'),
+        ReportField(key: 'bloc3', label: 'Bloc 3: Ministère & Sacrements (Leçons 19-24) - % Réalisé', type: FieldType.number, directiveRef: 'p.100'),
+        ReportField(key: 'bloc4', label: 'Bloc 4: Avenir & Préparation (Leçons 25-29) - % Réalisé', type: FieldType.number, directiveRef: 'p.130'),
+        
+        ReportField(key: 'h3', label: 'III. MAÎTRISE DOCTRINALE & SACRAMENTELLE', type: FieldType.header),
+        ReportField(key: 'maitrise_10_art', label: 'Mémorisation des 10 Articles de foi (%)', type: FieldType.number, required: true),
+        ReportField(key: 'connaiss_sacrem', label: 'Connaissance des 3 sacrements (%)', type: FieldType.number),
+        ReportField(key: 'notre_pere', label: 'Compréhension du "Notre Père" (%)', type: FieldType.number),
+        ReportField(key: 'sens_voeu', label: 'Sens du vœu de confirmation (%)', type: FieldType.number),
+        
+        ReportField(key: 'h4', label: 'IV. DÉVELOPPEMENT DES VERTUS (Leçons 28a-28e)', type: FieldType.header),
+        ReportField(key: 'evaluation_vertus', label: 'Évaluation collective des vertus (Foi, Amour, Fidélité)', type: FieldType.textarea, maxLines: 3),
+        
+        ReportField(key: 'h5', label: 'V. IMPLICATION DES PARENTS', type: FieldType.header),
+        ReportField(key: 'reunions_parents', label: 'Nombre de réunions parents tenues', type: FieldType.number),
+        ReportField(key: 'suivi_devoirs', label: 'Taux de suivi des devoirs à domicile (%)', type: FieldType.number),
+        ReportField(key: 'difficultes_fam', label: 'Difficultés familiales signalées', type: FieldType.textarea, maxLines: 2),
+        
+        ReportField(key: 'h6', label: 'VI. PRÉPARATION PRATIQUE CÉRÉMONIE (Leçon 29)', type: FieldType.header),
+        ReportField(key: 'check_ceremonie', label: 'Checklist Préparation', type: FieldType.checkbox, options: ['Lettre Patriarcale lue', 'Vœu maîtrisé collectivement', 'Tenues confirmées', 'Invitations distribuées']),
+        ReportField(key: 'date_repetition', label: 'Date prévue répétition générale', type: FieldType.date),
+        
+        ReportField(key: 'h7', label: 'VII. DIFFICULTÉS & RECOMMANDATIONS', type: FieldType.header),
+        ReportField(key: 'diff_pedago', label: 'Difficultés Pédagogiques', type: FieldType.textarea),
+        ReportField(key: 'diff_orga', label: 'Difficultés Organisationnelles', type: FieldType.textarea),
+        
+        ReportField(key: 'h8', label: 'VIII. STATISTIQUES RÉCAPITULATIVES', type: FieldType.header),
+        ReportField(key: 'prets_ceremonie', label: 'Nombre de confirmands prêts', type: FieldType.number),
+        ReportField(key: 'objectifs_cycle', label: 'Objectif du cycle atteint', type: FieldType.dropdown, options: ['Oui', 'Partiellement', 'Non']),
+      ],
+      recommendations: [
+        'Traiter les 35 leçons dans l\'ordre strict du manuel',
+        'Vérifier la mémorisation des 10 articles (Leçon 26)',
+        'Respecter la méthode dialogique : Dialogue, Cahier, Devoirs',
+      ],
+      libraryRefs: ['Manuel Catéchisme Prof', 'Directives §6.5', 'Vœu de Confirmation'],
+    ),
+
+    // 11. JEUNESSE
+    'jeunesse': ReportConfig(
+      id: 'jeunesse', title: 'Rapport Commission Jeunesse', icon: Icons.emoji_people,
+      kpis: [KPIConfig(label: 'Jeunes actifs', target: 50, unit: '', directiveRef: '§7.9')],
+      fields: [
+        ReportField(key: 'total', label: 'Jeunes suivis', type: FieldType.number, required: true),
+        ReportField(key: 'activites', label: 'Activités réalisées', type: FieldType.textarea, maxLines: 3),
+      ],
+      recommendations: ['Adapter accompagnement par âge (§7.9)'],
+      libraryRefs: ['Directives §7.9', 'Guide Jeunesse'],
+    ),
+
+    // 12. ECONFI
+    'econfi': ReportConfig(
+      id: 'econfi', title: 'Rapport Financier (Econfi)', icon: Icons.account_balance,
+      kpis: [KPIConfig(label: 'Concordance', target: 100, unit: '%', directiveRef: '§3.20.5')],
+      fields: [
+        ReportField(key: 'recettes_fc', label: 'Recettes FC', type: FieldType.number, required: true),
+        ReportField(key: 'depenses_fc', label: 'Dépenses FC', type: FieldType.number, required: true),
+        ReportField(key: 'justificatifs', label: 'Justificatifs joints', type: FieldType.checkbox, options: ['Oui']),
+      ],
+      recommendations: ['Double comptage obligatoire', 'Désintéressement strict (§3.20.5)'],
+      libraryRefs: ['Directives §3.20.5', 'Guide Comptabilité'],
+    ),
+
+    // 13. MEDICALE
+    'medicale': ReportConfig(
+      id: 'medicale', title: 'Rapport Commission Médicale', icon: Icons.local_hospital,
+      kpis: [KPIConfig(label: 'Visites', target: 20, unit: '', directiveRef: '§7.10')],
+      fields: [
+        ReportField(key: 'visites', label: 'Visites effectuées', type: FieldType.number),
+        ReportField(key: 'cas_urgents', label: 'Cas urgents signalés', type: FieldType.textarea, maxLines: 2),
+      ],
+      recommendations: ['Confidentialité médicale stricte (§3.20.6)'],
+      libraryRefs: ['Directives §7.10'],
+    ),
+
+    // 14. AINES
+    'aines': ReportConfig(
+      id: 'aines', title: 'Rapport Commission Aînés (65+)', icon: Icons.elderly,
+      kpis: [KPIConfig(label: 'Aînés visités', target: 90, unit: '%', directiveRef: '§7.10')],
+      fields: [
+        ReportField(key: 'total', label: 'Total recensés', type: FieldType.number, required: true),
+        ReportField(key: 'visites', label: 'Visites effectuées', type: FieldType.number),
+      ],
+      recommendations: ['Prioriser visites régulières (§7.10)'],
+      libraryRefs: ['Directives §7.10'],
+    ),
+
+    // 15. CONSTRUCTION
+    'construction': ReportConfig(
+      id: 'construction', title: 'Rapport Commission Construction', icon: Icons.build,
+      kpis: [KPIConfig(label: 'Maintenance', target: 100, unit: '%', directiveRef: '§13.1')],
+      fields: [
+        ReportField(key: 'etat', label: 'État général', type: FieldType.dropdown, options: ['Bon', 'Moyen', 'À réparer']),
+        ReportField(key: 'travaux', label: 'Travaux réalisés', type: FieldType.textarea),
+      ],
+      recommendations: ['Inspection trimestrielle obligatoire'],
+      libraryRefs: ['Directives §13.1'],
+    ),
+
+    // 16. SECURITE
+    'securite': ReportConfig(
+      id: 'securite', title: 'Rapport Sécurité & Protocole', icon: Icons.security,
+      kpis: [KPIConfig(label: 'Extincteurs', target: 100, unit: '%', directiveRef: '§4.2.1')],
+      fields: [
+        ReportField(key: 'extincteurs', label: 'Extincteurs OK', type: FieldType.checkbox, options: ['Oui']),
+        ReportField(key: 'incidents', label: 'Incidents signalés', type: FieldType.textarea),
+      ],
+      recommendations: ['Contrôle mensuel extincteurs'],
+      libraryRefs: ['Directives §4.2.1'],
+    ),
+
+    // 17. PRESSE
+    'presse': ReportConfig(
+      id: 'presse', title: 'Rapport Presse & Sonorisation', icon: Icons.camera_alt,
+      kpis: [KPIConfig(label: 'Qualité sonore', target: 95, unit: '%', directiveRef: '§8')],
+      fields: [
+        ReportField(key: 'qualite', label: 'Qualité SD', type: FieldType.dropdown, options: ['Excellente', 'Bonne', 'Moyenne']),
+        ReportField(key: 'besoins', label: 'Besoins équipement', type: FieldType.text),
+      ],
+      recommendations: ['Tester sonorisation 30min avant SD (§8)'],
+      libraryRefs: ['Directives §8'],
+    ),
+
+    // 18. PAPAS
+    'papas': ReportConfig(
+      id: 'papas', title: 'Rapport Commission des Papas', icon: Icons.man,
+      kpis: [KPIConfig(label: 'Papas actifs', target: 60, unit: '%', directiveRef: '§7.10')],
+      fields: [
+        ReportField(key: 'reunions', label: 'Réunions tenues', type: FieldType.number),
+        ReportField(key: 'themes', label: 'Thèmes abordés', type: FieldType.text),
+      ],
+      recommendations: ['Aborder paternité & couple (§3.16.5)'],
+      libraryRefs: ['Directives §7.10'],
+    ),
+
+    // 19. MAMANS
+    'mamans': ReportConfig(
+      id: 'mamans', title: 'Rapport Commission des Mamans', icon: Icons.woman,
+      kpis: [KPIConfig(label: 'Mamans actives', target: 70, unit: '%', directiveRef: '§7.10')],
+      fields: [
+        ReportField(key: 'grossesses', label: 'Suivis grossesses', type: FieldType.number),
+        ReportField(key: 'naissances', label: 'Naissances mois', type: FieldType.number),
+      ],
+      recommendations: ['Bénédiction prénatale systématique (§6.8.1)'],
+      libraryRefs: ['Directives §6.8.1'],
+    ),
+
+    // 20. ARIMATHEE
+    'arimathee': ReportConfig(
+      id: 'arimathee', title: 'Rapport Joseph d\'Arimathée', icon: Icons.volunteer_activism,
+      kpis: [KPIConfig(label: 'Services', target: 20, unit: '', directiveRef: '§9.4')],
+      fields: [
+        ReportField(key: 'effectif', label: 'Membres actifs', type: FieldType.number),
+        ReportField(key: 'services', label: 'Services rendus', type: FieldType.textarea),
+      ],
+      recommendations: ['Planifier roulement hebdomadaire'],
+      libraryRefs: ['Directives §9.4'],
+    ),
+
+    // 21. MUSIQUE
+    'musique': ReportConfig(
+      id: 'musique', title: 'Rapport Commission Musique', icon: Icons.music_note,
+      kpis: [KPIConfig(label: 'Présence chorale', target: 80, unit: '%', directiveRef: '§8')],
+      fields: [
+        ReportField(key: 'cantiques', label: 'Cantiques travaillés', type: FieldType.text),
+        ReportField(key: 'etat_instruments', label: 'État des instruments', type: FieldType.dropdown, options: ['Bon', 'Moyen', 'À réparer']),
+      ],
+      recommendations: ['Tester sonorisation 30min avant SD (§8)'],
+      libraryRefs: ['Directives §8', 'Recueil Cantiques'],
+    ),
+  };
+}

@@ -1,0 +1,99 @@
+{
+  "version": "1.0",
+  "territory": "RDC-OUEST",
+  "reports": [
+    {
+      "id": "service_divin",
+      "title": "RAPPORT DE SERVICE DIVIN",
+      "format": "A4",
+      "fields": [
+        { "key": "jour", "type": "radio", "label": "Jour", "options": ["DM", "JDS"], "required": true },
+        { "key": "type", "type": "radio", "label": "Type", "options": ["SD", "RF", "SJ", "S", "SE", "SF", "MA", "C"], "required": true },
+        { "key": "date", "type": "date", "label": "Date", "required": true },
+        { "key": "heureDebut", "type": "time", "label": "Heure du début", "required": true },
+        { "key": "heureFin", "type": "time", "label": "Heure de la fin", "required": true },
+        { "key": "cantique", "type": "text", "label": "Cantique d'introduction", "required": true },
+        { "key": "texteBiblique", "type": "text", "label": "Texte Biblique", "required": true },
+        { "key": "officiant", "type": "minister_select", "label": "Officiant", "required": true },
+        { "key": "assistant1", "type": "minister_select", "label": "Assistants 1)" },
+        { "key": "assistant2", "type": "minister_select", "label": "2)" },
+        { "key": "assistant3", "type": "minister_select", "label": "3)" },
+        { "key": "assistant4", "type": "minister_select", "label": "4)" },
+        { "key": "presencesTotales", "type": "number", "label": "Présences Totales", "required": true },
+        { "key": "membres", "type": "number", "label": "Membres" },
+        { "key": "visiteurs", "type": "number", "label": "Visiteurs" },
+        { "key": "offrandesFC", "type": "currency", "label": "Offrandes FC" },
+        { "key": "offrandesDevise", "type": "currency", "label": "Devise" },
+        { "key": "numeroRecu", "type": "text", "label": "Numéro du reçu" },
+        { "key": "bapteme", "type": "number", "label": "Saint Baptême", "default": 0 },
+        { "key": "scelle", "type": "number", "label": "Saint Scellé", "default": 0 },
+        { "key": "confirmation", "type": "number", "label": "Confirmation", "default": 0 },
+        { "key": "ordination", "type": "number", "label": "Ordination", "default": 0 },
+        { "key": "pretre", "type": "number", "label": "Prêtre", "default": 0 },
+        { "key": "diacre", "type": "number", "label": "Diacre", "default": 0 },
+        { "key": "mandatement", "type": "number", "label": "Mandatement", "default": 0 },
+        { "key": "rd", "type": "number", "label": "RD", "default": 0 },
+        { "key": "rc", "type": "number", "label": "RC", "default": 0 },
+        { "key": "autresMandatement", "type": "number", "label": "Autres", "default": 0 },
+        { "key": "nomination", "type": "text", "label": "Nomination" },
+        { "key": "retraite", "type": "text", "label": "Retraite" }
+      ],
+      "footer": {
+        "legend": "Légende: SD: Service Divin – RF: Réunion de Frères – SJ: Service de Jeunesse – S: Séminaire\nSE: Service de l'Ecodim – SF: Service Funèbre – MA: Mariage – C: Concert\nRD: Responsable de District – RC: Responsable de Communauté.",
+        "signatures": ["Approuvé par", "Le Rapporteur"]
+      }
+    },
+    {
+      "id": "sacristie",
+      "title": "RAPPORT DE SACRISTIE",
+      "format": "A4",
+      "locked_texts": {
+        "welcome": "Soyez les bienvenus dans notre communauté. Tous les enfants de Dieu se portent à merveille, grâce à vos prières, sauf quelques cas imprévus.",
+        "closing": "Cher ___________, dans la communauté nous vous demandons une aide de vos prières pour notre vie de foi et pour nos activités quotidiennes et vous souhaitons un bon service divin."
+      },
+      "sections": [
+        { "id": "pointage", "title": "I. POINTAGE DES MEMBRES", "type": "list", "count": 4 },
+        { "id": "ordre", "title": "II. ORDRE DANS L'EGLISE", "type": "list", "count": 6 },
+        { "id": "depouillements", "title": "III. DEPOUILLEMENTS DES OFFRANDES", "type": "list", "count": 4 },
+        {
+          "id": "calices",
+          "title": "IV. OUVERTURE ET COUVERTURE DES CALICES",
+          "type": "dual_list",
+          "left": { "label": "A. GAUCHE", "count": 2 },
+          "right": { "label": "B. DROITE", "count": 2 }
+        },
+        {
+          "id": "sainteCene",
+          "title": "V. DISTRIBUTION DE SAINTE-CENE",
+          "type": "dual_list",
+          "left": { "label": "A. GAUCHE", "count": 2 },
+          "right": { "label": "B. DROITE", "count": 2 }
+        },
+        { "id": "rapport", "title": "VI. ETABLISSEMENT DE RAPPORT", "type": "list", "count": 2 },
+        { "id": "malade", "title": "VII. CAS: MALADE", "type": "list", "count": 6 },
+        { "id": "reception", "title": "VIII. RECEPTION", "type": "text" }
+      ]
+    },
+    {
+      "id": "feuille_de_route",
+      "title": "FEUILLE DE ROUTE",
+      "format": "A5",
+      "locked_texts": {
+        "body": "Je soussigné ___________ Responsable de ___________\nAutorise le(la) nommé(e) ___________\nMembre de l'église néo-apostolique baptisé(e) et scellé(e) à se rendre de\n___________ à ___________\nPour une durée de ___________ accompagné(e) de ___________\nMotif du voyage ___________\nLe porteur de la présente exerce le ministère de ___________"
+      },
+      "fields": [
+        { "key": "soussigne", "type": "text", "label": "Je soussigné" },
+        { "key": "responsableDe", "type": "text", "label": "Responsable de" },
+        { "key": "autoriseNomme", "type": "member_select", "label": "Autorise le(la) nommé(e)" },
+        { "key": "de", "type": "text", "label": "à se rendre de" },
+        { "key": "a", "type": "text", "label": "à" },
+        { "key": "duree", "type": "text", "label": "Pour une durée de" },
+        { "key": "accompagneDe", "type": "text", "label": "accompagné(e) de" },
+        { "key": "motifVoyage", "type": "text", "label": "Motif du voyage" },
+        { "key": "exerceMinistere", "type": "text", "label": "Le porteur de la présente exerce le ministère de" },
+        { "key": "faitA", "type": "text", "label": "Fait à" },
+        { "key": "date", "type": "date", "label": "Date" }
+      ]
+    }
+  ]
+}
