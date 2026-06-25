@@ -1,0 +1,16 @@
+{
+  "appTitle": "Ecclesiastes",
+  "welcomeMessage": "Welcome",
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "dashboard": "Dashboard",
+  "reports": "Reports",
+  "members": "Members",
+  "settings": "Settings",
+  "logout": "Logout",
+  "socialHub": "Social Hub",
+  "library": "Library",
+  "calendar": "Calendar",
+  "hierarchy": "Hierarchy"
+}

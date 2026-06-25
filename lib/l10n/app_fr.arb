@@ -1,0 +1,16 @@
+{
+  "appTitle": "Ecclésiastes",
+  "welcomeMessage": "Bienvenue",
+  "login": "Connexion",
+  "email": "Email",
+  "password": "Mot de passe",
+  "dashboard": "Tableau de bord",
+  "reports": "Rapports",
+  "members": "Membres",
+  "settings": "Paramètres",
+  "logout": "Déconnexion",
+  "socialHub": "Hub Social",
+  "library": "Bibliothèque",
+  "calendar": "Calendrier",
+  "hierarchy": "Hiérarchie"
+}

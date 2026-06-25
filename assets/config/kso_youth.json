@@ -1,0 +1,36 @@
+{
+  "champ": "KSO (Kinshasa Sud-Ouest)",
+  "coordination_centrale": [
+    {"nom": "Prêtre Didier KUYINDAMA", "fonction": "Coordonnateur", "tel": "0821699113"},
+    {"nom": "Recteur Bernard MBENZA", "fonction": "Coord. Adj. Spiritualité", "tel": "0825813512"},
+    {"nom": "Sœur Caroline LUSIMBA", "fonction": "Coord. Adj. Jeunesse Féminine", "tel": "0815105822"},
+    {"nom": "Frère Anderson KAVUNGA", "fonction": "Rapporteur & Administration", "tel": "0821251695"},
+    {"nom": "Prêtre Givenchy MAYAMBA", "fonction": "Communication et Presse", "tel": "0850262420"},
+    {"nom": "Prêtre Christian NKUNGI", "fonction": "Suppléant & Formation", "tel": "0975443421"},
+    {"nom": "Sœur Walburge TOMENE", "fonction": "Caisse et Finances", "tel": "0811572940"},
+    {"nom": "Frère Jordan MANYAY", "fonction": "Informatique (IT)", "tel": "0820561279"}
+  ],
+  "pools": [
+    {
+      "nom": "Pool 1",
+      "districts": [
+        {
+          "nom": "NGOMBA KINKUSA",
+          "responsable_mixte": "D. MWIMBU AARON",
+          "responsable_feminine": "SR. SONA OLGA",
+          "communautes": [
+            {"nom": "ANE", "resp": "P. MULUMBA EMMANUEL", "adj": "FR. KEMBI GEDEON"},
+            {"nom": "BUANIA", "resp": "D. BOKULI NOSTALGIE", "adj": "D. NOMBE ARTHUR"},
+            {"nom": "MANASSE", "resp": "D. AYEMBI BERGE", "adj": "SR. TADE ASTRIDE"},
+            {"nom": "SUNEM", "resp": "D. NTANDU FISTON", "adj": "D. KUYIMBA CHRISTIAN"},
+            {"nom": "TELECOM", "resp": "SR. TABITHA KIKALABA", "adj": "FR ÉLIE MAKABA"},
+            {"nom": "KUNDEY", "resp": "SR. SALA SEPHORA", "adj": "FR. LEKABUSIA GLODI"},
+            {"nom": "LIBANGA", "resp": "D. MULUMBA MOISE", "adj": "SR. ROSE"},
+            {"nom": "PENIEL", "resp": "FR. MUAMBA MOISE", "adj": "-"},
+            {"nom": "GUHON", "resp": "SR. JEANNE", "adj": "-"}
+          ]
+        }
+      ]
+    }
+  ]
+}

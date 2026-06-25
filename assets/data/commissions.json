@@ -1,0 +1,68 @@
+{
+  "commissions": [
+    {
+      "id": 1,
+      "nom": "Commission d’Ecodim",
+      "description": "École de dimanche"
+    },
+    {
+      "id": 2,
+      "nom": "Commission d’Econfi",
+      "description": "École de confirmation"
+    },
+    {
+      "id": 3,
+      "nom": "Commission de la Jeunesse",
+      "description": "Activités des jeunes"
+    },
+    {
+      "id": 4,
+      "nom": "Commission des papas",
+      "description": "Activités des papas"
+    },
+    {
+      "id": 5,
+      "nom": "Commission des mamans",
+      "description": "Activités des mamans"
+    },
+    {
+      "id": 6,
+      "nom": "Commission des aînés",
+      "description": "Frères et sœurs de plus de 65 ans et FM en retraite"
+    },
+    {
+      "id": 7,
+      "nom": "Commission musique",
+      "description": "Direction technique et Orchestre",
+      "sous_commissions": [
+        "Direction technique",
+        "Orchestre"
+      ]
+    },
+    {
+      "id": 8,
+      "nom": "Commission presse, médias et sonorisation",
+      "description": "Communication et technique"
+    },
+    {
+      "id": 9,
+      "nom": "Commission des Joseph d’arimathee ou des piliers",
+      "description": "Soutien et piliers"
+    },
+    {
+      "id": 10,
+      "nom": "Commission sécurité et protocole",
+      "description": "Ordre et sécurité"
+    },
+    {
+      "id": 11,
+      "nom": "Commission médicale",
+      "description": "Santé et assistance"
+    },
+    {
+      "id": 12,
+      "nom": "Commission construction",
+      "description": "Bâtiments et entretien"
+    }
+  ]
+}
