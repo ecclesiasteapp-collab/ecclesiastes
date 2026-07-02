@@ -1,6 +1,5 @@
 import 'dart:typed_data';
 
-import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 import '../models/attachment_model.dart';
 import 'database_service.dart';
@@ -39,7 +38,7 @@ class AttachmentStorageService {
     final box = await DatabaseService.openBox<Attachment>(DatabaseService.attachmentsBoxName);
     final attachment = box.get(attachmentId);
     if (attachment == null) return null;
-    return await FileStorageService.readFile(attachment.relativePath);
+    return FileStorageService.readFile(attachment.relativePath);
   }
 
   /// Supprime un attachment par ID
@@ -62,6 +61,41 @@ class AttachmentStorageService {
     final attachments = await getAllAttachments();
     final totalBytes = attachments.fold<int>(0, (sum, item) => sum + item.fileSize);
     return totalBytes / (1024 * 1024);
+  }
+
+  static Future<Map<String, double>> getStorageDistribution() async {
+    final attachments = await getAllAttachments();
+    final distribution = <String, double>{};
+
+    for (final attachment in attachments) {
+      final key = attachment.simpleMimeType;
+      distribution[key] = (distribution[key] ?? 0) + attachment.fileSize / (1024 * 1024);
+    }
+
+    return distribution;
+  }
+
+  static Future<int> cleanupOrphanedAttachments() async {
+    final box = await DatabaseService.openBox<Attachment>(DatabaseService.attachmentsBoxName);
+    final attachments = box.values.toList();
+    var deletedCount = 0;
+
+    for (final attachment in attachments) {
+      final relativePath = attachment.relativePath.trim();
+      if (relativePath.isEmpty) {
+        await attachment.delete();
+        deletedCount++;
+        continue;
+      }
+
+      final bytes = await FileStorageService.readFile(relativePath);
+      if (bytes == null) {
+        await attachment.delete();
+        deletedCount++;
+      }
+    }
+
+    return deletedCount;
   }
 }
 

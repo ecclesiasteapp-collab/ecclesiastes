@@ -108,6 +108,5 @@ class AppLocalizationsKg extends AppLocalizations {
   @override
   String get autoBackup => 'Kulunda na mbala mosi';
 
-  @override
   String get keyBackup => 'Kulunda kinsona ya nsole';
 }

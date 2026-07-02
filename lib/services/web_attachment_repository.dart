@@ -14,7 +14,7 @@ class WebAttachmentRepository implements AttachmentRepository {
   final String _boxName = 'attachment_data_box';
 
   Future<Box<Uint8List>> _getBox() async {
-    return await Hive.openBox<Uint8List>(_boxName);
+    return Hive.openBox<Uint8List>(_boxName);
   }
 
   @override

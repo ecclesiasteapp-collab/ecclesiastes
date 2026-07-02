@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 // ─── PALETTE ──────────────────────────────────────────────────────────────────
-const _bg   = Color(0xFF1E3A5F);
+// const _bg   = Color(0xFF1E3A5F);
 const _card = Color(0xFF2A4A6F);
 
 /// Encart "Hub Réseaux" affiché dans le dashboard Responsable Entité.

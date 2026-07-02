@@ -449,8 +449,10 @@ class _InscriptionMembrePageState extends State<InscriptionMembrePage> {
             children: [
               Radio<String>(
                 value: opt,
+                // ignore: deprecated_member_use
                 groupValue: groupValue,
-                onChanged: onChanged,
+                // ignore: deprecated_member_use
+                onChanged: (value) => onChanged(value),
               ),
               Text(opt),
               const SizedBox(width: 10),

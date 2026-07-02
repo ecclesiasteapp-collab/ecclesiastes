@@ -35,11 +35,11 @@ class Attachment extends HiveObject {
 
   // Getter pour le type MIME simplifié
   String get simpleMimeType {
-    if (mimeType.startsWith("image/")) return "image";
-    if (mimeType.startsWith("video/")) return "video";
-    if (mimeType.startsWith("audio/")) return "audio";
-    if (mimeType == "application/pdf") return "pdf";
-    return "document";
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/')) return 'video';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    if (mimeType == 'application/pdf') return 'pdf';
+    return 'document';
   }
 
   Uint8List? get rawFileData => _fileData;

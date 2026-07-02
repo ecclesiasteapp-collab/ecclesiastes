@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:typed_data';
-import 'dart:convert';
+// import 'dart:typed_data';
+// import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
@@ -466,7 +466,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     final report = ChurchReport.fromMap(reportMap);
     final logoBytes = params['logo'] as Uint8List;
 
-    return await ReportPdfGenerator.generate(report, logoBytes);
+    return ReportPdfGenerator.generate(report, logoBytes);
   }
 
   Future<void> _generatePDF() async {

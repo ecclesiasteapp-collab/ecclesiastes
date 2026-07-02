@@ -77,10 +77,10 @@ class FileAttachmentService {
         if (bytes == null) throw Exception('Lecture impossible');
         if (bytes.lengthInBytes > 5 * 1024 * 1024) throw Exception('Fichier > 5Mo');
 
-        final savedPath = await FileStorageService.saveFile(bytes, file.name!);
+        final savedPath = await FileStorageService.saveFile(bytes, file.name);
         return Attachment(
           id: _uuid.v4(),
-          fileName: file.name!,
+          fileName: file.name,
           mimeType: _getMimeType(file.extension ?? ''),
           relativePath: savedPath,
           fileSize: bytes.length,

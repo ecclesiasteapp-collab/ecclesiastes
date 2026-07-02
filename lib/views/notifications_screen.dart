@@ -43,13 +43,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // Naviguer vers l'objet lié (si applicable)
     if (notif.relatedObjectType == 'report' && notif.relatedObjectId != null && mounted) {
       final report = await DatabaseHelper.instance.getReportById(notif.relatedObjectId!);
-      if (report != null && mounted) {
+      if (report != null) {
+        if (!mounted) return;
         // Naviguer vers l'écran d'édition avec le rapport spécifique
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => CreateReportScreen(existingReport: report)),
-        ).then((_) => _loadNotifications()); // Rafraîchir la liste au retour
+          MaterialPageRoute(builder: (_) => const CreateReportScreen()),
+        ).then((_) {
+          if (mounted) _loadNotifications();
+        });
       } else {
+        if (!mounted) return;
         // Fallback : naviguer vers la liste générale si le rapport n'est pas trouvé
         Navigator.push(context, MaterialPageRoute(builder: (_) => const MyReportsScreen()));
       }

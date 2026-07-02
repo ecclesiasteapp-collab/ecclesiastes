@@ -3,7 +3,7 @@ import 'package:ecclesiastes/utils/constants.dart';
 
 // ─── PALETTE ──────────────────────────────────────────────────────────────────
 const _bg     = Color(0xFF1E3A5F);
-const _card   = Color(0xFF2A4A6F);
+// const _card   = Color(0xFF2A4A6F);
 const _accent = Color(0xFF3A7AB8);
 
 /// Popup de bienvenue affiché au démarrage du dashboard.

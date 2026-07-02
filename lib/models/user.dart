@@ -81,44 +81,44 @@ class User extends HiveObject {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: map["id"]?.toString() ?? "".toString(),
-      fullName: map["nom_complet"] as String? ?? "",
-      email: map["identifiant_email"] as String? ?? "",
-      passwordHash: map["mot_de_passe"] as String? ?? "",
+      id: map['id']?.toString() ?? ''.toString(),
+      fullName: map['nom_complet'] as String? ?? '',
+      email: map['identifiant_email'] as String? ?? '',
+      passwordHash: map['mot_de_passe'] as String? ?? '',
       role: UserRole.values.firstWhere(
-        (e) => e.name.toLowerCase() == (map["role"] as String? ?? "").toLowerCase(),
+        (e) => e.name.toLowerCase() == (map['role'] as String? ?? '').toLowerCase(),
         orElse: () => UserRole.membre,
       ),
-      entityId: map["entite_id"] as String?,
+      entityId: map['entite_id'] as String?,
       entityLevel: EntityLevel.values.firstWhere(
-        (e) => e.name.toLowerCase() == (map["niveau_entite"] as String? ?? "").toLowerCase(),
+        (e) => e.name.toLowerCase() == (map['niveau_entite'] as String? ?? '').toLowerCase(),
         orElse: () => EntityLevel.communaute,
       ),
-      isActive: (map["isActive"] as bool?) ?? true,
-      status: map["status"] as String? ?? "active",
-      createdAt: map["createdAt"] != null ? DateTime.parse(map["createdAt"] as String) : DateTime.now(),
-      lastLogin: map["lastLogin"] != null ? DateTime.parse(map["lastLogin"] as String) : null,
-      phone: map["phone"] as String?,
-      commissionType: map["commissionType"] != null
+      isActive: (map['isActive'] as bool?) ?? true,
+      status: map['status'] as String? ?? 'active',
+      createdAt: map['createdAt'] != null ? DateTime.parse(map['createdAt'] as String) : DateTime.now(),
+      lastLogin: map['lastLogin'] != null ? DateTime.parse(map['lastLogin'] as String) : null,
+      phone: map['phone'] as String?,
+      commissionType: map['commissionType'] != null
           ? CommissionType.values.firstWhere(
-              (e) => e.name.toLowerCase() == (map["commissionType"] as String).toLowerCase(),
+              (e) => e.name.toLowerCase() == (map['commissionType'] as String).toLowerCase(),
               orElse: () => CommissionType.none,
             )
           : null,
-      commissionRole: map["commissionRole"] != null
+      commissionRole: map['commissionRole'] != null
           ? CommissionRole.values.firstWhere(
-              (e) => e.name.toLowerCase() == (map["commissionRole"] as String).toLowerCase(),
+              (e) => e.name.toLowerCase() == (map['commissionRole'] as String).toLowerCase(),
               orElse: () => CommissionRole.membre,
             )
           : null,
-      profil: map["profil"] != null
+      profil: map['profil'] != null
           ? ProfilDocumentaire.values.firstWhere(
-              (e) => e.name.toLowerCase() == (map["profil"] as String).toLowerCase(),
+              (e) => e.name.toLowerCase() == (map['profil'] as String).toLowerCase(),
               orElse: () => ProfilDocumentaire.membre,
             )
           : null,
-      entityRole: map["entityRole"] as String?,
-      photoPath: map["photoPath"] as String?,
+      entityRole: map['entityRole'] as String?,
+      photoPath: map['photoPath'] as String?,
     );
   }
 

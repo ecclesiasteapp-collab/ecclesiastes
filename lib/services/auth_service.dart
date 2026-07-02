@@ -74,7 +74,7 @@ class AuthService {
     final auth = AuthService();
     // Assurez-vous que le container est défini avant d'appeler login
     if (_container == null) {
-      debugPrint("Erreur: ProviderContainer non défini dans AuthService. Veuillez appeler setProviderContainer.");
+      debugPrint('Erreur: ProviderContainer non défini dans AuthService. Veuillez appeler setProviderContainer.');
       // Gérer l'erreur ou initialiser le container si possible
       return false;
     }
@@ -141,7 +141,7 @@ class AuthService {
             // currentUser = User.fromMap(userFromDb);
           }
           // Si l'utilisateur n'a pas été trouvé via DatabaseHelper (legacy), essayer Hive
-          currentUser ??= await Hive.box<User>(DatabaseService.usersBoxName).get(userId);
+          currentUser ??= Hive.box<User>(DatabaseService.usersBoxName).get(userId);
         }
       }
     }

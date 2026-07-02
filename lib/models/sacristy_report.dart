@@ -71,7 +71,7 @@ class SacristyReport extends HiveObject {
       presentMembers: (map['presentMembers'] as String).split('|').where((e) => e.isNotEmpty).toList(),
       saintSealed: (map['saintSealed'] as String).split('|').where((e) => e.isNotEmpty).toList(),
       churchOrder: map['churchOrder'] as String,
-      offeringAmount: double.tryParse(map["offeringAmount"]?.toString() ?? '0') ?? 0.0,
+      offeringAmount: double.tryParse(map['offeringAmount']?.toString() ?? '0') ?? 0.0,
       chaliceOpeners: (map['chaliceOpeners'] as String).split('|').where((e) => e.isNotEmpty).toList(),
       chaliceClosers: (map['chaliceClosers'] as String).split('|').where((e) => e.isNotEmpty).toList(),
       holySceneDistributors: (map['holySceneDistributors'] as String).split('|').where((e) => e.isNotEmpty).toList(),

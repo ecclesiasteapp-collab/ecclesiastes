@@ -33,13 +33,7 @@ class _SocialHubScreenState extends State<SocialHubScreen> {
     }
   }
 
-  EntityLevel _mapStringToLevel(EntityLevel? level) {
-    return level ?? EntityLevel.communaute;
-  }
 
-  CommissionType _mapStringToCommission(CommissionType? comm) {
-    return comm ?? CommissionType.none;
-  }
 
   @override
   Widget build(BuildContext context) {

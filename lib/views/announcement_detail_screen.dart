@@ -82,7 +82,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               pinned: true,
               flexibleSpace: FlexibleSpaceBar(
                 background: FutureBuilder<Uint8List?>(
-                  future: FileStorageService.readFile(attachment!.relativePath),
+                  future: FileStorageService.readFile(attachment.relativePath),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState != ConnectionState.done) {
                       return const Center(child: CircularProgressIndicator());

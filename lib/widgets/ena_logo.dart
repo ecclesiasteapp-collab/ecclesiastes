@@ -7,7 +7,7 @@ class EnaLogo extends StatelessWidget {
 
   const EnaLogo({super.key, this.size = 120});
 
-  static const _assetPath = 'assets/branding/logo_accueil.png';
+  // static const _assetPath = 'assets/branding/logo_accueil.png';
 
   @override
   Widget build(BuildContext context) {

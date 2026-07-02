@@ -108,6 +108,5 @@ class AppLocalizationsLua extends AppLocalizations {
   @override
   String get autoBackup => 'Kubaka kopie automatique';
 
-  @override
   String get keyBackup => 'Kubaka kopie ya klé wa nsokoko';
 }

@@ -16,7 +16,7 @@ import 'package:ecclesiastes/services/logging_service.dart';
 import 'package:ecclesiastes/services/workmanager_setup.dart';
 import 'package:ecclesiastes/services/database_initializer.dart';
 import 'package:ecclesiastes/services/asset_auto_sync_service.dart';
-import 'package:ecclesiastes/services/sync_service.dart';
+// import 'package:ecclesiastes/services/sync_service.dart';
 import 'package:ecclesiastes/services/library_seed_service.dart';
 import 'package:ecclesiastes/core/security/encryption_service.dart';
 import 'package:ecclesiastes/theme/app_theme.dart';

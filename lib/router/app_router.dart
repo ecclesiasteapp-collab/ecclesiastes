@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive/hive.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Models
 import '../models/news_model.dart';
-import '../models/event.dart';
 import '../models/hierarchy_models.dart';
 import '../models/library_document.dart';
 

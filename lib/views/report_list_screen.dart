@@ -137,7 +137,7 @@ class _ReportListScreenState extends State<ReportListScreen> {
         borderRadius: BorderRadius.circular(15),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: _getStatusColor(report.statut).withOpacity(0.1),
+            backgroundColor: _getStatusColor(report.statut).withValues(alpha: 0.1),
             child: Icon(_getIconForType(report.type), color: _getStatusColor(report.statut)),
           ),
           title: Text(
