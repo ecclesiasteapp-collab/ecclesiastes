@@ -27,3 +27,4 @@ class EventListItem extends StatelessWidget {
     );
   }
 }
+

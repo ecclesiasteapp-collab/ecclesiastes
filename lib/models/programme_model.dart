@@ -55,3 +55,4 @@ class Activite extends HiveObject {
     this.estAnnonce = false,
   });
 }
+

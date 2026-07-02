@@ -51,3 +51,4 @@ class NewsDetailScreen extends StatelessWidget {
     );
   }
 }
+

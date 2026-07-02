@@ -8,3 +8,4 @@ class AppContacts {
   static String get emailLink => 'mailto:$supportEmail?subject=Support%20Eccl%C3%A9siastes';
   static String get youtubeLink => youtubeChannel;
 }
+

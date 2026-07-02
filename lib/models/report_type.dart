@@ -7,6 +7,7 @@ enum ReportType {
   disciplinary('Rapport Disciplinaire'),
   other('Autre Rapport');
 
+
   final String label;
   const ReportType(this.label);
 
@@ -29,3 +30,4 @@ enum ReportType {
     }
   }
 }
+

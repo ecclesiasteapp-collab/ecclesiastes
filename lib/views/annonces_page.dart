@@ -1,7 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'dart:typed_data';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:ecclesiastes/models/news_model.dart';
 import 'package:ecclesiastes/services/auth_service.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 
 class AnnoncesPage extends StatefulWidget {
   const AnnoncesPage({super.key});
@@ -11,7 +16,8 @@ class AnnoncesPage extends StatefulWidget {
 }
 
 class _AnnoncesPageState extends State<AnnoncesPage> {
-  List<Map<String, dynamic>> _annonces = [];
+  late Box<News> _newsBox;
+  List<News> _annonces = [];
   bool _isLoading = true;
 
   @override
@@ -20,12 +26,13 @@ class _AnnoncesPageState extends State<AnnoncesPage> {
     _fetchAnnonces();
   }
 
-  void _fetchAnnonces() async {
+  Future<void> _fetchAnnonces() async {
     setState(() => _isLoading = true);
-    final data = await DatabaseHelper.instance.getAnnoncesRecent();
+    _newsBox = await Hive.openBox<News>('news');
     if (mounted) {
       setState(() {
-        _annonces = data;
+        _annonces = _newsBox.values.toList()
+          ..sort((a, b) => b.date.compareTo(a.date));
         _isLoading = false;
       });
     }
@@ -34,8 +41,15 @@ class _AnnoncesPageState extends State<AnnoncesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Text("Annonces Officielles"),
+        title: const Text('Annonces Officielles'),
+        leading: Navigator.canPop(context)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -46,164 +60,108 @@ class _AnnoncesPageState extends State<AnnoncesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _annonces.isEmpty
-              ? const Center(child: Text("Aucune annonce pour le moment."))
+              ? _buildEmptyState()
               : ListView.builder(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   itemCount: _annonces.length,
                   itemBuilder: (context, index) {
                     final annonce = _annonces[index];
-                    final bool isUrgent = annonce['type_annonce'] == 'URGENT';
+                    final attachment = annonce.posterAttachment;
 
                     return Card(
-                      elevation: isUrgent ? 4 : 1,
-                      margin: const EdgeInsets.only(bottom: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        side: isUrgent 
-                          ? const BorderSide(color: Colors.redAccent, width: 2)
-                          : BorderSide.none,
-                      ),
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(15),
-                        leading: CircleAvatar(
-                          backgroundColor: isUrgent ? Colors.red : Colors.blueGrey,
-                          child: Icon(
-                            isUrgent ? Icons.priority_high : Icons.notifications_none,
-                            color: Colors.white,
-                          ),
-                        ),
-                        title: Row(
+                      elevation: 2,
+                      margin: const EdgeInsets.only(bottom: 16),
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                      child: InkWell(
+                        onTap: () => context.push('/announcements/detail/${annonce.id}', extra: annonce),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (isUrgent)
-                              const Text("🚨 ", style: TextStyle(fontSize: 16)),
-                            Expanded(
-                              child: Text(
-                                annonce['titre'],
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                              if (attachment != null && attachment.isImage)
+                                FutureBuilder<Uint8List?>(
+                                  future: FileStorageService.readFile(attachment.relativePath),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                      return _buildHeroImage(snapshot.data!);
+                                    } else if (snapshot.hasError) {
+                                      return const Icon(Icons.error, size: 50, color: Colors.red);
+                                    } else {
+                                      return const Center(child: CircularProgressIndicator());
+                                    }
+                                  },
+                                ),
+                            Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    annonce.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF003366)),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    annonce.content,
+                                    maxLines: 3,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(color: Colors.grey[800], fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        '✍️ Admin',
+                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                                      ),
+                                      Text(
+                                        DateFormat('dd/MM/yyyy').format(annonce.date),
+                                        style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 5),
-                            Text(
-                              annonce['contenu'],
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(color: Colors.grey[800]),
-                            ),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "Par: ${annonce['auteur'] ?? 'Administration'}",
-                                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
-                                ),
-                                Text(
-                                  DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(annonce['date_publication'])),
-                                  style: const TextStyle(fontSize: 11, color: Colors.blueGrey),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        onTap: () => _showAnnonceDetail(annonce),
                       ),
                     );
                   },
                 ),
       floatingActionButton: AuthService.isResponsable()
           ? FloatingActionButton.extended(
-              onPressed: _showAddAnnonceDialog,
-              label: const Text("Publier"),
-              icon: const Icon(Icons.edit_note),
-              backgroundColor: Colors.blueAccent,
+              onPressed: () => context.push('/announcements/create').then((_) => _fetchAnnonces()),
+              label: const Text('Nouvelle Affiche'),
+              icon: const Icon(Icons.add_photo_alternate_outlined),
+              backgroundColor: const Color(0xFF003366),
+              foregroundColor: Colors.white,
             )
           : null,
     );
   }
 
-  void _showAnnonceDetail(Map<String, dynamic> annonce) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        expand: false,
-        builder: (_, controller) => ListView(
-          controller: controller,
-          padding: const EdgeInsets.all(25),
-          children: [
-            Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)))),
-            const SizedBox(height: 20),
-            Text(annonce['titre'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const Divider(height: 30),
-            Text(annonce['contenu'], style: const TextStyle(fontSize: 16, height: 1.5)),
-            const SizedBox(height: 30),
-            Text("Date: ${annonce['date_publication']}", style: const TextStyle(color: Colors.grey)),
-            Text("Auteur: ${annonce['auteur']}", style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAddAnnonceDialog() {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
-    String typeAnnonce = 'COMMUNIQUE';
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Nouvelle Annonce"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(controller: titleController, decoration: const InputDecoration(labelText: "Titre")),
-              const SizedBox(height: 10),
-              TextField(controller: contentController, maxLines: 4, decoration: const InputDecoration(labelText: "Contenu")),
-              const SizedBox(height: 15),
-              DropdownButtonFormField<String>(
-                initialValue: typeAnnonce,
-                items: const [
-                  DropdownMenuItem(value: 'COMMUNIQUE', child: Text("Communiqué")),
-                  DropdownMenuItem(value: 'URGENT', child: Text("⚠️ Urgent / Lettre")),
-                ],
-                onChanged: (v) => typeAnnonce = v!,
-                decoration: const InputDecoration(labelText: "Priorité"),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Annuler")),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleController.text.isNotEmpty && contentController.text.isNotEmpty) {
-                final nav = Navigator.of(context);
-                await DatabaseHelper.instance.insertAnnonce({
-                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
-                  'titre': titleController.text,
-                  'contenu': contentController.text,
-                  'date_publication': DateTime.now().toIso8601String(),
-                  'type_annonce': typeAnnonce,
-                  'auteur': AuthService.currentUser?['nom_complet'] ?? 'Responsable',
-                });
-                if (!mounted) return;
-                nav.pop();
-                _fetchAnnonces();
-              }
-            },
-            child: const Text("Publier"),
-          ),
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.campaign_outlined, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          const Text('Aucune annonce officielle', style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
+
+  Widget _buildHeroImage(Uint8List data) {
+    return Container(
+      width: double.infinity,
+      height: 200,
+      decoration: BoxDecoration(color: Colors.grey[200]),
+      child: Image.memory(data, fit: BoxFit.cover, errorBuilder: (c,e,s) => const Icon(Icons.broken_image, size: 50)),
+    );
+  }
 }
+

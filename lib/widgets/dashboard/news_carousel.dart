@@ -79,3 +79,4 @@ class NewsCarousel extends StatelessWidget {
     );
   }
 }
+

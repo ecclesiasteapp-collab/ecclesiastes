@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
@@ -45,13 +46,14 @@ class _FundraisingReportScreenState extends State<FundraisingReportScreen> {
     super.initState();
     final user = AuthService.currentUser;
     if (user != null) {
-      _rapporteurCtrl.text = user['nom_complet'] ?? '';
+      _rapporteurCtrl.text = user.fullName;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isWeb = MediaQuery.of(context).size.width > 900;
+    final user = AuthService.currentUser;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -68,9 +70,11 @@ class _FundraisingReportScreenState extends State<FundraisingReportScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 HeaderOfficiel(
-                  champ: AuthService.currentUser?['nom_champ'] ?? 'Kinshasa Sud-Ouest',
-                  district: AuthService.currentUser?['nom_district'] ?? 'Ngaliema',
-                  communaute: AuthService.currentUser?['nom_communaute'] ?? 'Centrale',
+                  lines: [
+                    HeaderLine('CHAMP', user?.entityId ?? 'Kinshasa Sud-Ouest'),
+                    HeaderLine('DISTRICT', 'Ngaliema'),
+                    HeaderLine('COMMUNAUTÉ', 'Centrale'),
+                  ],
                   typeRapport: 'COTISATION ET COLLECTE DE FONDS',
                   date: DateTime.now(),
                 ),
@@ -231,12 +235,13 @@ class _FundraisingReportScreenState extends State<FundraisingReportScreen> {
   }
 
   FundraisingReport _buildModel() {
+    final user = AuthService.currentUser;
     return FundraisingReport(
       id: const Uuid().v4(),
       entityLevel: 'Communauté',
-      entityName: AuthService.currentUser?['nom_communaute'] ?? 'Centrale',
-      districtName: AuthService.currentUser?['nom_district'] ?? 'Ngaliema',
-      champName: AuthService.currentUser?['nom_champ'] ?? 'Kinshasa Sud-Ouest',
+      entityName: user?.entityId ?? 'Centrale',
+      districtName: user?.entityId ?? 'Ngaliema',
+      champName: user?.entityId ?? 'Kinshasa Sud-Ouest',
       motif: _motifCtrl.text,
       commissionOrganisatrice: _commissionCtrl.text,
       dateCollecte: DateTime.now(),
@@ -272,8 +277,19 @@ class _FundraisingReportScreenState extends State<FundraisingReportScreen> {
   }
 
   Future<void> _generatePDF() async {
-    final report = _buildModel();
-    final pdfBytes = await FundraisingPdfGenerator.generate(report);
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+    try {
+      final report = _buildModel();
+      final ByteData logoData = await rootBundle.load('assets/branding/logo_ena.png');
+      final Uint8List logoBytes = logoData.buffer.asUint8List();
+
+      // FundraisingReport étant un HiveObject, on génère directement sans isolate pour éviter les erreurs de sérialisation
+      final pdfBytes = await FundraisingPdfGenerator.generate(report, logoBytes);
+      await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur PDF: $e')));
+      }
+    }
   }
 }
+

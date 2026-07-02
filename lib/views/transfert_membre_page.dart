@@ -37,22 +37,22 @@ class _TransfertMembrePageState extends State<TransfertMembrePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Transférer $nomMembre"),
+        title: Text('Transférer $nomMembre'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: districtController,
-              decoration: const InputDecoration(labelText: "ID du nouveau District"),
+              decoration: const InputDecoration(labelText: 'ID du nouveau District'),
             ),
             TextField(
               controller: communauteController,
-              decoration: const InputDecoration(labelText: "ID de la nouvelle Communauté"),
+              decoration: const InputDecoration(labelText: 'ID de la nouvelle Communauté'),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Annuler")),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
           ElevatedButton(
             onPressed: () async {
               if (districtController.text.isEmpty || communauteController.text.isEmpty) return;
@@ -71,10 +71,10 @@ class _TransfertMembrePageState extends State<TransfertMembrePage> {
               _loadMembres();
 
               messenger.showSnackBar(
-                const SnackBar(content: Text("Transfert réussi avec succès.")),
+                const SnackBar(content: Text('Transfert réussi avec succès.')),
               );
             },
-            child: const Text("Transférer"),
+            child: const Text('Transférer'),
           ),
         ],
       ),
@@ -84,23 +84,23 @@ class _TransfertMembrePageState extends State<TransfertMembrePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Gestion des Transferts")),
+      appBar: AppBar(title: const Text('Gestion des Transferts')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _membres.isEmpty
-              ? const Center(child: Text("Aucun membre disponible pour le transfert."))
+              ? const Center(child: Text('Aucun membre disponible pour le transfert.'))
               : ListView.builder(
                   itemCount: _membres.length,
                   padding: const EdgeInsets.all(10),
                   itemBuilder: (context, index) {
                     final m = _membres[index];
-                    final nomComplet = "${m['nom']} ${m['prenom'] ?? ''}".trim();
+                    final nomComplet = '${m["nom"]} ${m["prenom"] ?? ''}'.trim();
                     final commOrigine = m['communaute_id'] ?? 'Inconnue';
                     return Card(
                       child: ListTile(
                         leading: const CircleAvatar(child: Icon(Icons.person)),
                         title: Text(nomComplet),
-                        subtitle: Text("Communauté actuelle : $commOrigine"),
+                        subtitle: Text('Communauté actuelle : $commOrigine'),
                         trailing: IconButton(
                           icon: const Icon(Icons.swap_horiz, color: Colors.blue),
                           onPressed: () => _confirmerTransfert(m['id'], nomComplet, commOrigine),
@@ -112,3 +112,4 @@ class _TransfertMembrePageState extends State<TransfertMembrePage> {
     );
   }
 }
+

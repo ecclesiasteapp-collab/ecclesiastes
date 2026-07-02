@@ -49,16 +49,16 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Statistiques du Champ")),
+      appBar: AppBar(title: const Text('Statistiques du Champ')),
       body: Column(
         children: [
           Padding(
             padding: const EdgeInsets.all(15),
             child: DropdownButtonFormField<String?>(
               initialValue: _selectedDistrict,
-              decoration: const InputDecoration(labelText: "Filtrer par District", border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Filtrer par District', border: OutlineInputBorder()),
               items: [
-                const DropdownMenuItem(value: null, child: Text("🌍 Vue Globale (Tout le Champ)")),
+                const DropdownMenuItem(value: null, child: Text('🌍 Vue Globale (Tout le Champ)')),
                 ..._districts.map((d) => DropdownMenuItem(value: d['id'].toString(), child: Text(d['nom']))),
               ],
               onChanged: (val) {
@@ -75,28 +75,28 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                   children: [
                     Row(
                       children: [
-                        _buildStatCard("Baptisés", _sacrements['Baptisés'] ?? 0, Colors.blue),
-                        _buildStatCard("Scellés", _sacrements['Scellés'] ?? 0, Colors.orange),
+                        _buildStatCard('Baptisés', _sacrements['Baptisés'] ?? 0, Colors.blue),
+                        _buildStatCard('Scellés', _sacrements['Scellés'] ?? 0, Colors.orange),
                       ],
                     ),
                     const SizedBox(height: 25),
-                    const Text("RETRAITE DES MINISTRES (${AppConstants.ageRetraite} ans)", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                    const Text('RETRAITE DES MINISTRES (${AppConstants.ageRetraite} ans)', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
                     const Divider(),
                     Row(
                       children: [
-                        _buildStatCard("Total ministres", _retraite['total'] ?? 0, Colors.teal),
-                        _buildStatCard("Proches retraite", _retraite['proches_retraite'] ?? 0, Colors.orange),
+                        _buildStatCard('Total ministres', _retraite['total'] ?? 0, Colors.teal),
+                        _buildStatCard('Proches retraite', _retraite['proches_retraite'] ?? 0, Colors.orange),
                       ],
                     ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
-                        _buildStatCard("Déjà retraités", _retraite['deja_retraites'] ?? 0, Colors.red),
-                        _buildStatCard("Âge retraite", AppConstants.ageRetraite, Colors.grey),
+                        _buildStatCard('Déjà retraités', _retraite['deja_retraites'] ?? 0, Colors.red),
+                        _buildStatCard('Âge retraite', AppConstants.ageRetraite, Colors.grey),
                       ],
                     ),
                     const SizedBox(height: 25),
-                    const Text("RÉPARTITION PAR COMMISSION", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
+                    const Text('RÉPARTITION PAR COMMISSION', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey)),
                     const Divider(),
                     ..._commissions.entries.map((e) => Card(
                       child: ListTile(
@@ -131,3 +131,4 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
     );
   }
 }
+

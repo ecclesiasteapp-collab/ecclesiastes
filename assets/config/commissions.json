@@ -1,68 +1,16 @@
 {
   "commissions": [
-    {
-      "id": 1,
-      "nom": "Commission d’Ecodim",
-      "description": "École de dimanche"
-    },
-    {
-      "id": 2,
-      "nom": "Commission d’Econfi",
-      "description": "École de confirmation"
-    },
-    {
-      "id": 3,
-      "nom": "Commission de la Jeunesse",
-      "description": "Activités des jeunes"
-    },
-    {
-      "id": 4,
-      "nom": "Commission des papas",
-      "description": "Activités des papas"
-    },
-    {
-      "id": 5,
-      "nom": "Commission des mamans",
-      "description": "Activités des mamans"
-    },
-    {
-      "id": 6,
-      "nom": "Commission des aînés",
-      "description": "Frères et sœurs de plus de 65 ans et FM en retraite"
-    },
-    {
-      "id": 7,
-      "nom": "Commission musique",
-      "description": "Direction technique et Orchestre",
-      "sous_commissions": [
-        "Direction technique",
-        "Orchestre"
-      ]
-    },
-    {
-      "id": 8,
-      "nom": "Commission presse, médias et sonorisation",
-      "description": "Communication et technique"
-    },
-    {
-      "id": 9,
-      "nom": "Commission des Joseph d’arimathee ou des piliers",
-      "description": "Soutien et piliers"
-    },
-    {
-      "id": 10,
-      "nom": "Commission sécurité et protocole",
-      "description": "Ordre et sécurité"
-    },
-    {
-      "id": 11,
-      "nom": "Commission médicale",
-      "description": "Santé et assistance"
-    },
-    {
-      "id": 12,
-      "nom": "Commission construction",
-      "description": "Bâtiments et entretien"
-    }
+    { "id": 1, "code": "ecodim", "nom": "Commission d’Ecodim", "description": "École du Dimanche (enseignement des enfants)" },
+    { "id": 2, "code": "econfi", "nom": "Commission d’Econfi", "description": "École de Confirmation (préparation des catéchumènes)" },
+    { "id": 3, "code": "jeunesse", "nom": "Commission de la Jeunesse", "description": "Jeunesse Mixte et Féminine" },
+    { "id": 4, "code": "papas", "nom": "Commission des Papas", "description": "Commission des Papas" },
+    { "id": 5, "code": "mamans", "nom": "Commission des Mamans", "description": "Commission des Mamans" },
+    { "id": 6, "code": "aines", "nom": "Commission des Aînés", "description": "Frères et sœurs de plus de 65 ans et FM en retraite" },
+    { "id": 7, "code": "musique", "nom": "Commission Musique", "description": "Direction technique et Orchestre", "sous_commissions": ["Direction technique", "Orchestre"] },
+    { "id": 8, "code": "presse", "nom": "Commission Presse, Médias et Sonorisation", "description": "Communication et technique" },
+    { "id": 9, "code": "arimathee", "nom": "Commission des Joseph d’Arimathée", "description": "Commission des Piliers" },
+    { "id": 10, "code": "securite", "nom": "Commission Sécurité et Protocole", "description": "Sécurité et organisation" },
+    { "id": 11, "code": "medicale", "nom": "Commission Médicale", "description": "Service médical et assistance sanitaire" },
+    { "id": 12, "code": "construction", "nom": "Commission Construction", "description": "Bâtiments et infrastructures" }
   ]
 }

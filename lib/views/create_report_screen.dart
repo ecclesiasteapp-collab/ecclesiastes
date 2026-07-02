@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:hive/hive.dart';
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
-import '../../models/church_report.dart';
-import '../../models/hierarchy_models.dart';
-import '../../services/auth_service.dart';
-import '../../services/report_pdf_generator.dart';
-import '../../widgets/header_officiel.dart';
+import '../models/church_report.dart';
+import '../models/hierarchy_models.dart';
+import '../services/file_storage_service.dart';
+import '../services/auth_service.dart';
+import '../services/report_pdf_generator.dart';
+import '../widgets/header_officiel.dart';
+import '../widgets/signature_pad_dialog.dart';
 
 class CreateReportScreen extends StatefulWidget {
   const CreateReportScreen({super.key});
@@ -18,7 +24,7 @@ class CreateReportScreen extends StatefulWidget {
 class _CreateReportScreenState extends State<CreateReportScreen> {
   final _formKey = GlobalKey<FormState>();
   
-  // Modèle de données
+  String? _signaturePath;
   ReportTypeExt _selectedType = ReportTypeExt.serviceDivin;
   final _officiantCtrl = TextEditingController();
   final _texteBibliqueCtrl = TextEditingController();
@@ -46,7 +52,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     // Pré-remplissage avec les données de l'utilisateur connecté
     final user = AuthService.currentUser;
     if (user != null) {
-      _officiantCtrl.text = user['nom_complet'] ?? '';
+      _officiantCtrl.text = user.fullName;
     }
   }
 
@@ -77,9 +83,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               children: [
                 // 1. Entête Officiel Modulaire
                 HeaderOfficiel(
-                  champ: AuthService.currentUser?['nom_champ'] ?? 'Kinshasa Sud-Ouest',
-                  district: AuthService.currentUser?['nom_district'] ?? 'Ngaliema',
-                  communaute: AuthService.currentUser?['nom_communaute'] ?? 'Centrale',
+                  lines: [
+                    HeaderLine('CHAMP', AuthService.currentUser?.entityId ?? 'Ecclésiaste'),
+                    HeaderLine('DISTRICT', 'Ngaliema'),
+                    HeaderLine('COMMUNAUTÉ', 'Centrale'),
+                  ],
                   typeRapport: _getReportTypeLabel(_selectedType),
                   date: DateTime.now(),
                 ),
@@ -148,7 +156,6 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   ),
                 ),
 
-                // 6. Actes (Uniquement si pertinent)
                 if (_shouldShowActes())
                   _buildSectionCard(
                     title: 'ACTES SACRAMENTELS ET MINISTÉRIELS',
@@ -167,6 +174,46 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                       ],
                     ),
                   ),
+
+                const SizedBox(height: 20),
+
+                // 6.5 Signature
+                _buildSectionCard(
+                  title: 'SIGNATURE DU RAPPORTEUR',
+                  icon: Icons.edit,
+                  child: Column(
+                    children: [
+                      if (_signaturePath != null)
+                        Container(
+                          height: 100,
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: FutureBuilder<Uint8List?>( // Utilisation de FutureBuilder
+                            future: FileStorageService.readFile(_signaturePath!),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                return Image.memory(snapshot.data!, fit: BoxFit.contain);
+                              } else if (snapshot.hasError) {
+                                return Center(child: Text('Erreur de chargement de la signature: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+                              }
+                              return const Center(child: CircularProgressIndicator()); // Placeholder de chargement
+                            },
+                          ),
+                        ),
+                      OutlinedButton.icon(
+                        onPressed: _showSignaturePad,
+                        icon: const Icon(Icons.fingerprint),
+                        label: Text(_signaturePath == null
+                            ? 'SIGNER LE RAPPORT'
+                            : 'MODIFIER LA SIGNATURE'),
+                      ),
+                    ],
+                  ),
+                ),
 
                 const SizedBox(height: 30),
                 
@@ -255,20 +302,77 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   }
 
   bool _shouldShowActes() {
-    return [ReportTypeExt.serviceDivin, ReportTypeExt.serviceJeunesse, ReportTypeExt.serviceEcodim].contains(_selectedType);
+    return [
+      ReportTypeExt.serviceDivin,
+      ReportTypeExt.jeunesse,
+      ReportTypeExt.ecodim,
+      ReportTypeExt.bapteme,
+      ReportTypeExt.scellement,
+      ReportTypeExt.ordinationInstallation,
+      ReportTypeExt.sainteCene
+    ].contains(_selectedType);
   }
 
   String _getReportTypeLabel(ReportTypeExt type) {
     switch (type) {
       case ReportTypeExt.serviceDivin: return 'Service Divin';
-      case ReportTypeExt.reunionFreres: return 'Réunion de Frères';
-      case ReportTypeExt.serviceJeunesse: return 'Service de Jeunesse';
-      case ReportTypeExt.seminaire: return 'Séminaire';
-      case ReportTypeExt.serviceEcodim: return 'Service Ecodim';
-      case ReportTypeExt.serviceFunebre: return 'Service Funèbre';
+      case ReportTypeExt.visitePastorale: return 'Visite Pastorale';
+      case ReportTypeExt.communionFraternelle: return 'Communion Fraternelle';
+      case ReportTypeExt.ordinationInstallation: return 'Ordination / Installation';
+      case ReportTypeExt.funerailles: return 'Funérailles';
       case ReportTypeExt.mariage: return 'Mariage';
-      case ReportTypeExt.concert: return 'Concert';
-      default: return 'Rapport d\'activité';
+      case ReportTypeExt.bapteme: return 'Baptême';
+      case ReportTypeExt.scellement: return 'Saint-Scellement';
+      case ReportTypeExt.sainteCene: return 'Sainte-Cène';
+      case ReportTypeExt.sacristie: return 'Sacristie';
+      case ReportTypeExt.ecodim: return 'ECODIM';
+      case ReportTypeExt.econfi: return 'ECONFI';
+      case ReportTypeExt.jeunesse: return 'Jeunesse';
+      case ReportTypeExt.papas: return 'Papas';
+      case ReportTypeExt.mamans: return 'Mamans';
+      case ReportTypeExt.aines: return 'Aînés';
+      case ReportTypeExt.musiqueTechnique: return 'Musique - Direction Technique';
+      case ReportTypeExt.musiqueOrchestre: return 'Musique - Orchestre';
+      case ReportTypeExt.presseMedias: return 'Presse / Médias';
+      case ReportTypeExt.josephArimathee: return 'Joseph d\'Arimathée';
+      case ReportTypeExt.securiteProtocole: return 'Sécurité / Protocole';
+      case ReportTypeExt.medicale: return 'Médicale';
+      case ReportTypeExt.construction: return 'Construction';
+      case ReportTypeExt.consolidationCommunaute: return 'Consolidation Communauté';
+      case ReportTypeExt.consolidationDistrict: return 'Consolidation District';
+      case ReportTypeExt.consolidationChamp: return 'Consolidation Champ';
+      case ReportTypeExt.consolidationTerritorial: return 'Consolidation Territorial';
+      case ReportTypeExt.consolidationInternational: return 'Consolidation International';
+      case ReportTypeExt.collecteFundraising: return 'Collecte / Fundraising';
+      case ReportTypeExt.evenementSpecial: return 'Événement';
+      case ReportTypeExt.mensuelActivite: return 'Mensuel d\'Activité';
+      case ReportTypeExt.trimestrielActivite: return 'Trimestriel d\'Activité';
+      case ReportTypeExt.annuelActivite: return 'Annuel d\'Activité';
+      case ReportTypeExt.reunionCommission: return 'Réunion de Commission';
+      case ReportTypeExt.seminaire: return 'Séminaire';
+      case ReportTypeExt.repetition: return 'Répétition';
+      case ReportTypeExt.formation: return 'Formation';
+      case ReportTypeExt.activiteSociale: return 'Activité Sociale';
+      case ReportTypeExt.inventaire: return 'Rapport d\'Inventaire';
+      case ReportTypeExt.gestionDistrict: return 'Rapport de Gestion (District)';
+      case ReportTypeExt.gestionCommunaute: return 'Rapport de Gestion (Cté)';
+      case ReportTypeExt.autre: return 'Autre Rapport';
+    }
+  }
+
+
+  Future<void> _showSignaturePad() async {
+    // Le dialogue retourne maintenant directement les octets de l'image
+    final Uint8List? signatureBytes = await showDialog<Uint8List>(
+      context: context,
+      builder: (context) => const SignaturePadDialog(title: 'Signature du Rapporteur'),
+    );
+    if (signatureBytes != null && signatureBytes.isNotEmpty) {
+      // On sauvegarde directement les octets via le service
+      final path = await FileStorageService.saveFile(signatureBytes, 'png'); // La signature est un PNG
+      setState(() {
+        _signaturePath = path;
+      });
     }
   }
 
@@ -277,9 +381,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       id: const Uuid().v4(),
       type: _selectedType,
       niveauEntite: EntityLevel.communaute, // À adapter selon l'utilisateur
-      nomEntite: AuthService.currentUser?['nom_communaute'] ?? 'Centrale',
-      nomChamp: AuthService.currentUser?['nom_champ'] ?? 'Kinshasa Sud-Ouest',
-      nomDistrict: AuthService.currentUser?['nom_district'] ?? 'Ngaliema',
+      nomEntite: AuthService.currentUser?.entityId ?? 'Centrale',
+      nomChamp: AuthService.currentUser?.entityId ?? 'Kinshasa Sud-Ouest',
+      nomDistrict: AuthService.currentUser?.entityId ?? 'Ngaliema',
       dateRapport: DateTime.now(),
       heureDebut: DateTime.now().subtract(const Duration(hours: 1)),
       officiant: _officiantCtrl.text,
@@ -299,27 +403,84 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       nombreMandatements: _mandatements,
       nombreNominations: _nominations,
       nombreRetraites: _retraites,
-      rapporteur: AuthService.currentUser?['nom_complet'] ?? 'Anonyme',
+      rapporteur: AuthService.currentUser?.fullName ?? 'Anonyme',
+      rapporteurId: AuthService.currentUser?.id,
       statut: ReportStatus.soumis,
+      signaturePath: _signaturePath, // Utilisation du chemin
     );
   }
 
   Future<void> _saveReport() async {
     if (_formKey.currentState!.validate()) {
-      final report = _buildReportModel();
-      final box = Hive.box<ChurchReport>('church_reports');
-      await box.put(report.id, report);
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Rapport enregistré et soumis avec succès')));
-        Navigator.pop(context);
+      final confirm = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Confirmer la soumission'),
+          content: const Text('Voulez-vous enregistrer ce rapport et le transmettre à la hiérarchie ?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('ANNULER')),
+            ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('TRANSMETTRE')),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        final report = _buildReportModel();
+        final box = Hive.box<ChurchReport>('church_reports');
+        await box.put(report.id, report);
+
+        if (mounted) {
+          // Affichage du dialogue de succès final
+          await showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green),
+                  SizedBox(width: 10),
+                  Text('Rapport Transmis'),
+                ],
+              ),
+              content: Text('Le rapport "${_getReportTypeLabel(_selectedType)}" a été enregistré et transmis avec succès à votre hiérarchie directe.'),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF003366)),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+
+          if (mounted) Navigator.pop(context);
+        }
       }
+
     }
+  }
+
+  // 1. Créez une fonction statique ou globale (obligatoire pour l'Isolate)
+  static Future<Uint8List> _buildPdfTask(Map<String, dynamic> params) async {
+    // Recréer l'objet ChurchReport à partir de la Map
+    final reportMap = params['report'] as Map<String, dynamic>;
+    final report = ChurchReport.fromMap(reportMap);
+    final logoBytes = params['logo'] as Uint8List;
+
+    return await ReportPdfGenerator.generate(report, logoBytes);
   }
 
   Future<void> _generatePDF() async {
     final report = _buildReportModel();
-    final pdfBytes = await ReportPdfGenerator.generate(report);
+    final ByteData logoData = await rootBundle.load('assets/branding/logo_ena.png');
+
+    // L'interface reste fluide pendant que l'Isolate travaille
+    final pdfBytes = await compute(_buildPdfTask, {
+      // On passe une Map car ChurchReport (HiveObject) ne peut pas traverser l'Isolate
+      'report': report.toMap(),
+      'logo': logoData.buffer.asUint8List(),
+    });
+
     await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
   }
 }
+

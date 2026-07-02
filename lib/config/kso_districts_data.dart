@@ -50,3 +50,4 @@ class KsoChampData {
     KsoDistrict(id: 22, name: 'U.P.N', communitiesCount: 7, membersCount: 915, responsables: ['GIMAVU', 'SINDANI']),
   ];
 }
+

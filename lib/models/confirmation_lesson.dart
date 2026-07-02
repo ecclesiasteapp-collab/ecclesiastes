@@ -22,3 +22,4 @@ class ConfirmationLesson extends HiveObject {
     this.isCoreLesson = true,
   });
 }
+

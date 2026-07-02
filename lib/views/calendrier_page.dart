@@ -27,11 +27,11 @@ class _CalendrierPageState extends State<CalendrierPage> {
     final allEvents = await db.getEvenements();
     final allAnnivs = await db.getAnniversairesDuJour();
 
-    List<Appointment> meetings = [];
+    final List<Appointment> meetings = [];
 
     for (var e in allEvents) {
-      DateTime start = DateTime.parse(e['date_debut'] ?? e['date_evenement'] ?? DateTime.now().toIso8601String());
-      DateTime end = e['date_fin'] != null ? DateTime.parse(e['date_fin']) : start.add(const Duration(hours: 1));
+      final DateTime start = DateTime.parse(e['date_debut'] ?? e['date_evenement'] ?? DateTime.now().toIso8601String());
+      final DateTime end = e['date_fin'] != null ? DateTime.parse(e['date_fin']) : start.add(const Duration(hours: 1));
       
       meetings.add(Appointment(
         startTime: start,
@@ -44,11 +44,11 @@ class _CalendrierPageState extends State<CalendrierPage> {
 
     for (var a in allAnnivs) {
       // Pour les anniversaires, on les met sur toute la journée
-      DateTime now = DateTime.now();
-      String dateAnnivStr = a['date_naissance'] ?? '';
+      final DateTime now = DateTime.now();
+      final String dateAnnivStr = a['date_naissance'] ?? '';
       if (dateAnnivStr.isNotEmpty) {
-        DateTime birthDate = DateTime.parse(dateAnnivStr);
-        DateTime annivThisYear = DateTime(now.year, birthDate.month, birthDate.day);
+        final DateTime birthDate = DateTime.parse(dateAnnivStr);
+        final DateTime annivThisYear = DateTime(now.year, birthDate.month, birthDate.day);
         
         meetings.add(Appointment(
           startTime: annivThisYear,
@@ -82,7 +82,7 @@ class _CalendrierPageState extends State<CalendrierPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Calendrier & Programmes"),
+        title: const Text('Calendrier & Programmes'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -134,18 +134,18 @@ class _CalendrierPageState extends State<CalendrierPage> {
             Text("Début : ${DateFormat('dd/MM/yyyy HH:mm').format(app.startTime)}"),
             Text("Fin : ${DateFormat('dd/MM/yyyy HH:mm').format(app.endTime)}"),
             const SizedBox(height: 10),
-            Text(app.notes ?? "Aucune description"),
+            Text(app.notes ?? 'Aucune description'),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Fermer")),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fermer')),
           if (AuthService.isResponsable())
             TextButton(
               onPressed: () {
                 // Logique de modification
                 Navigator.pop(context);
               }, 
-              child: const Text("Modifier")
+              child: const Text('Modifier')
             ),
         ],
       ),
@@ -158,3 +158,4 @@ class MeetingDataSource extends CalendarDataSource {
     appointments = source;
   }
 }
+

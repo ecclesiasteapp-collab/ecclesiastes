@@ -22,7 +22,7 @@ class BibleNoteAdapter extends TypeAdapter<BibleNote> {
       chapterNumber: fields[2] as int,
       verseNumber: fields[3] as int,
       content: fields[4] as String,
-      createdAt: fields[5] as DateTime,
+      createdAt: fields[5] as DateTime?,
     );
   }
 

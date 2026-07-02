@@ -1,171 +1,166 @@
-import 'package:sqflite/sqflite.dart';
-import '../models/models.dart';
+import 'package:flutter/foundation.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
+import '../models/app_settings.dart';
+import '../models/attachment_model.dart';
+import '../models/church_report.dart';
+import '../models/ecodim_lesson.dart';
+import '../models/event.dart';
+import '../models/event_models.dart';
+import '../models/fundraising_report.dart';
+import '../models/hierarchy_models.dart';
+import '../models/library_document.dart';
+import '../models/member_profile.dart';
+import '../models/news_model.dart';
+import '../models/sacristy_report.dart';
+import '../models/sync_queue_model.dart';
+import '../models/user.dart';
 import 'database_helper.dart';
 
+/// Service centralisé pour l'initialisation et la gestion des boîtes Hive.
+/// Garantit une initialisation paresseuse (lazy) pour de meilleures performances au démarrage.
 class DatabaseService {
-  static final DatabaseService _instance = DatabaseService._internal();
+  // Noms des boîtes pour éviter les erreurs de frappe
+  static const usersBoxName = 'users';
+  static const settingsBoxName = 'settings_box';
+  static const churchReportsBoxName = 'church_reports';
+  static const attachmentsBoxName = 'attachments_box';
+  static const newsBoxName = 'news';
+  static const eventsBoxName = 'evenements_map';
+  static const membersBoxName = 'member_profiles';
+  static const lessonsBoxName = 'eco_lessons';
+  static const fundraisingBoxName = 'fundraising_reports';
+  static const libraryBoxName = 'library_box';
+  static const pendingUsersBoxName = 'pending_users';
 
-  factory DatabaseService() {
-    return _instance;
-  }
-
-  DatabaseService._internal();
-
-  Future<Database?> get database async => DatabaseHelper.instance.database;
-
-  // Opérations sur les utilisateurs (Unifiées avec la table utilisateurs si besoin, 
-  // mais ici on garde le mapping vers la table 'users' ou on redirige vers 'utilisateurs')
-  // Note: Pour simplifier l'unification, on va utiliser la table 'utilisateurs' de DatabaseHelper
-  
-  Future<int> insertUser(AppUser user) async {
-    final db = await database;
-    if (db == null) return 0;
-    // Map AppUser to DatabaseHelper's utilisateurs table if necessary, 
-    // but for now we keep the 'users' table name to avoid breaking existing logic 
-    // and rely on DatabaseHelper to have created it or use 'utilisateurs'
-    return db.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
-  }
-
-  Future<AppUser?> getUser(String id) async {
-    final db = await database;
-    if (db == null) return null;
-    final maps = await db.query('users', where: 'id = ?', whereArgs: [id]);
-    if (maps.isNotEmpty) {
-      return AppUser.fromMap(maps.first);
+  /// Initialise Hive et enregistre tous les adaptateurs de type.
+  /// C'est la seule méthode à appeler dans `main.dart`.
+  static Future<void> init() async {
+    // Initialisation de Hive dans un sous-dossier pour une meilleure organisation
+    String? path;
+    if (!kIsWeb) {
+      final appDocumentDir = await getApplicationDocumentsDirectory();
+      path = appDocumentDir.path;
     }
-    return null;
+    await Hive.initFlutter(path);
+
+    // Enregistrement de tous les TypeAdapters
+    _registerAdapters();
+
+    // Ouverture des boîtes critiques pour le démarrage
+    await Hive.openBox<User>(usersBoxName);
+    await Hive.openBox<AppSettings>(settingsBoxName);
+    await Hive.openBox<Map>(eventsBoxName);
+    await Hive.openBox<Map>('rapports');
   }
 
-  Future<List<AppUser>> getAllUsers() async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query('users');
-    return List.generate(maps.length, (i) => AppUser.fromMap(maps[i]));
-  }
-
-  Future<List<AppUser>> getUsersByLevel(UserLevel level) async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query('users', where: 'level = ?', whereArgs: [level.toString()]);
-    return List.generate(maps.length, (i) => AppUser.fromMap(maps[i]));
-  }
-
-  Future<int> updateUser(AppUser user) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('users', user.toMap(), where: 'id = ?', whereArgs: [user.id]);
-  }
-
-  Future<int> deleteUser(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.delete('users', where: 'id = ?', whereArgs: [id]);
-  }
-
-  // Opérations sur les événements
-  Future<int> insertEvent(ChurchEvent event) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('events', event.toMap());
-  }
-
-  Future<ChurchEvent?> getEvent(String id) async {
-    final db = await database;
-    if (db == null) return null;
-    final maps = await db.query('events', where: 'id = ?', whereArgs: [id]);
-    if (maps.isNotEmpty) {
-      return ChurchEvent.fromMap(maps.first);
+  /// Ouvre une boîte de manière paresseuse. Si elle est déjà ouverte, la retourne simplement.
+  /// C'est la méthode à utiliser dans les services ou les vues pour accéder à une boîte.
+  static Future<Box<T>> openBox<T>(String name) async {
+    if (Hive.isBoxOpen(name)) {
+      return Hive.box<T>(name);
     }
-    return null;
+    return Hive.openBox<T>(name);
   }
 
-  Future<List<ChurchEvent>> getAllEvents() async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query('events', orderBy: 'startDate DESC');
-    return List.generate(maps.length, (i) => ChurchEvent.fromMap(maps[i]));
+  /// Enregistre tous les adaptateurs de l'application.
+  static void _registerAdapters() {
+    // N'enregistre que si ce n'est pas déjà fait (utile pour les tests)
+    if (!Hive.isAdapterRegistered(UserAdapter().typeId)) {
+      Hive.registerAdapter(UserAdapter());
+      Hive.registerAdapter(UserRoleAdapter());
+      Hive.registerAdapter(EntityLevelAdapter());
+      Hive.registerAdapter(CommissionRoleAdapter());
+      Hive.registerAdapter(CommissionTypeAdapter());
+      Hive.registerAdapter(ProfilDocumentaireAdapter());
+      Hive.registerAdapter(AppSettingsAdapter());
+      Hive.registerAdapter(ChurchReportAdapter());
+      Hive.registerAdapter(ReportTypeExtAdapter());
+      Hive.registerAdapter(ReportStatusAdapter());
+      Hive.registerAdapter(AttachmentAdapter());
+      Hive.registerAdapter(NewsAdapter());
+      Hive.registerAdapter(ChurchEventAdapter());
+      Hive.registerAdapter(CivilStatusAdapter());
+      Hive.registerAdapter(MemberStatusAdapter());
+      Hive.registerAdapter(AvailabilityAdapter());
+      Hive.registerAdapter(MemberProfileAdapter());
+      Hive.registerAdapter(SacristyReportAdapter());
+      Hive.registerAdapter(EcodimLessonAdapter());
+      Hive.registerAdapter(UserCategoryAdapter());
+      Hive.registerAdapter(DocumentTypeAdapter());
+      Hive.registerAdapter(LibraryDocumentAdapter());
+      Hive.registerAdapter(EntityResponsibleRoleAdapter());
+      Hive.registerAdapter(SyncQueueItemAdapter());
+      Hive.registerAdapter(FundraisingReportAdapter());
+      // ... Ajoutez ici TOUS les autres adaptateurs de votre application
+    }
   }
 
-  Future<List<ChurchEvent>> getEventsByType(EventType type) async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query('events', where: 'type = ?', whereArgs: [type.toString()], orderBy: 'startDate DESC');
-    return List.generate(maps.length, (i) => ChurchEvent.fromMap(maps[i]));
+  static Future<User?> getUser(String id) async {
+    final box = await openBox<User>(usersBoxName);
+    return box.get(id);
   }
 
-  Future<List<ChurchEvent>> getEventsByDateRange(DateTime start, DateTime end) async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query(
-      'events',
-      where: 'startDate >= ? AND startDate <= ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
-      orderBy: 'startDate ASC',
+  static List<User> getAllUsers() {
+    if (!Hive.isBoxOpen(usersBoxName)) {
+      return const [];
+    }
+    return Hive.box<User>(usersBoxName).values.toList();
+  }
+
+  static List<Event> getAllEvents() {
+    if (!Hive.isBoxOpen(eventsBoxName)) {
+      return const [];
+    }
+
+    final box = Hive.box<Map>(eventsBoxName);
+    return box.values
+        .map((data) => _eventFromMap(Map<String, dynamic>.from(data)))
+        .toList();
+  }
+
+  static Future<void> insertEvent(Event event) async {
+    final box = await openBox<Map>(eventsBoxName);
+    await box.put(event.id, {
+      'id': event.id,
+      'title': event.title,
+      'description': event.description,
+      'type': event.type.name,
+      'date_evenement': event.dateTime.toIso8601String(),
+      'responsable_type': event.responsiblePerson,
+      'attachment_id': null,
+    });
+  }
+
+  static Future<List<SacristyReport>> getSacristyReportsByEvent(String eventId) async {
+    final reports = await DatabaseHelper.instance.getSacristyReportsByEvent(eventId);
+    return reports.map(SacristyReport.fromMap).toList();
+  }
+
+  static Future<void> insertSacristyReport(SacristyReport report) async {
+    final box = await openBox<Map>('rapports');
+    await box.put(report.id, report.toMap());
+  }
+
+  static Event _eventFromMap(Map<String, dynamic> map) {
+    final rawType = (map['type'] ?? map['category'] ?? '').toString();
+    final eventType = EventType.values.firstWhere(
+      (value) => value.name.toLowerCase() == rawType.toLowerCase(),
+      orElse: () => EventType.autre,
     );
-    return List.generate(maps.length, (i) => ChurchEvent.fromMap(maps[i]));
-  }
 
-  Future<int> updateEvent(ChurchEvent event) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('events', event.toMap(), where: 'id = ?', whereArgs: [event.id]);
-  }
+    final date = DateTime.tryParse((map['date_evenement'] ?? map['dateTime'] ?? '').toString()) ??
+        DateTime.now();
 
-  Future<int> deleteEvent(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.delete('events', where: 'id = ?', whereArgs: [id]);
-  }
-
-  // Opérations sur les rapports de sacristie
-  Future<int> insertSacristyReport(SacristyReport report) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('sacristy_reports', report.toMap());
-  }
-
-  Future<SacristyReport?> getSacristyReport(String id) async {
-    final db = await database;
-    if (db == null) return null;
-    final maps = await db.query('sacristy_reports', where: 'id = ?', whereArgs: [id]);
-    if (maps.isNotEmpty) {
-      return SacristyReport.fromMap(maps.first);
-    }
-    return null;
-  }
-
-  Future<List<SacristyReport>> getSacristyReportsByEvent(String eventId) async {
-    final db = await database;
-    if (db == null) return [];
-    final maps = await db.query('sacristy_reports', where: 'eventId = ?', whereArgs: [eventId]);
-    return List.generate(maps.length, (i) => SacristyReport.fromMap(maps[i]));
-  }
-
-  Future<int> updateSacristyReport(SacristyReport report) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('sacristy_reports', report.toMap(), where: 'id = ?', whereArgs: [report.id]);
-  }
-
-  // Statistiques
-  Future<Map<String, dynamic>> getStatisticsByLevel(UserLevel level, String entityName) async {
-    final db = await database;
-    if (db == null) return {};
-    final maps = await db.query(
-      'statistics',
-      where: 'level = ? AND entityName = ?',
-      whereArgs: [level.toString(), entityName],
+    return Event(
+      id: map['id']?.toString() ?? 'evt_${date.millisecondsSinceEpoch}',
+      title: map['title']?.toString() ?? map['titre']?.toString() ?? 'Événement',
+      description: map['description']?.toString() ?? '',
+      type: eventType,
+      dateTime: date,
+      responsiblePerson: map['responsable_type']?.toString(),
+      category: map['niveau']?.toString(),
+      location: map['entite_nom']?.toString(),
     );
-    if (maps.isNotEmpty) {
-      return maps.first;
-    }
-    return {};
-  }
-
-  Future<void> close() async {
-    final db = await database;
-    if (db != null) {
-      await db.close();
-    }
   }
 }

@@ -77,12 +77,12 @@ class DashboardDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           UserAccountsDrawerHeader(
-            accountName: Text(user?['nom_complet'] ?? ''),
-            accountEmail: Text(user?['role_label']?.toString() ?? user?['role']?.toString() ?? ''),
+            accountName: Text(user?.fullName ?? ''),
+            accountEmail: Text(user?.role.name ?? ''),
             currentAccountPicture: CircleAvatar(
               backgroundColor: DashboardTheme.blue,
               child: Text(
-                (user?['nom_complet'] ?? 'U')[0].toUpperCase(),
+                (user?.fullName ?? 'U')[0].toUpperCase(),
                 style: const TextStyle(color: Colors.white, fontSize: 22),
               ),
             ),
@@ -374,3 +374,4 @@ class DashboardFooterBar extends StatelessWidget {
     );
   }
 }
+

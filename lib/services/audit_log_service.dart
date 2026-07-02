@@ -11,22 +11,20 @@ class AuditLogService {
 
   /// Enregistre une action utilisateur
   Future<void> logAction({
-    required String action,
-    required String details,
-    String? entityId,
-    String? entityType,
+    required String actionType,
+    required String targetType,
+    required String targetId,
+    required String changesJson,
   }) async {
     final user = AuthService.currentUser;
     final log = AuditLog(
       id: 'log_${DateTime.now().millisecondsSinceEpoch}',
-      userId: user?.id ?? 'SYSTEM',
-      userName: user?.fullName ?? 'Système',
-      action: action,
-      details: details,
+      adminId: user?.id ?? 'SYSTEM',
+      actionType: actionType,
+      targetType: targetType,
+      targetId: targetId,
+      changesJson: changesJson,
       timestamp: DateTime.now(),
-      entityId: entityId,
-      entityType: entityType,
-      userRole: user?.role.name ?? 'N/A',
     );
     await _logBox.add(log);
   }
@@ -37,3 +35,4 @@ class AuditLogService {
     return logs.take(limit).toList();
   }
 }
+

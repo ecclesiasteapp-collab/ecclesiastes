@@ -81,3 +81,4 @@ class VisitReport extends ReportBase {
     );
   }
 }
+

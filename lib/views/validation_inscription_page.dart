@@ -43,7 +43,7 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
         });
       }
     } catch (e) {
-      debugPrint("Erreur chargement entités : $e");
+      debugPrint('Erreur chargement entités : $e');
       if (mounted) setState(() => _isLoadingEntites = false);
     }
   }
@@ -74,7 +74,7 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
         });
       }
     } catch (e) {
-      debugPrint("Erreur lors de la récupération : $e");
+      debugPrint('Erreur lors de la récupération : $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -86,7 +86,7 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
       length: 2,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.isSuperAdmin ? "Validations Globales" : "Validations Locales"),
+          title: Text(widget.isSuperAdmin ? 'Validations Globales' : 'Validations Locales'),
           backgroundColor: Colors.blueGrey[900],
           foregroundColor: Colors.white,
           actions: [
@@ -103,8 +103,8 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
             unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.orange,
             tabs: [
-              Tab(icon: Icon(Icons.security), text: "Comptes Utilisateurs"),
-              Tab(icon: Icon(Icons.people), text: "Fiches Membres"),
+              Tab(icon: Icon(Icons.security), text: 'Comptes Utilisateurs'),
+              Tab(icon: Icon(Icons.people), text: 'Fiches Membres'),
             ],
           ),
         ),
@@ -117,16 +117,16 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
                     ? const Center(child: SizedBox(height: 40, child: CircularProgressIndicator()))
                     : DropdownButtonFormField<String>(
                         initialValue: _filtreEntiteId,
-                        hint: const Text("Filtrer par entité"),
+                        hint: const Text('Filtrer par entité'),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                         ),
                         items: [
-                          const DropdownMenuItem<String>(value: 'TOUS', child: Text("Toutes les entités")),
+                          const DropdownMenuItem<String>(value: 'TOUS', child: Text('Toutes les entités')),
                           ..._entites.map((e) => DropdownMenuItem<String>(
                             value: e['id'].toString(),
-                            child: Text("${e['nom']} (${e['type']})"),
+                            child: Text('${e["nom"]} (${e["type"]})'),
                           )),
                         ],
                         onChanged: (val) {
@@ -153,14 +153,14 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
 
   Widget _buildUtilisateursTab() {
     if (_utilisateursDemandes.isEmpty) {
-      return const Center(child: Text("Aucun compte utilisateur en attente"));
+      return const Center(child: Text('Aucun compte utilisateur en attente'));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(10),
       itemCount: _utilisateursDemandes.length,
       itemBuilder: (context, index) {
         final u = _utilisateursDemandes[index];
-        final dateInsc = DateTime.tryParse(u['date_inscription'] ?? "") ?? DateTime.now();
+        final dateInsc = DateTime.tryParse(u['date_inscription'] ?? '') ?? DateTime.now();
         final diffDays = DateTime.now().difference(dateInsc).inDays;
         final estUrgent = diffDays >= 2; // Approche de la limite de 3 jours
 
@@ -181,12 +181,12 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Rôle : ${u['role_label'] ?? 'Non défini'}"),
-                Text("Ministère : ${u['ministere'] ?? 'Aucun'}"),
-                Text("Identifiant : ${u['identifiant']}"),
+                Text('Rôle : ${u["role_label"] ?? 'Non défini'}'),
+                Text('Ministère : ${u["ministere"] ?? 'Aucun'}'),
+                Text('Identifiant : ${u["identifiant"]}'),
                 const SizedBox(height: 4),
                 Text(
-                  "Temps restant : ${3 - diffDays} jour(s) avant expiration",
+                  'Temps restant : ${3 - diffDays} jour(s) avant expiration',
                   style: TextStyle(
                     color: estUrgent ? Colors.red : Colors.grey[600],
                     fontWeight: estUrgent ? FontWeight.bold : FontWeight.normal,
@@ -205,14 +205,14 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
                     if (!mounted) return;
                     _fetchDemandes();
                     ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(content: Text("Compte utilisateur confirmé avec succès")),
+                      const SnackBar(content: Text('Compte utilisateur confirmé avec succès')),
                     );
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.cancel, color: Colors.red, size: 30),
                   onPressed: () async {
-                    final confirm = await _showDeleteDialog("Rejeter le compte ?");
+                    final confirm = await _showDeleteDialog('Rejeter le compte ?');
                     if (confirm == true) {
                       await AdminService.rejeterUtilisateur(u['id']);
                       if (mounted) _fetchDemandes();
@@ -229,14 +229,14 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
 
   Widget _buildMembresTab() {
     if (_membresDemandes.isEmpty) {
-      return const Center(child: Text("Aucune fiche de membre en attente"));
+      return const Center(child: Text('Aucune fiche de membre en attente'));
     }
     return ListView.builder(
       padding: const EdgeInsets.all(10),
       itemCount: _membresDemandes.length,
       itemBuilder: (context, index) {
         final d = _membresDemandes[index];
-        final dateInsc = DateTime.tryParse(d['date_inscription'] ?? "") ?? DateTime.now();
+        final dateInsc = DateTime.tryParse(d['date_inscription'] ?? '') ?? DateTime.now();
         final joursPasses = DateTime.now().difference(dateInsc).inDays;
         final estUrgent = joursPasses >= 4;
 
@@ -251,16 +251,16 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
               child: const Icon(Icons.person, color: Colors.white),
             ),
             title: Text(
-              "${d['nom']} ${d['prenom'] ?? ''}",
+              '${d["nom"]} ${d["prenom"] ?? ''}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Commission : ${d['commission']}"),
+                Text('Commission : ${d["commission"]}'),
                 const SizedBox(height: 4),
                 Text(
-                  "Attente : $joursPasses jour(s)",
+                  'Attente : $joursPasses jour(s)',
                   style: TextStyle(
                     color: estUrgent ? Colors.red : Colors.grey[600],
                     fontWeight: estUrgent ? FontWeight.bold : FontWeight.normal,
@@ -279,14 +279,14 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
                     if (!mounted) return;
                     _fetchDemandes();
                     ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(content: Text("Membre confirmé avec succès")),
+                      const SnackBar(content: Text('Membre confirmé avec succès')),
                     );
                   },
                 ),
                 IconButton(
                   icon: const Icon(Icons.cancel, color: Colors.red, size: 30),
                   onPressed: () async {
-                    final confirm = await _showDeleteDialog("Rejeter la fiche membre ?");
+                    final confirm = await _showDeleteDialog('Rejeter la fiche membre ?');
                     if (confirm == true) {
                       await AdminService.rejeterMembre(d['id']);
                       if (mounted) _fetchDemandes();
@@ -306,15 +306,16 @@ class _ValidationInscriptionPageState extends State<ValidationInscriptionPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(title),
-        content: const Text("Cette action supprimera définitivement la demande."),
+        content: const Text('Cette action supprimera définitivement la demande.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Annuler")),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true), 
-            child: const Text("Supprimer", style: TextStyle(color: Colors.red)),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 }
+

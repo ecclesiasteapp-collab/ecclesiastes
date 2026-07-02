@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'; // for compute
+// for Uint8List
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -5,24 +7,34 @@ import 'package:printing/printing.dart';
 class PdfService {
   /// Génère un rapport de visite simple
   static Future<void> generateReportPdf(Map<String, dynamic> reportData) async {
+    final bytes = await compute(_buildReportPdf, reportData);
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
+
+  static Future<Uint8List> _buildReportPdf(Map<String, dynamic> reportData) async {
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.Page(
         build: (pw.Context context) => pw.Center(
           child: pw.Text(
-            "Rapport de Visite - ${reportData['date'] ?? ''}",
+            'Rapport de Visite - ${reportData['date'] ?? ''}',
             style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
           ),
         ),
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    return pdf.save();
   }
 
   /// Génère la fiche administrative complète au format A4
   static Future<void> generateFicheMembre(Map<String, dynamic> m) async {
+    final bytes = await compute(_buildFicheMembrePdf, m);
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
+
+  static Future<Uint8List> _buildFicheMembrePdf(Map<String, dynamic> m) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -41,36 +53,36 @@ class PdfService {
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start, // Corrigé
                       children: [
-                        pw.Text("EGLISE NEO-APOSTOLIQUE",
+                        pw.Text('EGLISE NEO-APOSTOLIQUE',
                             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
-                        pw.Text("CHAMP KIN SUD-OUEST", style: const pw.TextStyle(fontSize: 10)),
+                        pw.Text('CHAMP KIN SUD-OUEST', style: const pw.TextStyle(fontSize: 10)),
                       ],
                     ),
-                    pw.Text("FICHE DE MEMBRE",
+                    pw.Text('FICHE DE MEMBRE',
                         style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
                   ],
                 ),
                 pw.Divider(thickness: 2),
                 pw.SizedBox(height: 20),
 
-                _buildSectionHeader("I. IDENTITÉ DU FIDÈLE"),
-                _buildInfoRow("Nom complet", "${m['nom'] ?? ''} ${m['postnom'] ?? ''} ${m['prenom'] ?? ''}"),
-                _buildInfoRow("Sexe", "${m['sexe'] ?? ''}"),
-                _buildInfoRow("Date de Naissance", "${m['date_naissance'] ?? ''}"),
+                _buildSectionHeader('I. IDENTITÉ DU FIDÈLE'),
+                _buildInfoRow('Nom complet', '${m['nom'] ?? ''} ${m['postnom'] ?? ''} ${m['prenom'] ?? ''}'),
+                _buildInfoRow('Sexe', '${m['sexe'] ?? ''}'),
+                _buildInfoRow('Date de Naissance', '${m['date_naissance'] ?? ''}'),
 
-                _buildSectionHeader("II. VIE SACRAMENTELLE"),
-                _buildInfoRow("Date de Baptême", m['date_bapteme'] ?? 'Non renseigné'),
-                _buildInfoRow("Date de Scellement", m['date_scellement'] ?? 'Non renseigné'),
+                _buildSectionHeader('II. VIE SACRAMENTELLE'),
+                _buildInfoRow('Date de Baptême', m['date_bapteme'] ?? 'Non renseigné'),
+                _buildInfoRow('Date de Scellement', m['date_scellement'] ?? 'Non renseigné'),
 
-                _buildSectionHeader("III. APPARTENANCE"),
-                _buildInfoRow("Commission", "${m['commission'] ?? 'Aucune'}"),
-                _buildInfoRow("Poste", "${m['poste'] ?? 'Membre'}"),
+                _buildSectionHeader('III. APPARTENANCE'),
+                _buildInfoRow('Commission', '${m['commission'] ?? 'Aucune'}'),
+                _buildInfoRow('Poste', '${m['poste'] ?? 'Membre'}'),
 
                 pw.Spacer(),
                 pw.Align(
                   alignment: pw.Alignment.centerRight,
                   child: pw.Text(
-                    "Fait à Kinshasa, le ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+                    'Fait à Kinshasa, le ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
                     style: const pw.TextStyle(fontSize: 10),
                   ),
                 ),
@@ -81,11 +93,16 @@ class PdfService {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    return pdf.save();
   }
 
   /// Génère une petite carte avec QR Code
   static Future<void> generateQRCard(Map<String, dynamic> m) async {
+    final bytes = await compute(_buildQRCardPdf, m);
+    await Printing.layoutPdf(onLayout: (format) async => bytes);
+  }
+
+  static Future<Uint8List> _buildQRCardPdf(Map<String, dynamic> m) async {
     final pdf = pw.Document();
 
     pdf.addPage(
@@ -101,7 +118,7 @@ class PdfService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start, // Corrigé
               children: [
-                pw.Text("EGLISE NEO-APOSTOLIQUE",
+                pw.Text('EGLISE NEO-APOSTOLIQUE',
                     style: pw.TextStyle(
                         fontSize: 8,
                         fontWeight: pw.FontWeight.bold,
@@ -124,9 +141,9 @@ class PdfService {
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start, // Corrigé
                         children: [
-                          pw.Text("${m['nom'] ?? ''} ${m['prenom'] ?? ''}",
+                          pw.Text('${m['nom'] ?? ''} ${m['prenom'] ?? ''}',
                               style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
-                          pw.Text("ID: ${m['id'] ?? ''}", style: const pw.TextStyle(fontSize: 7)),
+                          pw.Text('ID: ${m['id'] ?? ''}', style: const pw.TextStyle(fontSize: 7)),
                         ],
                       ),
                     ),
@@ -139,7 +156,7 @@ class PdfService {
       ),
     );
 
-    await Printing.layoutPdf(onLayout: (format) async => pdf.save());
+    return pdf.save();
   }
 
   // Fonctions d'aide (Helpers) privées
@@ -161,7 +178,7 @@ class PdfService {
         children: [
           pw.SizedBox(
               width: 120,
-              child: pw.Text("$label :", style: const pw.TextStyle(fontSize: 10))),
+              child: pw.Text('$label :', style: const pw.TextStyle(fontSize: 10))),
           pw.Expanded(
             child: pw.Text(value,
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
@@ -171,3 +188,4 @@ class PdfService {
     );
   }
 }
+

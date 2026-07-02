@@ -35,3 +35,4 @@ class KSODistrictsConfig {
   static const String apotreResponsable = 'Apôtre NGOLO Emmanuel';
   static const String dateTableau = '07 Avril 2025';
 }
+

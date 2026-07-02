@@ -16,7 +16,7 @@ class EntityModel extends HiveObject {
 
   @HiveField(5) String? responsableId;
   @HiveField(6) String? responsableNom;
-  @HiveField(7) MinistereRank? responsableRank;
+  @HiveField(7) UserRole? responsableRank;
 
   @HiveField(8) String? suppleantId;
   @HiveField(9) String? suppleantNom;
@@ -48,3 +48,4 @@ class EntityModel extends HiveObject {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 }
+

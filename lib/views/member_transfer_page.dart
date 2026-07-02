@@ -22,7 +22,6 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
   String? _selectedChamp;
   String? _selectedDistrict;
   String? _selectedCommunaute;
-  String _motif = '';
 
   List<Map<String, dynamic>> _territorials = [];
   List<Map<String, dynamic>> _champs = [];
@@ -122,7 +121,6 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
                   border: OutlineInputBorder(),
                   hintText: 'Ex: Déménagement, Raisons professionnelles...',
                 ),
-                onChanged: (v) => _motif = v,
                 validator: (v) => v == null || v.isEmpty ? 'Veuillez saisir un motif' : null,
               ),
 
@@ -151,9 +149,9 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.blue.withOpacity(0.2)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
@@ -162,7 +160,7 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('${_member.prenom} ${_member.nom}', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(_member.fullName, style: const TextStyle(fontWeight: FontWeight.bold)),
               Text('Actuel: ${_member.communauteId}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ),
@@ -175,7 +173,7 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: DropdownButtonFormField<String>(
-        value: value,
+        initialValue: value,
         decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
         items: items.map((e) => DropdownMenuItem<String>(value: e['id'].toString(), child: Text(e['nom']))).toList(),
         onChanged: onChanged,
@@ -187,7 +185,6 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
   Future<void> _performTransfer() async {
     if (_formKey.currentState!.validate()) {
       try {
-        // Mise à jour locale dans Hive
         _member.egliseTerritorialeId = _selectedTerritorial!;
         _member.champApostoliqueId = _selectedChamp;
         _member.districtId = _selectedDistrict!;
@@ -208,3 +205,4 @@ class _MemberTransferPageState extends State<MemberTransferPage> {
     }
   }
 }
+

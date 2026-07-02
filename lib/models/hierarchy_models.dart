@@ -1,3 +1,4 @@
+// ignore_for_file: constant_identifier_names
 import 'package:hive/hive.dart';
 
 part 'hierarchy_models.g.dart';
@@ -6,42 +7,109 @@ part 'hierarchy_models.g.dart';
 @HiveType(typeId: 20)
 enum EntityLevel {
   @HiveField(0) communaute,       // Niveau 1 : Local
-  @HiveField(1) district,         // Niveau 2 : Regroupement de communautés
-  @HiveField(2) champ,            // Niveau 3 : Regroupement de districts (ex: KSO)
-  @HiveField(3) territoriale,     // Niveau 4 : Église d'un pays/région (ex: RDC Ouest)
-  @HiveField(4) internationale,   // Niveau 5 : Église Néo-Apostolique Internationale
+  @HiveField(1) district,         // Niveau 2 : Regroupement
+  @HiveField(2) champ,            // Niveau 3 : Zone de supervision
+  @HiveField(3) territoriale,     // Niveau 4 : Église Territoriale
+  @HiveField(4) internationale,   // Niveau 5 : Église Internationale
 }
 
-// Les Rôles Utilisateurs (RBAC)
+
+// Les Rangs Ministériels Officiels
 @HiveType(typeId: 21)
 enum UserRole {
-  @HiveField(0) apotrePatriarche,     // Chef de l'Église Internationale (God-Mode)
-  @HiveField(1) presidentTerritoriale, // Chef de l'Église Territoriale
-  @HiveField(2) apotreChamp,          // Chef de Champ Apostolique
-  @HiveField(3) apotreDistrict,       // Chef de District
-  @HiveField(4) chefCommunaute,       // Responsable de communauté
-  @HiveField(5) ministre,             // Diacre, Prêtre (sans responsabilité de communauté)
-  @HiveField(6) respCommission,       // Responsable d'une commission à un niveau donné
-  @HiveField(7) membre,               // Fidèle
-  @HiveField(8) superAdmin,           // Administrateur système (Porte dérobée)
+  @HiveField(0) apotrePatriarche,
+  @HiveField(1) apotreDistrict,
+  @HiveField(2) apotreResponsable,
+  @HiveField(3) apotre,
+  @HiveField(4) eveque,
+  @HiveField(5) ancien,
+  @HiveField(6) lead,
+  @HiveField(7) berger,
+  @HiveField(8) evangeliste,
+  @HiveField(9) pretre,
+  @HiveField(10) diacre,
+  @HiveField(11) sousDiacre,
+  @HiveField(12) frereCharge,
+  @HiveField(13) conductrice,
+  @HiveField(14) membre,
+  @HiveField(15) superAdmin,
+  @HiveField(16) respCommission,
 }
 
-// Les Types de Commissions (Les 12 + Sacristie)
+
+// Rôles au sein d'une commission
+@HiveType(typeId: 23)
+enum CommissionRole {
+  @HiveField(0) responsable,
+  @HiveField(1) adjoint,
+  @HiveField(2) membre,
+}
+
+// Profils pour le filtrage documentaire
+@HiveType(typeId: 24)
+enum ProfilDocumentaire {
+  @HiveField(0) ministre,
+  @HiveField(1) formateur,
+  @HiveField(2) membre,
+}
+
+// Les 12 Commissions Officielles
 @HiveType(typeId: 22)
 enum CommissionType {
   @HiveField(0) ecodim,
-  @HiveField(1) confirmation,
+  @HiveField(1) econfi,
   @HiveField(2) jeunesse,
-  @HiveField(3) econfi,
-  @HiveField(4) musique,
-  @HiveField(5) medicale,
-  @HiveField(6) aines,
-  @HiveField(7) construction,
-  @HiveField(8) securite,
-  @HiveField(9) presse,
-  @HiveField(10) papas,
-  @HiveField(11) mamans,
-  @HiveField(12) arimathee,
-  @HiveField(13) sacristie,
-  @HiveField(14) none,
+  @HiveField(3) papas,
+  @HiveField(4) mamans,
+  @HiveField(5) aines,
+  @HiveField(6) musique,
+  @HiveField(7) presseMediasSonorisation,
+  @HiveField(8) josephArimathee,
+  @HiveField(9) securiteProtocole,
+  @HiveField(10) medicale,
+  @HiveField(11) construction,
+  @HiveField(12) sacristie,
+  @HiveField(13) none,
 }
+
+
+
+// Types de programmes
+@HiveType(typeId: 25)
+enum ProgrammeType {
+  @HiveField(0) mensuel,
+  @HiveField(1) trimestriel,
+  @HiveField(2) annuel,
+  @HiveField(3) special,
+}
+
+// Statuts des programmes
+@HiveType(typeId: 26)
+enum StatutProgramme {
+  @HiveField(0) brouillon,
+  @HiveField(1) valide,
+  @HiveField(2) publie,
+  @HiveField(3) archive,
+}
+
+// Catégories de documents
+@HiveType(typeId: 27)
+enum DocumentCategorie {
+  @HiveField(0) manuel_ministre,
+  @HiveField(1) manuel_formateur,
+  @HiveField(2) manuel_apprenant,
+  @HiveField(3) pensee_directrice,
+  @HiveField(4) catechisme,
+  @HiveField(5) cantique,
+  @HiveField(6) liturgie,
+  @HiveField(7) rapport_template,
+}
+
+
+// Rôles de responsable au sein d'une entité (ex: responsable de communauté, suppléant)
+@HiveType(typeId: 28)
+enum EntityResponsibleRole {
+  @HiveField(0) responsable,
+  @HiveField(1) suppleant,
+}
+

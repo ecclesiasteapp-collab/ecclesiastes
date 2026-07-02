@@ -1,10 +1,14 @@
-import 'package:ecclesiastes/models/fundraising_report.dart';
-import 'package:ecclesiastes/services/fundraising_pdf_generator.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:printing/printing.dart';
 import '../models/church_report.dart';
+import '../widgets/signature_pad_dialog.dart';
+import '../services/auth_service.dart';
 import '../services/report_pdf_generator.dart';
+import 'package:flutter/services.dart';
+import 'package:printing/printing.dart';
+import 'package:intl/intl.dart';
+import '../services/access_control_service.dart';
 
 class ReportListScreen extends StatefulWidget {
   const ReportListScreen({super.key});
@@ -14,178 +18,219 @@ class ReportListScreen extends StatefulWidget {
 }
 
 class _ReportListScreenState extends State<ReportListScreen> {
-  String _searchQuery = '';
-  ReportTypeExt? _typeFilter;
+  late Box<ChurchReport> _reportBox;
+  List<ChurchReport> _reports = [];
+  bool _isLoading = true;
+  ReportTypeExt? _selectedType;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReports();
+  }
+
+  Future<void> _loadReports() async {
+    setState(() => _isLoading = true);
+    _reportBox = Hive.box<ChurchReport>('church_reports');
+
+    // Filtrage par hiérarchie
+    final allReports = _reportBox.values.toList();
+    final filteredByHierarchy = AccessControlService.filterByHierarchy<ChurchReport>(
+      allReports,
+      (r) => r.nomEntite, // En prod, utilisez entityId
+      (r) => r.niveauEntite
+    );
+
+    setState(() {
+      _reports = filteredByHierarchy
+        ..sort((a, b) => b.dateRapport.compareTo(a.dateRapport));
+      _isLoading = false;
+    });
+  }
+
+
+  List<ChurchReport> get _filteredReports {
+    if (_selectedType == null) return _reports;
+    return _reports.where((r) => r.type == _selectedType).toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isWeb = MediaQuery.of(context).size.width > 900;
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Mes Rapports Officiels'),
         backgroundColor: const Color(0xFF003366),
-      ),
-      body: Center(
-        child: Container(
-          constraints: BoxConstraints(maxWidth: isWeb ? 1000 : double.infinity),
-          child: Column(
-            children: [
-              _buildHeader(isWeb),
-              Expanded(
-                child: ValueListenableBuilder(
-                  valueListenable: Hive.box<ChurchReport>('church_reports').listenable(),
-                  builder: (context, Box<ChurchReport> churchBox, _) {
-                    return ValueListenableBuilder(
-                      valueListenable: Hive.box<FundraisingReport>('fundraising_reports').listenable(),
-                      builder: (context, Box<FundraisingReport> fundBox, _) {
-                        // Combiner les rapports
-                        final List<dynamic> allReports = [];
-                        allReports.addAll(churchBox.values);
-                        allReports.addAll(fundBox.values);
+        title: const Text('Rapports Officiels'),
+        foregroundColor: Colors.white,
+        leading: Navigator.canPop(context)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
+        actions: [
 
-                        final filtered = allReports.where((r) {
-                          String name = "";
-                          String off = "";
-                          bool matchType = false;
-
-                          if (r is ChurchReport) {
-                            name = r.nomEntite;
-                            off = r.officiant;
-                            matchType = _typeFilter == null || r.type == _typeFilter;
-                          } else if (r is FundraisingReport) {
-                            name = r.entityName;
-                            off = r.rapporteur;
-                            matchType = _typeFilter == null; // Pour l'instant on montre tout si c'est un rapport de fonds
-                          } else {
-                            return false;
-                          }
-
-                          final matchSearch = name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                                              off.toLowerCase().contains(_searchQuery.toLowerCase());
-                          return matchSearch && matchType;
-                        }).toList();
-
-                        filtered.sort((a, b) {
-                          DateTime da = a is ChurchReport ? a.dateRapport : (a as FundraisingReport).dateCollecte;
-                          DateTime db = b is ChurchReport ? b.dateRapport : (b as FundraisingReport).dateCollecte;
-                          return db.compareTo(da);
-                        });
-
-                        if (filtered.isEmpty) {
-                          return _buildEmptyState();
-                        }
-
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            final r = filtered[index];
-                            if (r is ChurchReport) return _buildReportCard(r);
-                            return _buildFundraisingCard(r as FundraisingReport);
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => context.go('/reports/create'),
           ),
-        ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/create-report'),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          const Divider(height: 1),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredReports.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredReports.length,
+                        itemBuilder: (context, index) => _buildReportCard(_filteredReports[index]),
+                      ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => context.go('/reports/create'),
         backgroundColor: const Color(0xFF003366),
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('Nouveau Rapport', style: TextStyle(color: Colors.white)),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  Widget _buildHeader(bool isWeb) {
+  Widget _buildFilterBar() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      color: Colors.white,
-      child: Column(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: ListView(
+        scrollDirection: Axis.horizontal,
         children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Rechercher par entité ou officiant...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onChanged: (v) => setState(() => _searchQuery = v),
+          ChoiceChip(
+            label: const Text('Tous'),
+            selected: _selectedType == null,
+            onSelected: (_) => setState(() => _selectedType = null),
           ),
-          const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _buildFilterChip(null, 'Tous'),
-                ...ReportTypeExt.values.map((t) => _buildFilterChip(t, _getReportTypeLabel(t))),
-              ],
+          const SizedBox(width: 8),
+          ...ReportTypeExt.values.map((type) => Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ChoiceChip(
+              label: Text(type.name.toUpperCase()),
+              selected: _selectedType == type,
+              onSelected: (_) => setState(() => _selectedType = type),
             ),
-          ),
+          )),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChip(ReportTypeExt? type, String label) {
-    final isSelected = _typeFilter == type;
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label, style: TextStyle(color: isSelected ? Colors.white : Colors.black87, fontSize: 12)),
-        selected: isSelected,
-        onSelected: (v) => setState(() => _typeFilter = v ? type : null),
-        backgroundColor: Colors.grey[200],
-        selectedColor: const Color(0xFF003366),
+  Widget _buildReportCard(ChurchReport report) {
+    final bool isSoumis = report.statut == ReportStatus.soumis;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: InkWell(
+        onTap: () => _viewDetails(report),
+        borderRadius: BorderRadius.circular(15),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: _getStatusColor(report.statut).withOpacity(0.1),
+            child: Icon(_getIconForType(report.type), color: _getStatusColor(report.statut)),
+          ),
+          title: Text(
+            '${report.type.name.toUpperCase()} - ${report.nomEntite}',
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          subtitle: Text(
+            'Célébré le ${DateFormat('dd/MM/yyyy').format(report.dateRapport)}\nStatut: ${report.statut.name}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          trailing: PopupMenuButton<String>(
+            onSelected: (value) => _handleMenuAction(value, report),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'view', child: Text('Ouvrir Détails')),
+              if (isSoumis && AuthService.isResponsable())
+                const PopupMenuItem(value: 'validate', child: Text('✍️ Valider & Signer', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+              const PopupMenuItem(value: 'pdf', child: Text('Générer PDF')),
+              const PopupMenuItem(value: 'delete', child: Text('Supprimer', style: TextStyle(color: Colors.red))),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildReportCard(ChurchReport report) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-          backgroundColor: _getStatusColor(report.statut).withValues(alpha: 0.1),
-          child: Icon(_getReportIcon(report.type), color: _getStatusColor(report.statut)),
-        ),
-        title: Text(
-          _getReportTypeLabel(report.type),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${report.nomEntite} • ${report.officiant}'),
-            Text(
-              'Le ${report.dateRapport.day}/${report.dateRapport.month}/${report.dateRapport.year}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              onPressed: () => _printReport(report),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-        onTap: () {
-          // Détails du rapport
-        },
-      ),
+  Color _getStatusColor(ReportStatus status) {
+    switch (status) {
+      case ReportStatus.valide: return Colors.green;
+      case ReportStatus.rejete: return Colors.red;
+      case ReportStatus.soumis: return Colors.orange;
+      default: return Colors.blueGrey;
+    }
+  }
+
+  IconData _getIconForType(ReportTypeExt type) {
+    if (type == ReportTypeExt.serviceDivin) return Icons.church;
+    if (type == ReportTypeExt.reunionCommission || type.name.toLowerCase().contains('commission') || type.name.toLowerCase().contains('reunion')) {
+      return Icons.groups;
+    }
+    return Icons.description;
+  }
+
+  void _handleMenuAction(String action, ChurchReport report) {
+    if (action == 'validate') _signAndValidateReport(report);
+    if (action == 'delete') _deleteReport(report);
+    if (action == 'view') _viewDetails(report);
+    if (action == 'pdf') _generatePDF(report);
+  }
+
+  Future<void> _generatePDF(ChurchReport report) async {
+    try {
+      final ByteData logoData = await rootBundle.load('assets/branding/logo_ena.png');
+      final Uint8List logoBytes = logoData.buffer.asUint8List();
+      final pdfBytes = await ReportPdfGenerator.generate(report, logoBytes);
+      await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Erreur PDF: $e')));
+      }
+    }
+  }
+
+  void _viewDetails(ChurchReport report) {
+    context.go('/reports/detail/${report.id}');
+  }
+  Future<void> _signAndValidateReport(ChurchReport report) async {
+    final String? signature = await showDialog<String>(
+      context: context,
+      builder: (context) => const SignaturePadDialog(title: 'Validation Officielle'),
     );
+
+    if (signature != null) {
+      setState(() {
+        report.statut = ReportStatus.valide;
+        // report.signatureBase64 = signature; // Champ déprécié
+        // Enregistrer la signature dans le système de fichiers et stocker le chemin
+        // report.signaturePath = await FileStorageService.saveSignature(report.id, signature); // Supposons un tel service
+        // Pour l'instant, nous allons juste stocker le base64 pour la compatibilité
+        report.signatureBase64 = signature;
+        report.dateValidation = DateTime.now();
+        report.validateur = AuthService.currentUser?.fullName;
+        report.markAsUpdated(AuthService.currentUserId);
+      });
+      await report.save();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rapport validé avec signature numérique.')));
+      }
+    }
+  }
+
+  Future<void> _deleteReport(ChurchReport report) async {
+    await report.delete();
+    _loadReports();
   }
 
   Widget _buildEmptyState() {
@@ -193,95 +238,12 @@ class _ReportListScreenState extends State<ReportListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.description_outlined, size: 80, color: Colors.grey[300]),
+          Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
-          Text('Aucun rapport trouvé', style: TextStyle(color: Colors.grey[600], fontSize: 16)),
+          const Text('Aucun rapport enregistré', style: TextStyle(color: Colors.grey)),
         ],
       ),
     );
   }
-
-  String _getReportTypeLabel(ReportTypeExt type) {
-    switch (type) {
-      case ReportTypeExt.serviceDivin: return 'Service Divin';
-      case ReportTypeExt.reunionFreres: return 'Réunion de Frères';
-      case ReportTypeExt.serviceJeunesse: return 'Service de Jeunesse';
-      case ReportTypeExt.serviceEcodim: return 'Service Ecodim';
-      case ReportTypeExt.mariage: return 'Mariage';
-      case ReportTypeExt.serviceFunebre: return 'Service Funèbre';
-      case ReportTypeExt.concert: return 'Concert';
-      case ReportTypeExt.evangelisation: return 'Évangélisation';
-      default: return 'Autre';
-    }
-  }
-
-  IconData _getReportIcon(ReportTypeExt type) {
-    switch (type) {
-      case ReportTypeExt.serviceDivin: return Icons.church;
-      case ReportTypeExt.serviceEcodim: return Icons.child_care;
-      case ReportTypeExt.serviceJeunesse: return Icons.people;
-      case ReportTypeExt.mariage: return Icons.favorite;
-      case ReportTypeExt.evangelisation: return Icons.campaign;
-      default: return Icons.description;
-    }
-  }
-
-  Color _getStatusColor(ReportStatus status) {
-    switch (status) {
-      case ReportStatus.valide: return Colors.green;
-      case ReportStatus.soumis: return Colors.blue;
-      case ReportStatus.rejete: return Colors.red;
-      case ReportStatus.brouillon: return Colors.orange;
-      default: return Colors.grey;
-    }
-  }
-
-  Widget _buildFundraisingCard(FundraisingReport report) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
-        leading: CircleAvatar(
-          backgroundColor: Colors.teal.withValues(alpha: 0.1),
-          child: const Icon(Icons.account_balance_wallet, color: Colors.teal),
-        ),
-        title: Text(
-          'Collecte: ${report.motif}',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('${report.entityName} • ${report.rapporteur}'),
-            Text(
-              'Total: ${report.totalFC} FC / ${report.totalDevise} USD • Le ${report.dateCollecte.day}/${report.dateCollecte.month}/${report.dateCollecte.year}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              onPressed: () => _printFundraisingReport(report),
-            ),
-            const Icon(Icons.chevron_right),
-          ],
-        ),
-        onTap: () {},
-      ),
-    );
-  }
-
-  Future<void> _printFundraisingReport(FundraisingReport report) async {
-    final pdfBytes = await FundraisingPdfGenerator.generate(report);
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
-  }
-
-  Future<void> _printReport(ChurchReport report) async {
-    final pdfBytes = await ReportPdfGenerator.generate(report);
-    await Printing.layoutPdf(onLayout: (format) async => pdfBytes);
-  }
 }
+

@@ -61,4 +61,35 @@ class Report {
   bool get isValideDouble => 
     status == ValidationStatus.valideDouble ||
     (dateValidationCommunaute != null && dateValidationHierarchique != null);
+
+  Report copyWith({
+    String? id,
+    ReportType? type,
+    String? entiteId,
+    Map<String, dynamic>? data,
+    ValidationStatus? status,
+    DateTime? dateCreation,
+    DateTime? dateValidationCommunaute,
+    DateTime? dateValidationHierarchique,
+    String? commentaireValidation,
+    List<KPI>? kpis,
+    List<String>? temoins,
+    String? pdfUrl,
+  }) {
+    return Report(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      entiteId: entiteId ?? this.entiteId,
+      data: data ?? this.data,
+      status: status ?? this.status,
+      dateCreation: dateCreation ?? this.dateCreation,
+      dateValidationCommunaute: dateValidationCommunaute ?? this.dateValidationCommunaute,
+      dateValidationHierarchique: dateValidationHierarchique ?? this.dateValidationHierarchique,
+      commentaireValidation: commentaireValidation ?? this.commentaireValidation,
+      kpis: kpis ?? this.kpis,
+      temoins: temoins ?? this.temoins,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
+    );
+  }
 }
+

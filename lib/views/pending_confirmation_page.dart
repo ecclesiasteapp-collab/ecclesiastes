@@ -267,3 +267,4 @@ class PendingConfirmationPage extends StatelessWidget {
     );
   }
 }
+

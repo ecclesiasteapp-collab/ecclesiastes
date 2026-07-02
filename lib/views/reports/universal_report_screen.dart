@@ -37,13 +37,16 @@ class _UniversalReportScreenState extends State<UniversalReportScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             HeaderOfficiel(
-              champ: 'Kinshasa Sud-Ouest',
-              district: 'District Modèle',
-              communaute: 'Communauté Modèle',
+              lines: [
+                HeaderLine('CHAMP APOSTOLIQUE', 'Kinshasa Sud-Ouest'),
+                HeaderLine('DISTRICT', 'District Modèle'),
+                HeaderLine('COMMUNAUTÉ', 'Communauté Modèle'),
+              ],
+              typeRapport: widget.config.title,
               date: DateTime.now(),
             ),
             const SizedBox(height: 16),
-            
+
             if (widget.config.kpis.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -158,7 +161,7 @@ class _UniversalReportScreenState extends State<UniversalReportScreen> {
         return Container(
           height: 100, 
           decoration: BoxDecoration(border: Border.all(color: Colors.grey), borderRadius: BorderRadius.circular(8)), 
-          child: const Center(child: Text("Signature par Identifiant & Mot de passe"))
+          child: const Center(child: Text('Signature par Identifiant & Mot de passe'))
         );
       default:
         return const SizedBox.shrink();
@@ -168,10 +171,29 @@ class _UniversalReportScreenState extends State<UniversalReportScreen> {
   void _submitReport() {
     if (_formKey.currentState?.saveAndValidate() ?? false) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('🚀 Rapport transmis au niveau District/Champ'), backgroundColor: Colors.blue)
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Rapport transmis'),
+            ],
+          ),
+          content: const Text('Votre rapport a été généré et transmis avec succès à la hiérarchie (District/Champ).'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx); // Fermer le dialog
+                if (mounted) Navigator.pop(context); // Quitter l'écran de rapport
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
       );
-      Navigator.pop(context);
     }
   }
 
@@ -199,3 +221,4 @@ class _UniversalReportScreenState extends State<UniversalReportScreen> {
     );
   }
 }
+

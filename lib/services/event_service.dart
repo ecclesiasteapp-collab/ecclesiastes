@@ -1,10 +1,10 @@
 import 'package:hive/hive.dart';
-import '../models/isar/event.dart';
+import '../models/event_models.dart';
 
 class EventService {
   static const String _boxName = 'events_box';
 
-  static Future<Box<Event>> get _box async => await Hive.openBox<Event>(_boxName);
+  static Future<Box<Event>> get _box async => Hive.openBox<Event>(_boxName);
 
   /// Creates an event in the database
   static Future<Event> createEvent({
@@ -60,3 +60,4 @@ class EventService {
     }
   }
 }
+

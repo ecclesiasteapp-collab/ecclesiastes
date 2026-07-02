@@ -1,5 +1,6 @@
 import 'package:ecclesiastes/services/file_service.dart';
 import 'package:flutter/material.dart';
+import '../config/organization_config.dart';
 import '../models/library_document.dart';
 import '../models/hierarchy_models.dart';
 import '../services/library_service.dart';
@@ -43,18 +44,25 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('📚 Bibliothèque Officielle'),
+        title: const Text('Bibliothèque Officielle'),
         backgroundColor: const Color(0xFF003366),
+        leading: Navigator.canPop(context)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
         bottom: TabBar(
+
           controller: _tabController,
           isScrollable: true,
           indicatorColor: Colors.white,
           tabs: const [
-            Tab(text: '📖 Tous'),
-            Tab(text: '✝️ Pensées'),
-            Tab(text: '📋 Manuels'),
-            Tab(text: '📅 Programmes'),
-            Tab(text: '📝 Formulaires'),
+            Tab(text: 'Tous'),
+            Tab(text: 'Pensées'),
+            Tab(text: 'Manuels'),
+            Tab(text: 'Programmes'),
+            Tab(text: 'Formulaires'),
           ],
         ),
       ),
@@ -94,6 +102,24 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
               fillColor: Colors.grey[50],
             ),
             onChanged: (value) => setState(() => _searchQuery = value),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _infoChip(
+                  Icons.badge_outlined,
+                  'Profil: ${_getCategoryLabel(widget.userCategory)}',
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _infoChip(
+                  Icons.account_tree_outlined,
+                  'Niveau: ${_getLevelLabel(widget.userLevel)}',
+                ),
+              ),
+            ],
           ),
           if (widget.userCommission != CommissionType.none) ...[
             const SizedBox(height: 12),
@@ -137,6 +163,30 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           _buildStatItem('✝️ Pensées', stats['penseesDirectrices']!.toString()),
           _buildStatItem('📋 Manuels', stats['manuels']!.toString()),
           _buildStatItem('📅 Progr.', stats['programmes']!.toString()),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: const Color(0xFF003366)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
         ],
       ),
     );
@@ -305,6 +355,33 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
   
   String _getCommissionLabel(CommissionType commission) {
-    return commission.name[0].toUpperCase() + commission.name.substring(1);
+    return OrganizationConfig.getCommission(commission).name;
+  }
+
+  String _getCategoryLabel(UserCategory category) {
+    switch (category) {
+      case UserCategory.membre:
+        return 'Membre';
+      case UserCategory.ministre:
+        return 'Ministre';
+      case UserCategory.responsable:
+        return 'Responsable';
+    }
+  }
+
+  String _getLevelLabel(EntityLevel level) {
+    switch (level) {
+      case EntityLevel.communaute:
+        return 'Communauté';
+      case EntityLevel.district:
+        return 'District';
+      case EntityLevel.champ:
+        return 'Champ';
+      case EntityLevel.territoriale:
+        return 'Territoriale';
+      case EntityLevel.internationale:
+        return 'Internationale';
+    }
   }
 }
+

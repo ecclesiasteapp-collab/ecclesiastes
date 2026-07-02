@@ -57,3 +57,4 @@ class ReportConfig {
     this.doubleValidation = true,
   });
 }
+

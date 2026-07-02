@@ -126,3 +126,4 @@ class _InteractiveReportFormState extends State<InteractiveReportForm> {
     );
   }
 }
+

@@ -118,3 +118,4 @@ class MeetingReport extends ReportBase {
     );
   }
 }
+

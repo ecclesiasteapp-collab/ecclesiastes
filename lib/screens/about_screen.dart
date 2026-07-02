@@ -43,7 +43,7 @@ class AboutScreen extends StatelessWidget {
                 const Icon(Icons.church, color: Colors.white, size: 64),
                 const SizedBox(height: 16),
                 const Text(
-                  'Ecclésiastes',
+                  'Ecclésiaste',
                   style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const Text(
@@ -120,7 +120,7 @@ class AboutScreen extends StatelessWidget {
             ),
             child: Column(
               children: [
-                const Text('© 2026 Ecclésiastes', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366))),
+                const Text('© 2026 Ecclésiaste', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366))),
                 const SizedBox(height: 6),
                 const Text('Conçu pour l\'Église Néo-Apostolique', style: TextStyle(fontSize: 12, color: Colors.grey)),
                 const SizedBox(height: 4),
@@ -157,3 +157,4 @@ class AboutScreen extends StatelessWidget {
     );
   }
 }
+

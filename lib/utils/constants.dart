@@ -1,6 +1,6 @@
 class AppConstants {
-  static const String appName = "Ecclesiastes";
-  static const String egliseNom = "ÉGLISE NÉO-APOSTOLIQUE EN RDC OUEST";
+  static const String appName = 'Ecclesiastes';
+  static const String egliseNom = 'ÉGLISE NÉO-APOSTOLIQUE EN RDC OUEST';
   static const String directivesVersion = 'v3 - 24/11/2023';
 
   // Workflow de validation (heures)
@@ -22,18 +22,18 @@ class AppConstants {
 
   // Les 12 commissions officielles
   static const List<String> commissions = [
-    "Commission d’Ecodim",
-    "Commission d’Econfi",
-    "Commission de la Jeunesse",
-    "Commission des Papas",
-    "Commission des Mamans",
-    "Commission des Aînés (Frères et sœurs de plus de 65 ans et FM en retraite)",
-    "Commission Musique",
-    "Commission Presse, Médias et Sonorisation",
-    "Commission des Joseph d’Arimathée ou des Piliers",
-    "Commission Sécurité et Protocole",
-    "Commission Médicale",
-    "Commission Construction",
+    'Commission d’Ecodim',
+    'Commission d’Econfi',
+    'Commission de la Jeunesse',
+    'Commission des Papas',
+    'Commission des Mamans',
+    'Commission des Aînés (Frères et sœurs de plus de 65 ans et FM en retraite)',
+    'Commission Musique',
+    'Commission Presse, Médias et Sonorisation',
+    'Commission des Joseph d’Arimathée ou des Piliers',
+    'Commission Sécurité et Protocole',
+    'Commission Médicale',
+    'Commission Construction',
   ];
 
   // Hiérarchie des Ministères
@@ -42,14 +42,16 @@ class AppConstants {
     'Apôtre de District',
     'Apôtre Responsable',
     'Apôtre',
-    'Évêque (ministère sacerdotal)',
-    'Ancien (ministère sacerdotal)',
-    'Lead ou évangéliste de district (ministère sacerdotal)',
-    'Berger (ministère sacerdotal)',
-    'Évangéliste (ministère sacerdotal)',
-    'Prêtre (ministère sacerdotal)',
+    'Évêque',
+    'Ancien',
+    'Lead',
+    'Berger',
+    'Évangéliste',
+    'Prêtre',
     'Diacre',
     'Sous-Diacre',
+    'Frère Chargé',
+    'Conductrice',
   ];
 
   // Rôles de gestion des entités et ses gestionnaires
@@ -99,7 +101,7 @@ class AppConstants {
     {'id': 6, 'nom': 'Aînés', 'court': 'Aînés', 'section': 'local', 'icon': 0xe8d3, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
     {'id': 7, 'nom': 'Musique', 'court': 'Musique', 'section': 'tech', 'icon': 0xe405, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
     {'id': 8, 'nom': 'Presse & Sono', 'court': 'Presse & Sono', 'section': 'tech', 'icon': 0xe04f, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
-    {'id': 9, 'nom': "Joseph d'Arimathée", 'court': "Joseph d'Arimathée", 'section': 'tech', 'icon': 0xe869, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
+    {'id': 9, 'nom': 'Joseph d\'Arimathée', 'court': 'Joseph d\'Arimathée', 'section': 'tech', 'icon': 0xe869, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
     {'id': 10, 'nom': 'Sécurité', 'court': 'Sécurité', 'section': 'tech', 'icon': 0xe32a, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
     {'id': 11, 'nom': 'Médicale', 'court': 'Médicale', 'section': 'tech', 'icon': 0xe3f3, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
     {'id': 12, 'nom': 'Construction', 'court': 'Construction', 'section': 'tech', 'icon': 0xe869, 'responsable': 'À définir', 'pct': 0, 'statut': 'Actif'},
@@ -134,3 +136,4 @@ class AppConstants {
     'Retenue politique : ne pas influencer les convictions politiques des membres',
   ];
 }
+

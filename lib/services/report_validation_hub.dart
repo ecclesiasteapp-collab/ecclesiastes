@@ -25,3 +25,4 @@ class ReportValidationHub {
     return box.values.where((r) => r.status == 'soumis').toList();
   }
 }
+

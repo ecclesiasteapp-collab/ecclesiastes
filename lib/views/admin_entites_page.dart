@@ -54,13 +54,13 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
         builder: (context, setDialogState) {
           final parents = _parentsEligibles(_selectedType);
           return AlertDialog(
-            title: const Text("Nouvelle entité"),
+            title: const Text('Nouvelle entité'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: "Nom"),
+                  decoration: const InputDecoration(labelText: 'Nom'),
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
@@ -82,7 +82,7 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
                   DropdownButtonFormField<String>(
                     initialValue: _selectedParentId,
                     decoration: InputDecoration(
-                      labelText: "Entité parente (${EntiteTypes.label(_parentTypeFor(_selectedType)!)})",
+                      labelText: 'Entité parente (${EntiteTypes.label(_parentTypeFor(_selectedType)!)})',
                     ),
                     items: parents
                         .map((p) => DropdownMenuItem(
@@ -96,7 +96,7 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text("Annuler")),
+              TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Annuler')),
               ElevatedButton(
                 onPressed: () async {
                   if (_nameController.text.trim().isEmpty) return;
@@ -116,12 +116,12 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
                   if (!context.mounted) return;
                   Navigator.pop(dialogContext);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Entité créée")),
+                    const SnackBar(content: Text('Entité créée')),
                   );
                   _loadParents();
                   _nameController.clear();
                 },
-                child: const Text("Créer"),
+                child: const Text('Créer'),
               ),
             ],
           );
@@ -133,7 +133,7 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Configuration hiérarchique")),
+      appBar: AppBar(title: const Text('Configuration hiérarchique')),
       floatingActionButton: FloatingActionButton(
         onPressed: _addEntiteDialog,
         child: const Icon(Icons.add),
@@ -144,12 +144,12 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Hiérarchie : Église territoriale → Champ apostolique → District → Communauté",
+              'Hiérarchie : Église territoriale → Champ apostolique → District → Communauté',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
-              "Appuyez sur + pour ajouter une entité. Le parent proposé dépend du type choisi.",
+              'Appuyez sur + pour ajouter une entité. Le parent proposé dépend du type choisi.',
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 16),
@@ -173,3 +173,4 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
     );
   }
 }
+

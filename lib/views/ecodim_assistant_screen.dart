@@ -119,3 +119,4 @@ class _EcodimAssistantScreenState extends State<EcodimAssistantScreen> {
     );
   }
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/bible_service.dart';
+import '../services/social_share_service.dart';
 import '../models/bible_model.dart';
 
 class BiblePage extends StatefulWidget {
@@ -123,6 +124,7 @@ class BibleChapterListPage extends StatelessWidget {
 class BibleVerseListPage extends StatelessWidget {
   final BibleBook book;
   final BibleChapter chapter;
+
   const BibleVerseListPage({super.key, required this.book, required this.chapter});
 
   @override
@@ -138,22 +140,95 @@ class BibleVerseListPage extends StatelessWidget {
         itemCount: chapter.verses.length,
         itemBuilder: (context, index) {
           final verse = chapter.verses[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: RichText(
-              text: TextSpan(
-                style: const TextStyle(color: Colors.black, fontSize: 16, height: 1.5),
-                children: [
-                  TextSpan(
-                    text: '${verse.number} ',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366), fontSize: 14),
-                  ),
-                  TextSpan(text: verse.text),
-                ],
+          return InkWell(
+            onLongPress: () => _showVerseActions(context, verse),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: RichText(
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black, fontSize: 16, height: 1.5),
+                  children: [
+                    TextSpan(
+                      text: '${verse.number} ',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366), fontSize: 14),
+                    ),
+                    TextSpan(text: verse.text),
+                    if (verse.isFavorite)
+                      const WidgetSpan(child: Icon(Icons.star, size: 14, color: Colors.amber)),
+                  ],
+                ),
               ),
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _showVerseActions(BuildContext context, BibleVerse verse) {
+    final bibleService = BibleService();
+    final shareService = SocialShareService();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(verse.isFavorite ? Icons.star : Icons.star_border, color: Colors.amber),
+            title: Text(verse.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'),
+            onTap: () {
+              bibleService.toggleFavorite(book, chapter, verse);
+              Navigator.pop(context);
+              (context as Element).markNeedsBuild(); // Force rafraîchissement
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.edit_note, color: Colors.blue),
+            title: const Text('Ajouter une note pastorale'),
+            onTap: () {
+              Navigator.pop(context);
+              _showNoteDialog(context, verse);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.share, color: Colors.green),
+            title: const Text('Partager le verset (KSO Branding)'),
+            onTap: () {
+              Navigator.pop(context);
+              shareService.shareBibleVerse(context, book.name, chapter.number, verse.number, verse.text);
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  void _showNoteDialog(BuildContext context, BibleVerse verse) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Note sur ${book.name} ${chapter.number}:${verse.number}'),
+        content: TextField(
+          controller: controller,
+          maxLines: 4,
+          decoration: const InputDecoration(hintText: 'Saisissez votre note confidentielle...'),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () async {
+              await BibleService().addNote(book.id, chapter.number, verse.number, controller.text);
+              if (!context.mounted) return;
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note sauvegardée avec succès.')));
+            },
+            child: const Text('Sauvegarder'),
+          ),
+        ],
       ),
     );
   }
@@ -194,3 +269,4 @@ class BibleSearchDelegate extends SearchDelegate {
     return Container();
   }
 }
+

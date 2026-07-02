@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/image_entity.dart';
 import '../models/hierarchy_models.dart';
@@ -10,7 +9,8 @@ class ImageEntityService {
 
   static const String _boxName = 'image_entities';
 
-  Future<Box<ImageEntity>> get _box async => await Hive.openBox<ImageEntity>(_boxName);
+  Future<Box<ImageEntity>> get _box async =>
+      Hive.openBox<ImageEntity>(_boxName);
 
   Future<void> saveImage(ImageEntity image) async {
     final box = await _box;
@@ -19,15 +19,16 @@ class ImageEntityService {
 
   Future<List<ImageEntity>> getAnnoncesByLevel(EntityLevel level) async {
     final box = await _box;
-    return box.values.where((img) =>
-      img.level == level && img.category == 'annonce'
-    ).toList();
+    return box.values
+        .where((img) => img.level == level && img.category == 'annonce')
+        .toList();
   }
 
   Future<List<ImageEntity>> getResponsableImages(EntityLevel level) async {
     final box = await _box;
-    return box.values.where((img) =>
-      img.level == level && img.category == 'responsable'
-    ).toList();
+    return box.values
+        .where((img) => img.level == level && img.category == 'responsable')
+        .toList();
   }
 }
+

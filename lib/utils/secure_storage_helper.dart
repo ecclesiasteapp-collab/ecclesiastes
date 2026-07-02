@@ -28,3 +28,4 @@ class SecureStorageHelper {
     await _storage.delete(key: _sessionKey);
   }
 }
+

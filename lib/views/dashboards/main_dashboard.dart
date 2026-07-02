@@ -1,356 +1,218 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import '../../widgets/dashboard/custom_header.dart';
-import '../../widgets/dashboard/hierarchy_nav.dart';
-import '../../widgets/dashboard/news_carousel.dart';
-import '../../widgets/dashboard/commission_grid.dart';
-import '../../models/news_model.dart';
-import '../../models/hierarchy_models.dart';
-import '../../models/library_document.dart';
+import 'package:go_router/go_router.dart';
+import '../../widgets/dashboard_modulaire.dart';
 import '../../services/auth_service.dart';
-import '../../utils/constants.dart';
-import '../commissions/commission_detail_screen.dart';
-import '../event_dashboard_page.dart';
-import '../calendrier_page.dart';
-import '../library_screen.dart';
-import '../hierarchie_page.dart';
-import '../../models/isar/event.dart';
-import 'package:ecclesiastes/screens/about_screen.dart';
-import 'package:ecclesiastes/views/bible_page.dart';
-import 'entity_responsible_dashboard.dart';
+import '../../widgets/dashboard/entite_hierarchy_pills.dart';
+import '../../core/theme.dart';
 
-class MainDashboard extends StatefulWidget {
+class MainDashboard extends StatelessWidget {
   const MainDashboard({super.key});
-
-  @override
-  State<MainDashboard> createState() => _MainDashboardState();
-}
-
-class _MainDashboardState extends State<MainDashboard> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int _activeHierarchyIndex = 2; // Champ (KSO)
-
-  final List<String> _hierarchyLevels = [
-    'Église Internationale',
-    'Église Territoriale',
-    'Champ (KSO)',
-    'District (Kalamu)',
-    'Communauté (Badiading)',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 6, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final userName = user?['nom_complet'] ?? 'Utilisateur';
-    final userTitle = user?['role_label'] ?? 'Apostolic Administrator';
+    final String userName = user?.fullName ?? 'Administrateur';
 
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: SafeArea(
+    return DashboardModulaire(
+      title: 'Dashboard Global',
+      headerSubtitle: 'Bienvenue, $userName',
+      topSection: const EntiteHierarchyPills(),
+      carouselItems: [
+        _buildInfoCard(
+          context,
+          'Rapports en attente',
+          '5 rapports à valider',
+          Icons.pending_actions,
+          '/reports',
+        ),
+        _buildInfoCard(
+          context,
+          'Nouvelles annonces',
+          '3 nouvelles publications',
+          Icons.campaign,
+          '/announcements',
+        ),
+        _buildInfoCard(
+          context,
+          'Membres inscrits',
+          '12 nouveaux membres ce mois-ci',
+          Icons.person_add,
+          '/members',
+        ),
+      ],
+      navigationTabs: [
+        {'icon': Icons.description, 'label': 'Rapports', 'route': '/reports'},
+        {'icon': Icons.people, 'label': 'Membres', 'route': '/members'},
+        {'icon': Icons.event_note, 'label': 'Calendrier', 'route': '/calendar'},
+        {'icon': Icons.account_balance, 'label': 'Finances', 'route': '/finances/journal'},
+      ],
+      bottomSection: [
+        _buildSectionTitle('STATISTIQUES CLÉS', Icons.analytics),
+        const SizedBox(height: 16),
+        _buildStatsGrid(),
+        const SizedBox(height: 20),
+        _buildSectionTitle('GESTION RAPIDE', Icons.settings_applications),
+        const SizedBox(height: 16),
+        _buildManagementActions(context),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard(
+    BuildContext context,
+    String title,
+    String subtitle,
+    IconData icon,
+    String route,
+  ) {
+    return GestureDetector(
+      onTap: () => context.go(route),
+      child: Container(
+        width: 180,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CustomDashboardHeader(
-              userName: userName,
-              userTitle: userTitle,
-              onMenuTap: () => _scaffoldKey.currentState?.openEndDrawer(),
-              onLogout: () {
-                AuthService.logout();
-                Navigator.pushReplacementNamed(context, '/login');
-              },
+            Icon(icon, color: AppTheme.accent, size: 28),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-            Expanded(
-              child: ListView(
-                children: [
-                  HierarchyNav(
-                    levels: _hierarchyLevels,
-                    activeIndex: _activeHierarchyIndex,
-                    onLevelTap: (index) {
-                      setState(() => _activeHierarchyIndex = index);
-                      _navigateToEntityDetail(index);
-                    },
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text('À la Une', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF1a1a1a))),
-                  ),
-                  ValueListenableBuilder(
-                    valueListenable: Hive.box<News>('news').listenable(),
-                    builder: (context, Box<News> box, _) {
-                      return NewsCarousel(newsList: box.values.toList());
-                    },
-                  ),
-                  _buildTabBar(),
-                  const SizedBox(height: 16),
-                  _buildTabContent(),
-                ],
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 11,
               ),
             ),
           ],
         ),
       ),
-      endDrawer: _buildDrawer(),
     );
   }
 
-  void _navigateToEntityDetail(int index) {
-    final isSuperAdmin = AuthService.isSuperAdmin();
-    EntityLevel level;
-    String name = _hierarchyLevels[index];
-    
-    // Si l'utilisateur n'est pas Super Admin, il ne peut pas naviguer vers des niveaux supérieurs au sien
-    // Pour simplifier ici, on laisse le Super Admin tout voir, et les autres sont limités par leurs données.
-    
-    switch (index) {
-      case 0: level = EntityLevel.internationale; break;
-      case 1: level = EntityLevel.territoriale; break;
-      case 2: level = EntityLevel.champ; break;
-      case 3: level = EntityLevel.district; break;
-      case 4: level = EntityLevel.communaute; break;
-      default: return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EntityResponsibleDashboard(
-          entityLevel: level,
-          entityName: name,
-          responsable: Responsable(
-            id: '1',
-            nom: isSuperAdmin ? 'Nestor Mbuyi Kankolongo' : 'Apôtre Emmanuel NGOLO',
-            fonction: isSuperAdmin ? 'Super Administrateur' : 'Apôtre de District',
-            ministry: isSuperAdmin ? 'Apostolat' : 'Sacerdotal',
-            dateMandatement: DateTime(2022, 7, 10),
-          ),
-          pendingReports: [],
-          pendingEvents: [],
-          pendingNominations: [],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return Container(
-      color: Colors.white,
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        labelColor: const Color(0xFF003366),
-        unselectedLabelColor: Colors.grey,
-        indicatorColor: const Color(0xFF003366),
-        indicatorWeight: 3,
-        onTap: (index) => setState(() {}),
-        tabs: const [
-          Tab(text: 'Tout'),
-          Tab(text: 'Événements'),
-          Tab(text: 'Calendrier'),
-          Tab(text: 'Bibliothèque'),
-          Tab(text: 'Programmes'),
-          Tab(text: 'Ministres'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabContent() {
-    final isSuperAdmin = AuthService.isSuperAdmin();
-    
-    switch (_tabController.index) {
-      case 0: return _buildCommissionGrid();
-      case 1: return _buildEventsView();
-      case 2: return const SizedBox(height: 500, child: CalendrierPage());
-      case 3: return SizedBox(height: 600, child: LibraryScreen(
-        userCategory: isSuperAdmin ? UserCategory.responsable : UserCategory.membre,
-        userLevel: EntityLevel.champ,
-        userCommission: CommissionType.none,
-        isSuperAdmin: isSuperAdmin,
-      ));
-      case 4: return _buildProgrammesView();
-      case 5: return const SizedBox(height: 600, child: HierarchiePage());
-      default: return const SizedBox();
-    }
-  }
-
-  Widget _buildCommissionGrid() {
-    return Column(
-      children: [
-        CommissionGrid(
-          commissions: _getCommissionsData(),
-          onTap: (comm) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CommissionDetailScreen(
-                  commissionName: comm.title,
-                  leaderName: 'Pr. Didier KUYINDAMA',
-                  progress: comm.progress,
-                  entityId: 'ROOT',
-                ),
-              ),
-            );
-          },
-        ),
-        _buildFooter(),
-      ],
-    );
-  }
-
-  Widget _buildEventsView() {
-    return ValueListenableBuilder(
-      valueListenable: Hive.box<Event>('events_box').listenable(),
-      builder: (context, Box<Event> box, _) {
-        final events = box.values.toList();
-        return SizedBox(
-          height: 600,
-          child: EventDashboardPage(events: events),
-        );
-      },
-    );
-  }
-
-  Widget _buildProgrammesView() {
-    return ValueListenableBuilder(
-      valueListenable: Hive.box<Event>('events_box').listenable(),
-      builder: (context, Box<Event> box, _) {
-        final events = box.values.toList()..sort((a, b) => a.dateTime.compareTo(b.dateTime));
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          shrinkWrap: true, // ✅ Correction Erreur 2
-          physics: const NeverScrollableScrollPhysics(), // ✅ Délègue le scroll au parent
-          itemCount: events.length,
-          itemBuilder: (context, index) {
-            final e = events[index];
-            return _buildProgramCard(e.title, e.description, _getCategoryColor(e.category ?? ''));
-          },
-        );
-      },
-    );
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category) {
-      case 'ECODIM': return Colors.green;
-      case 'JEUNESSE': return Colors.orange;
-      case 'APOTRE': return Colors.red;
-      default: return Colors.blue;
-    }
-  }
-
-  Widget _buildProgramCard(String title, String subtitle, Color color) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-          child: Icon(Icons.event_note, color: color),
-        ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-        trailing: const Icon(Icons.chevron_right, size: 18),
-        onTap: () {},
-      ),
-    );
-  }
-
-  List<CommissionCardData> _getCommissionsData() {
-    return AppConstants.commissionsDashboard.map((c) {
-      String name = c['nom'];
-      String sectionLabel = c['section'] == 'local' ? 'Administration & Support' : 'Technique & Soutien';
-      double progress = 0.0;
-      String status = 'Pas de responsable';
-      if (name == 'Ecodim') { progress = 0.65; status = 'À jour'; }
-      else if (name == 'Econfi') { progress = 0.82; status = 'À jour'; }
-      else if (name == 'Jeunesse') { progress = 0.92; status = 'À jour'; }
-      else if (name == 'Mamans') { status = 'En attente'; }
-      return CommissionCardData(title: name, section: sectionLabel, progress: progress, status: status);
-    }).toList();
-  }
-
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.all(24),
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text('KSO: 22 Districts / 186 Communautés', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-          TextButton.icon(
-            onPressed: () {},
-            icon: const Text('Alertes Vacances', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 12)),
-            label: const Icon(Icons.arrow_forward, size: 14, color: Colors.black87),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    final user = AuthService.currentUser;
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          DrawerHeader(
-            decoration: const BoxDecoration(color: Color(0xFF003366)),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const CircleAvatar(radius: 30, backgroundColor: Colors.white, child: Icon(Icons.person, color: Color(0xFF003366))),
-                const SizedBox(height: 10),
-                Text(user?['nom_complet'] ?? 'Nestor Mbuyi', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(user?['role_label'] ?? 'Super Administrateur', style: TextStyle(color: Colors.white70, fontSize: 12)),
-              ],
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          ListTile(leading: const Icon(Icons.person_outline), title: const Text('Mon Profil'), onTap: () => Navigator.pushNamed(context, '/profile')),
-          ListTile(
-            leading: const Icon(Icons.menu_book, color: Color(0xFF003366)),
-            title: const Text('Bible TOB'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(context, MaterialPageRoute(builder: (context) => const BiblePage()));
-            },
-          ),
-          ListTile(leading: const Icon(Icons.settings_outlined), title: const Text('Paramètres'), onTap: () => Navigator.pushNamed(context, '/settings')),
-          ListTile(leading: const Icon(Icons.help_outline), title: const Text('Aide'), onTap: () => Navigator.pushNamed(context, '/help')),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info_outline, color: Color(0xFF003366)),
-            title: const Text('À Propos & Contact'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AboutScreen()),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red), 
-            title: const Text('Déconnexion', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-            onTap: () {
-              AuthService.logout();
-              Navigator.pushReplacementNamed(context, '/login');
-            }
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.8,
+        children: [
+          _buildStatItem('Total Membres', '12,345', Icons.group, Colors.blueAccent),
+          _buildStatItem('Total Entités', '120', Icons.location_city, Colors.greenAccent),
+          _buildStatItem('Rapports Validés', '98%', Icons.check_circle, Colors.orangeAccent),
+          _buildStatItem('Actifs en ligne', '2,100', Icons.wifi, Colors.purpleAccent),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: color, size: 28),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.7),
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildManagementActions(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        children: [
+          _buildQuickActionButton(context, 'Gérer Entités', Icons.corporate_fare, '/admin/panel'),
+          _buildQuickActionButton(context, 'Gérer Utilisateurs', Icons.manage_accounts, '/admin/users'),
+          _buildQuickActionButton(context, 'Paramètres App', Icons.settings, '/settings'),
+          _buildQuickActionButton(context, "Journal d'Audit", Icons.receipt_long, '/audit_log'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    String route,
+  ) {
+    return ElevatedButton.icon(
+      onPressed: () => context.go(route),
+      icon: Icon(icon, color: Colors.white),
+      label: Text(label, style: const TextStyle(color: Colors.white)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       ),
     );
   }
 }
+

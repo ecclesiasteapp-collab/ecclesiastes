@@ -27,8 +27,9 @@ class ImageService {
     );
 
     if (source != null) {
-      return await picker.pickImage(source: source, imageQuality: 80);
+      return picker.pickImage(source: source, imageQuality: 80);
     }
     return null;
   }
 }
+

@@ -29,10 +29,10 @@ class _JournalFinancesPageState extends State<JournalFinancesPage> {
       entiteId: AuthService.filterCommunauteId,
     );
 
-    Map<String, double> tempTotaux = {'USD': 0.0, 'FC': 0.0, 'EUR': 0.0};
+    final Map<String, double> tempTotaux = {'USD': 0.0, 'FC': 0.0, 'EUR': 0.0};
     for (var item in data) {
-      String devise = item['devise'] ?? 'USD';
-      double montant = (item['montant'] as num).toDouble();
+      final String devise = item['devise'] ?? 'USD';
+      final double montant = (item['montant'] as num).toDouble();
       if (tempTotaux.containsKey(devise)) {
         tempTotaux[devise] = tempTotaux[devise]! + montant;
       }
@@ -50,7 +50,7 @@ class _JournalFinancesPageState extends State<JournalFinancesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Journal des Finances")),
+      appBar: AppBar(title: const Text('Journal des Finances')),
       body: Column(
         children: [
           // En-tête des Offrandes accumulées
@@ -61,10 +61,10 @@ class _JournalFinancesPageState extends State<JournalFinancesPage> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _totaux.entries.map((e) => Column(
                 children: [
-                  Text("Total Offrandes (${e.key})", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                  Text('Total Offrandes (${e.key})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                   const SizedBox(height: 4),
                   Text(
-                    NumberFormat("#,##0.00").format(e.value), 
+                    NumberFormat('#,##0.00').format(e.value), 
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.blue)
                   ),
                 ],
@@ -75,7 +75,7 @@ class _JournalFinancesPageState extends State<JournalFinancesPage> {
             child: _isLoading 
               ? const Center(child: CircularProgressIndicator())
               : _transactions.isEmpty
-                  ? const Center(child: Text("Aucune transaction enregistrée."))
+                  ? const Center(child: Text('Aucune transaction enregistrée.'))
                   : ListView.builder(
                       itemCount: _transactions.length,
                       itemBuilder: (context, index) {
@@ -106,3 +106,4 @@ class _JournalFinancesPageState extends State<JournalFinancesPage> {
     );
   }
 }
+

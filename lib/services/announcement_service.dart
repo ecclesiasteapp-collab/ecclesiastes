@@ -1,6 +1,6 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
-import '../models/isar/event.dart';
+import '../models/event_models.dart';
 
 class AnnouncementService {
   
@@ -34,7 +34,7 @@ class AnnouncementService {
   /// Partage directement sur WhatsApp
   Future<void> shareOnWhatsApp(Event event) async {
     final text = Uri.encodeComponent(generateTemplate(event, isWhatsApp: true));
-    final url = Uri.parse("whatsapp://send?text=$text");
+    final url = Uri.parse('whatsapp://send?text=$text');
     
     if (await canLaunchUrl(url)) {
       await launchUrl(url);
@@ -48,9 +48,9 @@ class AnnouncementService {
   Future<void> openInMaps(Event event) async {
     Uri url;
     if (event.latitude != null && event.longitude != null) {
-      url = Uri.parse("https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}");
+      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}');
     } else if (event.address != null) {
-      url = Uri.parse("https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(event.address!)}");
+      url = Uri.parse('https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(event.address!)}');
     } else {
       return;
     }
@@ -70,6 +70,7 @@ class AnnouncementService {
     }
   }
 
-  String _formatDate(DateTime d) => "${d.day}/${d.month}/${d.year}";
+  String _formatDate(DateTime d) => '${d.day}/${d.month}/${d.year}';
   String _formatTime(DateTime d) => "${d.hour}:${d.minute.toString().padLeft(2, '0')}";
 }
+

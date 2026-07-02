@@ -3,7 +3,7 @@ import 'hierarchy_models.dart';
 
 part 'library_resource.g.dart';
 
-@HiveType(typeId: 103)
+@HiveType(typeId: 113)
 enum LibraryCategory {
   @HiveField(0) cantiques,
   @HiveField(1) catechisme,
@@ -13,7 +13,7 @@ enum LibraryCategory {
   @HiveField(5) visionEglise,
 }
 
-@HiveType(typeId: 104)
+@HiveType(typeId: 114)
 enum ResourceType {
   @HiveField(0) pdf,
   @HiveField(1) audio,
@@ -61,19 +61,20 @@ class LibraryResource extends HiveObject {
   String get categoryPath {
     switch (category) {
       case LibraryCategory.cantiques:
-        return 'assets/librairie/cantiques/';
+        return 'assets/membre/documents/';
       case LibraryCategory.catechisme:
-        return 'assets/librairie/catechisme/';
+        return 'assets/membre/documents/';
       case LibraryCategory.liturgie:
-        return 'assets/librairie/liturgie/';
+        return 'assets/ministre/documents/';
       case LibraryCategory.penseeDirectrice:
-        return 'assets/librairie/pensee_directrice/';
+        return 'assets/ministre/documents/';
       case LibraryCategory.programmes:
-        return 'assets/librairie/programmes/';
+        return 'assets/entites/annonces/';
       case LibraryCategory.visionEglise:
-        return 'assets/librairie/vision_eglise/';
+        return 'assets/entites/documents/';
     }
   }
 
   String get fullPath => '$categoryPath$resourcePath';
 }
+

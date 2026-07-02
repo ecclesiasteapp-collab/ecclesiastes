@@ -31,3 +31,4 @@ class TerritoryConfig extends HiveObject {
     this.labelLevel1 = 'Communauté',
   });
 }
+

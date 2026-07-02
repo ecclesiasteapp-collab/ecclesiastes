@@ -94,3 +94,4 @@ class _SignaturePadDialogState extends State<SignaturePadDialog> {
     }
   }
 }
+

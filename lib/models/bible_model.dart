@@ -40,3 +40,4 @@ class BibleVerse extends HiveObject {
 
   BibleVerse({required this.number, required this.text, this.isFavorite = false});
 }
+

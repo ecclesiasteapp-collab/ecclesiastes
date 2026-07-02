@@ -40,9 +40,10 @@ class CommissionDetailScreen extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              'Commission $commissionName - KSO',
+              'Commission $commissionName',
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
+
             const Spacer(),
           ],
         ),
@@ -61,17 +62,22 @@ class CommissionDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Carte d\'Informations', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Carte d\'Informations',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 12),
             _buildInfoCard(context),
             const SizedBox(height: 24),
             _buildActionGrid(context),
             const SizedBox(height: 32),
-            const Text('Liste des Rapports Récents', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Liste des Rapports Récents',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 12),
-            _buildReportItem(context, 'District Tshikapa - Rapport Mars', 'validé', Icons.check_circle, Colors.green),
-            _buildReportItem(context, 'District UPN - Rapport Mars', 'en attente', Icons.access_time, Colors.orange),
-            _buildReportItem(context, 'District Kanga-M - Rapport Mars', 'validé', Icons.check_circle, Colors.green),
+            _buildReportItem(context, 'District Tshikapa - Rapport Mars',
+                'validé', Icons.check_circle, Colors.green),
+            _buildReportItem(context, 'District UPN - Rapport Mars',
+                'en attente', Icons.access_time, Colors.orange),
+            _buildReportItem(context, 'District Kanga-M - Rapport Mars',
+                'validé', Icons.check_circle, Colors.green),
           ],
         ),
       ),
@@ -96,16 +102,24 @@ class CommissionDetailScreen extends StatelessWidget {
                 CircleAvatar(
                   radius: 30,
                   backgroundColor: Colors.grey[200],
-                  backgroundImage: leaderPhotoUrl != null ? NetworkImage(leaderPhotoUrl!) : null,
-                  child: leaderPhotoUrl == null ? const Icon(Icons.person, size: 30) : null,
+                  backgroundImage: leaderPhotoUrl != null
+                      ? NetworkImage(leaderPhotoUrl!)
+                      : null,
+                  child: leaderPhotoUrl == null
+                      ? const Icon(Icons.person, size: 30)
+                      : null,
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(leaderName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                      Text('Responsable: $leaderName', style: const TextStyle(color: Colors.grey, fontSize: 14)),
+                      Text(leaderName,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 18)),
+                      Text('Responsable: $leaderName',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 14)),
                     ],
                   ),
                 ),
@@ -116,10 +130,16 @@ class CommissionDetailScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _buildClickableStat(context, '22', 'Districts actifs', () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => const HierarchiePage()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const HierarchiePage()));
                 }),
                 _buildClickableStat(context, '156', 'Rapports ce mois', () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportListScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ReportListScreen()));
                 }),
               ],
             ),
@@ -134,7 +154,11 @@ class CommissionDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text('${(progress * 100).toInt()}% complété', style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 12)),
+              child: Text('${(progress * 100).toInt()}% complété',
+                  style: const TextStyle(
+                      color: Colors.orange,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12)),
             ),
           ],
         ),
@@ -142,13 +166,16 @@ class CommissionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildClickableStat(BuildContext context, String value, String label, VoidCallback onTap) {
+  Widget _buildClickableStat(
+      BuildContext context, String value, String label, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(value,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           Text(label, style: const TextStyle(color: Colors.grey, fontSize: 12)),
         ],
       ),
@@ -164,26 +191,28 @@ class CommissionDetailScreen extends StatelessWidget {
       mainAxisSpacing: 16,
       childAspectRatio: 2.2,
       children: [
-        _buildActionBtn(context, '📋 Voir Rapports', Colors.green, '12 nouveaux', () {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportListScreen()));
+        _buildActionBtn(
+            context, '📋 Voir Rapports', Colors.green, '12 nouveaux', () {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ReportListScreen()));
         }),
         _buildActionBtn(context, '👥 Membres (847)', Colors.blue, null, () {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => GestionMembresPage(
-             commissionName: commissionName,
-             entiteId: entityId,
-           )));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (_) => GestionMembresPage()));
         }),
         _buildActionBtn(context, '📅 Programme 2026', Colors.orange, null, () {
-           _showProgramme(context);
+          _showProgramme(context);
         }),
-        _buildActionBtn(context, '✏️ Modifier', Colors.deepPurpleAccent, null, () {
-           _showEditDialog(context);
+        _buildActionBtn(context, '✏️ Modifier', Colors.deepPurpleAccent, null,
+            () {
+          _showEditDialog(context);
         }),
       ],
     );
   }
 
-  Widget _buildActionBtn(BuildContext context, String label, Color color, String? badge, VoidCallback onTap) {
+  Widget _buildActionBtn(BuildContext context, String label, Color color,
+      String? badge, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       child: Stack(
@@ -199,7 +228,10 @@ class CommissionDetailScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 label,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -214,7 +246,11 @@ class CommissionDetailScreen extends StatelessWidget {
                   color: const Color(0xFF990000),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Text(badge, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                child: Text(badge,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold)),
               ),
             ),
         ],
@@ -222,7 +258,8 @@ class CommissionDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildReportItem(BuildContext context, String title, String status, IconData icon, Color iconColor) {
+  Widget _buildReportItem(BuildContext context, String title, String status,
+      IconData icon, Color iconColor) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -233,13 +270,17 @@ class CommissionDetailScreen extends StatelessWidget {
             style: const TextStyle(color: Colors.black, fontSize: 14),
             children: [
               TextSpan(text: '$title '),
-              TextSpan(text: '($status)', style: TextStyle(color: iconColor, fontWeight: FontWeight.w500)),
+              TextSpan(
+                  text: '($status)',
+                  style:
+                      TextStyle(color: iconColor, fontWeight: FontWeight.w500)),
             ],
           ),
         ),
         trailing: const Icon(Icons.chevron_right, size: 16),
         onTap: () {
-           Navigator.push(context, MaterialPageRoute(builder: (_) => const ReportListScreen()));
+          Navigator.push(context,
+              MaterialPageRoute(builder: (_) => const ReportListScreen()));
         },
       ),
     );
@@ -251,11 +292,19 @@ class CommissionDetailScreen extends StatelessWidget {
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const ListTile(title: Text('Filtrer par district', style: TextStyle(fontWeight: FontWeight.bold))),
+          const ListTile(
+              title: Text('Filtrer par district',
+                  style: TextStyle(fontWeight: FontWeight.bold))),
           const Divider(),
-          ListTile(title: const Text('District Tshikapa'), onTap: () => Navigator.pop(ctx)),
-          ListTile(title: const Text('District UPN'), onTap: () => Navigator.pop(ctx)),
-          ListTile(title: const Text('District Kanga-M'), onTap: () => Navigator.pop(ctx)),
+          ListTile(
+              title: const Text('District Tshikapa'),
+              onTap: () => Navigator.pop(ctx)),
+          ListTile(
+              title: const Text('District UPN'),
+              onTap: () => Navigator.pop(ctx)),
+          ListTile(
+              title: const Text('District Kanga-M'),
+              onTap: () => Navigator.pop(ctx)),
         ],
       ),
     );
@@ -267,9 +316,19 @@ class CommissionDetailScreen extends StatelessWidget {
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ListTile(leading: const Icon(Icons.description), title: const Text('Créer un nouveau rapport'), onTap: () => Navigator.pushReplacementNamed(context, '/create-report')),
-          ListTile(leading: const Icon(Icons.person_add), title: const Text('Ajouter un membre'), onTap: () {}),
-          ListTile(leading: const Icon(Icons.notifications), title: const Text('Envoyer un rappel'), onTap: () {}),
+          ListTile(
+              leading: const Icon(Icons.description),
+              title: const Text('Créer un nouveau rapport'),
+              onTap: () =>
+                  Navigator.pushReplacementNamed(context, '/create-report')),
+          ListTile(
+              leading: const Icon(Icons.person_add),
+              title: const Text('Ajouter un membre'),
+              onTap: () {}),
+          ListTile(
+              leading: const Icon(Icons.notifications),
+              title: const Text('Envoyer un rappel'),
+              onTap: () {}),
         ],
       ),
     );
@@ -280,8 +339,12 @@ class CommissionDetailScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Modifier la Commission'),
-        content: const Text('Formulaire d\'édition en cours de construction...'),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer'))],
+        content:
+            const Text('Formulaire d\'édition en cours de construction...'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Fermer'))
+        ],
       ),
     );
   }
@@ -301,20 +364,36 @@ class CommissionDetailScreen extends StatelessWidget {
           children: [
             Container(
               margin: const EdgeInsets.all(12),
-              width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2)),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Text('Programme $commissionName 2026', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              child: Text('Programme $commissionName 2026',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold)),
             ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
-                  _buildProgramItem('17 Janvier', '1ère Rencontre Trimestrielle Encadreurs', 'D/ Kanga-M, C/Kanga-M'),
-                  _buildProgramItem('7 Mars', 'Conférence Jeunesse Féminine (JIF)', 'D/ Mbudi, C/Mbudi'),
-                  _buildProgramItem('14 Août', 'Voyage d’excursion toute la jeunesse', 'Kongo Central'),
-                  _buildProgramItem('30 Août', 'SD de la rentrée scolaire avec tous les élèves', 'D/ UPN, C/Naomi'),
+                  _buildProgramItem(
+                      '17 Janvier',
+                      '1ère Rencontre Trimestrielle Encadreurs',
+                      'D/ Kanga-M, C/Kanga-M'),
+                  _buildProgramItem(
+                      '7 Mars',
+                      'Conférence Jeunesse Féminine (JIF)',
+                      'D/ Mbudi, C/Mbudi'),
+                  _buildProgramItem('14 Août',
+                      'Voyage d’excursion toute la jeunesse', 'Kongo Central'),
+                  _buildProgramItem(
+                      '30 Août',
+                      'SD de la rentrée scolaire avec tous les élèves',
+                      'D/ UPN, C/Naomi'),
                 ],
               ),
             ),
@@ -331,12 +410,21 @@ class CommissionDetailScreen extends StatelessWidget {
         leading: Container(
           width: 50,
           padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
-          child: Text(date, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.orange)),
+          decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8)),
+          child: Text(date,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange)),
         ),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+        title: Text(title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
         subtitle: Text(loc, style: const TextStyle(fontSize: 11)),
       ),
     );
   }
 }
+

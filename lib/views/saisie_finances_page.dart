@@ -30,7 +30,8 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
 
   void _enregistrer() async {
     if (_formKey.currentState!.validate()) {
-      final entiteId = AuthService.currentUser?['entite_id'] ?? 'COMM_01';
+      final user = AuthService.currentUser;
+      final entiteId = user?.entityId ?? 'COMM_01';
       final financeData = {
         'type_offrande': _typeOffrande,
         'montant': double.parse(_montantController.text),
@@ -44,7 +45,7 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Opération financière enregistrée avec succès !")),
+        const SnackBar(content: Text('Opération financière enregistrée avec succès !')),
       );
       Navigator.pop(context);
     }
@@ -53,7 +54,7 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Saisie des Finances")),
+      appBar: AppBar(title: const Text('Saisie des Finances')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -64,7 +65,7 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
               DropdownButtonFormField<String>(
                 initialValue: _typeOffrande,
                 decoration: const InputDecoration(
-                  labelText: "Type d'Offrande",
+                  labelText: 'Type d\'Offrande',
                   border: OutlineInputBorder(),
                 ),
                 items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
@@ -77,11 +78,11 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
                 controller: _montantController,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: "Montant",
+                  labelText: 'Montant',
                   prefixIcon: Icon(Icons.attach_money),
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? "Veuillez entrer un montant" : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Veuillez entrer un montant' : null,
               ),
               const SizedBox(height: 20),
 
@@ -89,7 +90,7 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
               DropdownButtonFormField<String>(
                 initialValue: _devise,
                 decoration: const InputDecoration(
-                  labelText: "Devise",
+                  labelText: 'Devise',
                   border: OutlineInputBorder(),
                 ),
                 items: _devisesList.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
@@ -101,17 +102,17 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
               TextFormField(
                 controller: _recuController,
                 decoration: const InputDecoration(
-                  labelText: "Numéro du Reçu",
+                  labelText: 'Numéro du Reçu',
                   prefixIcon: Icon(Icons.confirmation_number),
                   border: OutlineInputBorder(),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? "Le numéro du reçu est obligatoire" : null,
+                validator: (v) => (v == null || v.isEmpty) ? 'Le numéro du reçu est obligatoire' : null,
               ),
               const SizedBox(height: 20),
 
               // Date de l'opération
               ListTile(
-                title: Text("Date: ${_selectedDate.toLocal()}".split(' ')[0]),
+                title: Text('Date: ${_selectedDate.toLocal()}'.split(' ')[0]),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () async {
                   final picked = await showDatePicker(
@@ -132,7 +133,7 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
                   backgroundColor: Colors.blueAccent,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text("VALIDER L'ENREGISTREMENT"),
+                child: const Text('VALIDER L\'ENREGISTREMENT'),
               ),
             ],
           ),
@@ -148,3 +149,4 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
     super.dispose();
   }
 }
+

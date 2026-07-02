@@ -1,0 +1,36 @@
+[
+  {
+    "id": "genese",
+    "name": "Genèse",
+    "chapters": [
+      {
+        "number": 1,
+        "verses": [
+          {"number": 1, "text": "Au commencement, Dieu créa les cieux et la terre."},
+          {"number": 2, "text": "La terre était informe et vide: il y avait des ténèbres à la surface de l'abîme, et l'esprit de Dieu se mouvait au-dessus des eaux."},
+          {"number": 3, "text": "Dieu dit: Que la lumière soit! Et la lumière fut."}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "jean",
+    "name": "Jean",
+    "chapters": [
+      {
+        "number": 1,
+        "verses": [
+          {"number": 1, "text": "Au commencement était la Parole, et la Parole était avec Dieu, et la Parole était Dieu."},
+          {"number": 2, "text": "Elle était au commencement avec Dieu."},
+          {"number": 3, "text": "Toutes choses ont été faites par elle, et rien de ce qui a été fait n'a été fait sans elle."}
+        ]
+      },
+      {
+        "number": 3,
+        "verses": [
+          {"number": 16, "text": "Car Dieu a tant aimé le monde qu'il a donné son Fils unique, afin que quiconque croit en lui ne périsse point, mais qu'il ait la vie éternelle."}
+        ]
+      }
+    ]
+  }
+]

@@ -1,24 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+class HeaderLine {
+  final String label;
+  final String value;
+  HeaderLine(this.label, this.value);
+}
+
 class HeaderOfficiel extends StatelessWidget {
-  final String champ;
-  final String district;
-  final String communaute;
+  final String institution;
+  final List<HeaderLine>? lines;
   final String typeRapport;
   final DateTime? date;
+  final String? codeRapport;
+  final List<String> shortCodes;
+
+  // Champs de compatibilité
+  final String? champ;
+  final String? district;
+  final String? communaute;
 
   const HeaderOfficiel({
     super.key,
-    required this.champ,
-    required this.district,
-    required this.communaute,
-    this.typeRapport = "RAPPORT DE SERVICE DIVIN",
+    this.institution = 'Eglise Néo – Apostolique',
+    this.lines,
+    this.typeRapport = "RAPPORT D'ACTIVITÉ",
     this.date,
+    this.codeRapport,
+    this.shortCodes = const ['SD', 'RF', 'SJ', 'S', 'SE', 'SF', 'MA', 'C'],
+    this.champ,
+    this.district,
+    this.communaute,
   });
+
+  /// Constructeur de compatibilité
+  factory HeaderOfficiel.standard({
+    required String champ,
+    required String district,
+    required String communaute,
+    String? typeRapport,
+    DateTime? date,
+    String? codeRapport,
+  }) {
+    return HeaderOfficiel(
+      champ: champ,
+      district: district,
+      communaute: communaute,
+      typeRapport: typeRapport ?? "RAPPORT D'ACTIVITÉ",
+      date: date,
+      codeRapport: codeRapport,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Construction de la liste des lignes (soit via lines, soit via les champs individuels)
+    final List<HeaderLine> displayLines = lines ?? [
+      if (champ != null) HeaderLine('CHAMP APOSTOLIQUE', champ!),
+      if (district != null) HeaderLine('DISTRICT', district!),
+      if (communaute != null) HeaderLine('COMMUNAUTÉ', communaute!),
+    ];
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -34,64 +76,71 @@ class HeaderOfficiel extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Eglise Néo – Apostolique de la RDC – Ouest',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    Text(
+                      institution.toUpperCase(),
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                     ),
                     const SizedBox(height: 8),
-                    _buildLine('CHAMP APOSTOLIQUE', champ),
-                    _buildLine('DISTRICT', district),
-                    _buildLine('COMMUNAUTÉ', communaute),
+                    ...displayLines.map((line) => _buildLine(line.label, line.value)),
                   ],
                 ),
               ),
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue.shade900),
-                ),
-                child: Image.asset(
-                  'assets/images/logo_ena.png',
-                  errorBuilder: (c, e, s) => const Icon(Icons.church, color: Colors.blue),
-                ),
+              Column(
+                children: [
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: Image.asset(
+                      'assets/branding/logo_ena.png',
+                      errorBuilder: (c, e, s) => const Icon(Icons.church, color: Color(0xFF003366)),
+                    ),
+                  ),
+                  if (codeRapport != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        codeRapport!,
+                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.black, width: 2)),
+              border: Border.symmetric(horizontal: BorderSide(color: Colors.black, width: 1.5)),
             ),
             child: Text(
               typeRapport.toUpperCase(),
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, letterSpacing: 1.2),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: 1.1),
             ),
           ),
           const SizedBox(height: 10),
           Row(
-            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              const Text('Jour : ', style: TextStyle(fontSize: 12)),
-              _buildSmallBox('DM'),
-              const SizedBox(width: 4),
-              _buildSmallBox('JDS'),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Text('Type: ', style: TextStyle(fontSize: 12)),
-              ...['SD', 'RF', 'SJ', 'S', 'SE', 'SF', 'MA', 'C'].map((t) => Padding(
-                padding: const EdgeInsets.only(right: 4),
-                child: _buildSmallBox(t),
-              )),
-              const Spacer(),
-              Text('Date : Le ${date != null ? DateFormat('dd/MM/yyyy').format(date!) : "..../..../20...."}', 
-                style: const TextStyle(fontSize: 12)),
+              const Text('Type: ', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: shortCodes.map((t) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: _buildSmallBox(t),
+                    )).toList(),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text('Date : ${date != null ? DateFormat('dd/MM/yyyy').format(date!) : "..../..../20...."}',
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
             ],
           ),
         ],
@@ -104,13 +153,13 @@ class HeaderOfficiel extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          SizedBox(width: 130, child: Text('$label :', style: const TextStyle(fontSize: 12))),
+          SizedBox(width: 110, child: Text('$label :', style: const TextStyle(fontSize: 11, color: Colors.blueGrey))),
           Expanded(
             child: Container(
               decoration: const BoxDecoration(
                 border: Border(bottom: BorderSide(color: Colors.black, width: 0.5)),
               ),
-              child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+              child: Text(value, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -124,7 +173,8 @@ class HeaderOfficiel extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black),
       ),
-      child: Text(text, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+      child: Text(text, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold)),
     );
   }
 }
+

@@ -14,7 +14,7 @@ class _PlanningSDPageState extends State<PlanningSDPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Planification des Services")),
+      appBar: AppBar(title: const Text('Planification des Services')),
       body: Column(
         children: [
           CalendarDatePicker(
@@ -28,8 +28,8 @@ class _PlanningSDPageState extends State<PlanningSDPage> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _buildPlanningCard("Matin (DM)", "Prêtre Christian Kikaba"),
-                _buildPlanningCard("Semaine (JDS)", "Diacre Nestor Mbuyi"),
+                _buildPlanningCard('Matin (DM)', 'Prêtre Christian Kikaba'),
+                _buildPlanningCard('Semaine (JDS)', 'Diacre Nestor Mbuyi'),
               ],
             ),
           ),
@@ -46,9 +46,10 @@ class _PlanningSDPageState extends State<PlanningSDPage> {
     return Card(
       child: ListTile(
         title: Text(period, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("Officiant: $officiant"),
+        subtitle: Text('Officiant: $officiant'),
         trailing: const Icon(Icons.edit),
       ),
     );
   }
 }
+

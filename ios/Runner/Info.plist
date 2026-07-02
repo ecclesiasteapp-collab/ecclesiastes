@@ -66,5 +66,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Cette application nécessite l'accès à la galerie photos pour choisir la photo de profil du membre lors de son inscription.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Cette application nécessite l'accès au microphone pour l'enregistrement des rapports audio.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Cette application nécessite l'accès à l'appareil photo pour prendre des photos de profil et scanner les QR codes de sauvegarde.</string>
 </dict>
 </plist>

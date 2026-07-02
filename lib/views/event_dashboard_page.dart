@@ -1,7 +1,7 @@
 import 'package:ecclesiastes/services/image_service.dart';
 import 'package:ecclesiastes/views/import_events_page.dart';
 import 'package:flutter/material.dart';
-import '../models/isar/event.dart';
+import '../models/event_models.dart';
 import '../services/announcement_service.dart';
 
 class EventDashboardPage extends StatelessWidget {
@@ -49,7 +49,7 @@ class EventDashboardPage extends StatelessWidget {
       child: ExpansionTile(
         leading: _getIcon(event.type),
         title: Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${event.dateTime.day}/${event.dateTime.month} à ${event.dateTime.hour}h"),
+        subtitle: Text('${event.dateTime.day}/${event.dateTime.month} à ${event.dateTime.hour}h'),
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
@@ -62,9 +62,9 @@ class EventDashboardPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _statItem("Prévus", "${event.expectedParticipants}"),
-                    _statItem("Présents", "${event.actualParticipants}", color: Colors.green),
-                    _statItem("Taux", "${_calcRate(event)}%", color: Colors.blue),
+                    _statItem('Prévus', '${event.expectedParticipants}'),
+                    _statItem('Présents', '${event.actualParticipants}', color: Colors.green),
+                    _statItem('Taux', '${_calcRate(event)}%', color: Colors.blue),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -121,3 +121,4 @@ class EventDashboardPage extends StatelessWidget {
     // Dialogue de saisie des statistiques
   }
 }
+

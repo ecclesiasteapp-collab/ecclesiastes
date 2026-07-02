@@ -1,0 +1,36 @@
+name: Flutter CI
+
+on:
+  # Déclencher le workflow sur les push et les pull requests vers la branche main
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# Un seul job CI à la fois pour ce workflow, annule les exécutions précédentes
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.22.0' # Spécifiez votre version de Flutter
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Verify generated files are up-to-date
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze project source
+        run: flutter analyze

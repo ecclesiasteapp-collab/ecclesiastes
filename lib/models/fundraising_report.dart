@@ -67,3 +67,4 @@ class FundraisingReport extends HiveObject {
   double get totalFC => cotisationsFC + collecteSpecialeFC + donsDiversFC + autresFC;
   double get totalDevise => cotisationsDevise + collecteSpecialeDevise + donsDiversDevise + autresDevise;
 }
+

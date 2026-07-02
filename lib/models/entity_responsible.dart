@@ -1,5 +1,4 @@
 import 'package:hive/hive.dart';
-import 'legacy_models.dart'; // Pour EntityLevel legacy si besoin
 
 part 'entity_responsible.g.dart';
 
@@ -63,3 +62,4 @@ class EntityResponsible extends HiveObject {
     );
   }
 }
+

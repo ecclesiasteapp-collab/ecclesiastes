@@ -26,3 +26,4 @@ class JsonSchemaLoader {
     throw Exception('Schéma non trouvé pour le rapport: $reportId');
   }
 }
+

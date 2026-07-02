@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:hive/hive.dart';
 import 'package:flutter/foundation.dart';
@@ -34,11 +33,8 @@ class ProfileService {
     if (kIsWeb) {
       return box.get('photo_$userId');
     } else {
-      final path = box.get('photo_path_$userId');
-      if (path != null) {
-        return File(path);
-      }
+      return box.get('photo_path_$userId');
     }
-    return null;
   }
 }
+

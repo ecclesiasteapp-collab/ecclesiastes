@@ -1,0 +1,14 @@
+- `[x]` 1. Génération PDF sur Isolate
+  - `[x]` Modifier `PdfService` pour encapsuler `pw.Document()` et `.save()` dans des fonctions autonomes.
+  - `[x]` Remplacer les appels directs par `compute(fonction, data)`
+- `[x]` 2. Allègement des boîtes Hive (Pièces jointes)
+  - `[x]` Ajouter `localPath` au modèle `Attachment` (et regénérer l'adaptateur si possible ou mettre à jour manuellement)
+  - `[x]` Rendre `fileData` optionnel (nullable).
+  - `[x]` Mettre à jour `file_attachment_service.dart` pour gérer l'enregistrement/lecture depuis le disque.
+- `[/]` 3. Synchronisation du State Management (Riverpod + Paramètres)
+  - `[ ]` Créer `settings_provider.dart`
+  - `[ ]` Modifier `theme.dart` (buildTheme dynamique)
+  - `[ ]` Modifier `main.dart` pour écouter `settingsProvider`
+  - `[ ]` Modifier `settings_page_enhanced.dart`
+  - `[ ]` Supprimer `locale_provider.dart`
+- `[ ]` 4. Vérifications (build, tests)

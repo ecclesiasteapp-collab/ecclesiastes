@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/legal_texts.dart';
 
@@ -9,7 +10,7 @@ class LegalDisclaimerPage extends StatelessWidget {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('has_accepted_legal_terms', true);
     if (context.mounted) {
-      Navigator.pushReplacementNamed(context, '/login');
+      context.go('/login');
     }
   }
 
@@ -55,3 +56,4 @@ class LegalDisclaimerPage extends StatelessWidget {
     );
   }
 }
+

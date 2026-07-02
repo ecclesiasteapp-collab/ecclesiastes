@@ -1,16 +1,13 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:logger/logger.dart';
 import '../models/report_base.dart';
 import '../models/meeting_report.dart';
 import '../models/visit_report.dart';
 import '../models/divine_service_report.dart';
-
-// Import conditionnel pour éviter les erreurs sur Web
-import 'dart:io' as io;
+import 'pdf_storage_helper.dart';
 
 final logger = Logger();
 
@@ -51,19 +48,7 @@ class PDFExportService {
         return 'WEB_DOWNLOAD';
       }
 
-      final directory = await getApplicationDocumentsDirectory();
-      final pdfPath =
-          '${directory.path}/reports_pdf/${report.id}_${DateTime.now().millisecondsSinceEpoch}.pdf';
-
-      final pdfDir = io.Directory('${directory.path}/reports_pdf');
-      if (!await pdfDir.exists()) {
-        await pdfDir.create(recursive: true);
-      }
-
-      final file = io.File(pdfPath);
-      await file.writeAsBytes(await pdf.save());
-
-      return pdfPath;
+      return await savePdfReport(await pdf.save(), report.id);
     } catch (e) {
       logger.e('Erreur lors de l\'export PDF: $e');
       return null;
@@ -300,3 +285,4 @@ class PDFExportService {
     );
   }
 }
+

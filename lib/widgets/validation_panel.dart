@@ -73,3 +73,4 @@ class DoubleValidationPanel extends StatelessWidget {
     );
   }
 }
+

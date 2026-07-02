@@ -27,3 +27,4 @@ class SocialLink extends HiveObject {
     this.isOfficial = false,
   });
 }
+

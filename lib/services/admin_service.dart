@@ -67,3 +67,4 @@ class AdminService {
     await DatabaseHelper.instance.supprimerMembre(id);
   }
 }
+

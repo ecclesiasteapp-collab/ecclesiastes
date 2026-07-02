@@ -1,8 +1,7 @@
 import 'package:hive/hive.dart';
-
 part 'sync_queue_model.g.dart';
 
-@HiveType(typeId: 80)
+@HiveType(typeId: 118)
 class SyncQueueItem extends HiveObject {
   @HiveField(0) late String id;
   @HiveField(1) late String actionType; // ex: 'UPDATE_MEMBER', 'SUBMIT_REPORT'
@@ -12,7 +11,10 @@ class SyncQueueItem extends HiveObject {
   
   @HiveField(5) String status = 'pending'; // 'pending', 'syncing', 'synced', 'failed'
   @HiveField(6) int retryCount = 0;
-  @HiveField(7) String? errorMessage;
+  // @HiveField(7) est maintenant obsolète et ne doit pas être réutilisé.
+
+  @HiveField(8)
+  String priority; // ex: 'normal', 'high'
 
   SyncQueueItem({
     required this.id,
@@ -22,7 +24,7 @@ class SyncQueueItem extends HiveObject {
     this.isSynced = false,
     this.status = 'pending',
     this.retryCount = 0,
-    this.errorMessage,
+    this.priority = 'normal',
   });
 }
 
@@ -32,3 +34,4 @@ class SyncStatus {
   static const String synced = 'synced';
   static const String failed = 'failed';
 }
+

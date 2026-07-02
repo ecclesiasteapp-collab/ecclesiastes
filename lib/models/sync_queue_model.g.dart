@@ -8,7 +8,7 @@ part of 'sync_queue_model.dart';
 
 class SyncQueueItemAdapter extends TypeAdapter<SyncQueueItem> {
   @override
-  final int typeId = 80;
+  final int typeId = 118;
 
   @override
   SyncQueueItem read(BinaryReader reader) {
@@ -24,7 +24,7 @@ class SyncQueueItemAdapter extends TypeAdapter<SyncQueueItem> {
       isSynced: fields[4] as bool,
       status: fields[5] as String,
       retryCount: fields[6] as int,
-      errorMessage: fields[7] as String?,
+      priority: fields[8] as String,
     );
   }
 
@@ -46,8 +46,8 @@ class SyncQueueItemAdapter extends TypeAdapter<SyncQueueItem> {
       ..write(obj.status)
       ..writeByte(6)
       ..write(obj.retryCount)
-      ..writeByte(7)
-      ..write(obj.errorMessage);
+      ..writeByte(8)
+      ..write(obj.priority);
   }
 
   @override

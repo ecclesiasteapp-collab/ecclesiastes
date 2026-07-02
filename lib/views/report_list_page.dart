@@ -50,16 +50,41 @@ class _ReportListPageState extends State<ReportListPage> {
     _loadReports(); // Rafraîchir la liste
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Rapport validé avec succès !")),
+        const SnackBar(content: Text('Rapport validé avec succès !')),
       );
     }
+  }
+
+  void _showReportDetails(Map<String, dynamic> r) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("Détails du Rapport - ${r['commission']}"),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: r.entries.map((e) {
+              if (e.key == 'id' || e.key == 'commission' || e.key == 'statut' || e.value == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Text("${e.key.replaceAll('_', ' ').toUpperCase()} : ${e.value}", style: const TextStyle(fontSize: 13)),
+              );
+            }).toList(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer'))
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Grand Livre des Rapports"),
+        title: const Text('Grand Livre des Rapports'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
@@ -117,7 +142,7 @@ class _ReportListPageState extends State<ReportListPage> {
                             if (isValidated)
                               IconButton(
                                 icon: const Icon(Icons.picture_as_pdf, color: Colors.red),
-                                tooltip: "Générer PDF",
+                                tooltip: 'Générer PDF',
                                 onPressed: () => PdfService.generateReportPdf(r),
                               ),
                             
@@ -131,10 +156,11 @@ class _ReportListPageState extends State<ReportListPage> {
                                       foregroundColor: Colors.white,
                                       padding: const EdgeInsets.symmetric(horizontal: 12),
                                     ),
-                                    child: const Text("Valider"),
+                                    child: const Text('Valider'),
                                   ),
                           ],
                         ),
+                        onTap: () => _showReportDetails(r),
                       ),
                     );
                   },
@@ -150,7 +176,7 @@ class _ReportListPageState extends State<ReportListPage> {
           Icon(Icons.inbox, size: 80, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           const Text(
-            "Aucun rapport trouvé dans la base locale.",
+            'Aucun rapport trouvé dans la base locale.',
             style: TextStyle(color: Colors.grey),
           ),
         ],
@@ -158,3 +184,4 @@ class _ReportListPageState extends State<ReportListPage> {
     );
   }
 }
+

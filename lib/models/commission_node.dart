@@ -25,3 +25,4 @@ class CommissionNode extends HiveObject {
     this.pendingReports = 0,
   });
 }
+

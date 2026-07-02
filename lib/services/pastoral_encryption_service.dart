@@ -27,3 +27,4 @@ class PastoralEncryptionService {
     return _encrypter!.decrypt(Encrypted.fromBase64(encryptedBase64), iv: _iv);
   }
 }
+

@@ -69,7 +69,6 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
         children: [
           Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF003366))),
           const SizedBox(height: 8),
-          // ✅ CORRECTION : Utilisation de RadioGroup avec Wrap pour la mise en page
           RadioGroup<String>(
             groupValue: _values[key],
             onChanged: (val) {
@@ -78,13 +77,15 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
             },
             child: Wrap(
               spacing: 16,
-              children: options.map((opt) => Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Radio<String>(value: opt),
-                  Text(opt),
-                ],
-              )).toList(),
+              children: options
+                  .map((opt) => Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Radio<String>(value: opt),
+                          Text(opt),
+                        ],
+                      ))
+                  .toList(),
             ),
           ),
         ],
@@ -142,7 +143,7 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
 
   Widget _buildDatePicker(String key, String label) {
     return ListTile(
-      title: Text('$label: ${_values[key] ?? "Sélectionner"}'),
+      title: Text('$label: ${_values[key] ?? 'Sélectionner'}'),
       trailing: const Icon(Icons.calendar_today),
       onTap: () async {
         final date = await showDatePicker(context: context, initialDate: DateTime.now(), firstDate: DateTime(2020), lastDate: DateTime(2030));
@@ -150,7 +151,7 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
         if (!mounted) return;
 
         if (date != null) { 
-          final formatted = "${date.day}/${date.month}/${date.year}";
+          final formatted = '${date.day}/${date.month}/${date.year}';
           setState(() => _values[key] = formatted); 
           widget.onFieldChanged(key, formatted); 
         }
@@ -160,7 +161,7 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
 
   Widget _buildTimePicker(String key, String label) {
     return ListTile(
-      title: Text('$label: ${_values[key] ?? "--:--"}'),
+      title: Text('$label: ${_values[key] ?? '--:--'}'),
       trailing: const Icon(Icons.access_time),
       onTap: () async {
         final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
@@ -198,3 +199,4 @@ class _DynamicFormBuilderState extends State<DynamicFormBuilder> {
     );
   }
 }
+

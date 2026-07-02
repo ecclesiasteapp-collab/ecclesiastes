@@ -78,8 +78,8 @@ class CommissionGrid extends StatelessWidget {
 
   Widget _buildCard(BuildContext context, CommissionCardData comm) {
     Color statusColor = Colors.green;
-    if (comm.status == "En attente") statusColor = Colors.orange;
-    if (comm.status == "Pas de responsable") statusColor = Colors.red;
+    if (comm.status == 'En attente') statusColor = Colors.orange;
+    if (comm.status == 'Pas de responsable') statusColor = Colors.red;
 
     return Card(
       elevation: 2,
@@ -133,3 +133,4 @@ class CommissionGrid extends StatelessWidget {
     );
   }
 }
+

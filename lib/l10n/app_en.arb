@@ -12,5 +12,12 @@
   "socialHub": "Social Hub",
   "library": "Library",
   "calendar": "Calendar",
-  "hierarchy": "Hierarchy"
+  "hierarchy": "Hierarchy",
+  "hello": "Hello",
+  "quickNavigation": "QUICK NAVIGATION",
+  "recentActivity": "RECENT ACTIVITY",
+  "seeAll": "See all",
+  "pastoralAnalysis": "PASTORAL ANALYSIS",
+  "bible": "HOLY BIBLE",
+  "commissions": "COMMISSIONS"
 }

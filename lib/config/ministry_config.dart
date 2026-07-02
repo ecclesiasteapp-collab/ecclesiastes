@@ -22,7 +22,7 @@ class MinistryConfig {
       description: 'C’est le plus haut niveau de leadership dans l’Église Néo-Apostolique. Il est à l’échelle mondiale. Il est responsable de la direction spirituelle, de la continuité de la foi apostolique, et de l’orientation générale de l’Église.',
       tasks: [
         'Diriger l’Église à l’échelle mondiale.',
-        'Prendre les décisions doctrinales importantes.',
+        'Prendre les décisions doctrinale importantes.',
         'Nommer les autres Apôtres et leurs responsabilités.',
         'Assurer la préservation de la tradition apostolique.',
         'Prendre des décisions sur les changements majeurs dans l\'organisation de l’Église.',
@@ -84,8 +84,8 @@ class MinistryConfig {
       ],
     ),
     MinistryDefinition(
-      role: UserRole.lude,
-      title: 'LUDE',
+      role: UserRole.lead,
+      title: 'LEAD',
       description: 'Responsable de circo.',
       tasks: [
         'Vérification des activités de circo.',
@@ -161,9 +161,37 @@ class MinistryConfig {
         'Accompagner spirituellement les femmes de la congrégation.',
       ],
     ),
+    MinistryDefinition(
+      role: UserRole.membre,
+      title: 'MEMBRE',
+      description: 'Fidèle de l’Église participant à la vie de la communauté.',
+      tasks: [
+        'Participer aux services divins.',
+        'Soutenir les activités de la communauté.',
+      ],
+    ),
+    MinistryDefinition(
+      role: UserRole.superAdmin,
+      title: 'SUPER ADMINISTRATEUR',
+      description: 'Responsable technique de la plateforme Ecclésiaste.',
+      tasks: [
+        'Gérer les utilisateurs et les accès.',
+        'Maintenir la configuration du système.',
+      ],
+    ),
+    MinistryDefinition(
+      role: UserRole.respCommission,
+      title: 'RESPONSABLE DE COMMISSION',
+      description: 'Responsable fonctionnel d’une des commissions de l’Église.',
+      tasks: [
+        'Diriger les activités de la commission.',
+        'Rendre compte aux ministères responsables.',
+      ],
+    ),
   ];
 
   static MinistryDefinition getRank(UserRole role) {
-    return ranks.firstWhere((r) => r.role == role, orElse: () => ranks.last);
+    return ranks.firstWhere((r) => r.role == role, orElse: () => ranks.firstWhere((r) => r.role == UserRole.membre));
   }
 }
+

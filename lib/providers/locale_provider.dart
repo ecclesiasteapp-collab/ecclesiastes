@@ -25,3 +25,4 @@ class LocaleNotifier extends StateNotifier<Locale> {
     await prefs.setString('language_code', languageCode);
   }
 }
+

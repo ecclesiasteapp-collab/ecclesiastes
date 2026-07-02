@@ -1,10 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import '../services/profile_service.dart';
+import '../utils/profile_image_provider.dart';
 import '../widgets/discrete_wrapper.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -28,7 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadProfilePhoto() async {
     final user = AuthService.currentUser;
     if (user != null) {
-      final photo = await _profileService.getProfilePhoto(user['id'].toString());
+      final photo = await _profileService.getProfilePhoto(user.id);
       if (mounted) {
         setState(() {
           _profilePhoto = photo;
@@ -73,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (image != null) {
       setState(() => _isLoadingPhoto = true);
       try {
-        await _profileService.saveProfilePhoto(image, user['id'].toString());
+        await _profileService.saveProfilePhoto(image, user.id);
         
         if (!mounted) return;
         await _loadProfilePhoto();
@@ -102,8 +102,8 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final userName = user?['nom_complet'] ?? 'Ministre';
-    final role = user?['role_label'] ?? 'Responsable';
+    final userName = user?.fullName ?? 'Ministre';
+    final role = user?.role.name ?? 'Responsable';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -121,13 +121,13 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 30),
             
             // 2. IDENTITÉ ECCLÉSIALE (Badges)
-            const Text("Statut Sacramentel", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Statut Sacramentel', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 15),
             _buildSacramentalSection(),
             const SizedBox(height: 30),
 
             // 3. STATISTIQUES PERSONNELLES
-            const Text("Mes Statistiques du Mois", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Mes Statistiques du Mois', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 15),
             _buildStatsGrid(),
             
@@ -135,7 +135,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ElevatedButton.icon(
               onPressed: () {},
               icon: const Icon(Icons.share),
-              label: const Text("PARTAGER MON PROFIL"),
+              label: const Text('PARTAGER MON PROFIL'),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(55),
                 backgroundColor: const Color(0xFF003366),
@@ -150,14 +150,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildMinisterCard(BuildContext context, String name, String role) {
-    ImageProvider? imageProvider;
-    if (_profilePhoto != null) {
-      if (kIsWeb) {
-        imageProvider = MemoryImage(_profilePhoto);
-      } else {
-        imageProvider = FileImage(_profilePhoto as File);
-      }
-    }
+    final imageProvider = buildProfileImageProvider(_profilePhoto);
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -232,14 +225,14 @@ class _ProfilePageState extends State<ProfilePage> {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
             child: QrImageView(
-              data: "ID-MIN-${name.hashCode}",
+              data: 'ID-MIN-${name.hashCode}',
               version: QrVersions.auto,
               size: 140,
             ),
           ),
           const SizedBox(height: 20),
           const Text(
-            "SCANNABLE POUR VÉRIFICATION DE MANDAT",
+            'SCANNABLE POUR VÉRIFICATION DE MANDAT',
             style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1.2),
           ),
         ],
@@ -251,9 +244,9 @@ class _ProfilePageState extends State<ProfilePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _badge(Icons.water_drop, "Baptisé", Colors.blue),
-        _badge(Icons.auto_awesome, "Scellé", Colors.amber),
-        _badge(Icons.church, "Sainte-Cène", Colors.green),
+        _badge(Icons.water_drop, 'Baptisé', Colors.blue),
+        _badge(Icons.auto_awesome, 'Scellé', Colors.amber),
+        _badge(Icons.church, 'Sainte-Cène', Colors.green),
       ],
     );
   }
@@ -279,10 +272,10 @@ class _ProfilePageState extends State<ProfilePage> {
       crossAxisSpacing: 15,
       mainAxisSpacing: 15,
       children: [
-        _statCard("Rapports Validés", "18", Icons.assignment_turned_in),
-        _statCard("Membres Suivis", "452", Icons.people),
-        _statCard("Heures Pastorales", "12h", Icons.access_time),
-        _statCard("Événements", "4", Icons.event),
+        _statCard('Rapports Validés', '18', Icons.assignment_turned_in),
+        _statCard('Membres Suivis', '452', Icons.people),
+        _statCard('Heures Pastorales', '12h', Icons.access_time),
+        _statCard('Événements', '4', Icons.event),
       ],
     );
   }
@@ -306,3 +299,4 @@ class _ProfilePageState extends State<ProfilePage> {
     ),
   );
 }
+

@@ -23,32 +23,32 @@ class HelpPage extends StatelessWidget {
               children: [
                 _buildResourceCard(
                   context,
-                  title: "Directives Ministres (v3)",
-                  subtitle: "Accès rapide aux 110 pages officielles",
+                  title: 'Directives Ministres (v3)',
+                  subtitle: 'Accès rapide aux 110 pages officielles',
                   icon: Icons.menu_book,
                   color: Colors.brown,
                 ),
                 _buildResourceCard(
                   context,
-                  title: "Tutoriels Interactifs",
+                  title: 'Tutoriels Interactifs',
                   subtitle: "Guides vidéo pas-à-pas pour l'app",
                   icon: Icons.play_circle_fill,
                   color: Colors.red,
                 ),
                 _buildResourceCard(
                   context,
-                  title: "Support Technique",
+                  title: 'Support Technique',
                   subtitle: "Signaler un bug ou contacter l'admin",
                   icon: Icons.support_agent,
                   color: Colors.blue,
                 ),
                 
                 const SizedBox(height: 20),
-                const Text("Glossaire Liturgique", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text('Glossaire Liturgique', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 10),
-                _buildGlossaryItem("Épiclèse", "Prière invoquant le Saint-Esprit sur les espèces de la Sainte-Cène."),
-                _buildGlossaryItem("Mandatement", "Délégation d'une fonction dirigeante par imposition des mains (§3.12)."),
-                _buildGlossaryItem("Déliement", "Acte officiel mettant fin à un mandat ou une nomination (§3.14)."),
+                _buildGlossaryItem('Épiclèse', 'Prière invoquant le Saint-Esprit sur les espèces de la Sainte-Cène.'),
+                _buildGlossaryItem('Mandatement', "Délégation d'une fonction dirigeante par imposition des mains (§3.12)."),
+                _buildGlossaryItem('Déliement', 'Acte officiel mettant fin à un mandat ou une nomination (§3.14).'),
               ],
             ),
           ),
@@ -70,13 +70,13 @@ class HelpPage extends StatelessWidget {
           const Icon(Icons.auto_awesome, color: Colors.amber, size: 40),
           const SizedBox(height: 10),
           const Text(
-            "Assistant Ecclésiastes",
+            'Assistant Ecclésiastes',
             style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 15),
           TextField(
             decoration: InputDecoration(
-              hintText: "Posez votre question sur les Directives...",
+              hintText: 'Posez votre question sur les Directives...',
               filled: true,
               fillColor: Colors.white,
               prefixIcon: const Icon(Icons.search, color: Color(0xFF003366)),
@@ -123,3 +123,4 @@ class HelpPage extends StatelessWidget {
     );
   }
 }
+

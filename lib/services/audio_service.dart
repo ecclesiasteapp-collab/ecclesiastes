@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:record/record.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:logger/logger.dart';
-import 'dart:io' as io;
+
+import 'audio_storage_helper.dart';
 
 final logger = Logger();
 
@@ -24,7 +24,7 @@ class AudioService {
 
   Future<bool> requestPermission() async {
     if (kIsWeb) return true;
-    return await _recorder.hasPermission();
+    return _recorder.hasPermission();
   }
 
   Future<String?> startRecording(String section) async {
@@ -34,14 +34,8 @@ class AudioService {
     }
     try {
       if (await _recorder.hasPermission()) {
-        final dir = await getApplicationDocumentsDirectory();
-        final audioDir = io.Directory('${dir.path}/reports_audio');
-        if (!await audioDir.exists()) {
-          await audioDir.create(recursive: true);
-        }
-
-        final fileName = 'report_${section}_${const Uuid().v4()}.m4a';
-        _currentRecordingPath = '${audioDir.path}/$fileName';
+        _currentRecordingPath =
+            await createAudioRecordingPath(section, const Uuid().v4());
 
         await _recorder.start(
           const RecordConfig(encoder: AudioEncoder.aacLc, bitRate: 128000, sampleRate: 44100),
@@ -96,9 +90,9 @@ class AudioService {
     }
   }
 
-  Future<void> pausePlayback() async => await _player.pause();
-  Future<void> resumePlayback() async => await _player.resume();
-  Future<void> stopPlayback() async => await _player.stop();
+  Future<void> pausePlayback() => _player.pause();
+  Future<void> resumePlayback() => _player.resume();
+  Future<void> stopPlayback() => _player.stop();
 
   Stream<Duration> get playerPositionStream => _player.onPositionChanged;
   Stream<PlayerState> get playerStateStream => _player.onPlayerStateChanged;
@@ -109,10 +103,7 @@ class AudioService {
   Future<void> deleteAudio(String filePath) async {
     if (kIsWeb) return;
     try {
-      final file = io.File(filePath);
-      if (await file.exists()) {
-        await file.delete();
-      }
+      await deleteAudioFile(filePath);
     } catch (e) {
       logger.e('Erreur suppression fichier audio: $e');
     }
@@ -123,3 +114,4 @@ class AudioService {
     _player.dispose();
   }
 }
+

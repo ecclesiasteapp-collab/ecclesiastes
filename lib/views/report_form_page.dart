@@ -38,7 +38,7 @@ class _ReportFormPageState extends State<ReportFormPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Rapport transmis au Prêtre !")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rapport transmis au Prêtre !')));
         Navigator.pop(context);
       }
     }
@@ -46,10 +46,10 @@ class _ReportFormPageState extends State<ReportFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    List<String> tasks = TaskConstants.commissionTasks[_selectedCommission] ?? [];
+    final List<String> tasks = TaskConstants.commissionTasks[_selectedCommission] ?? [];
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Saisie du Rapport")),
+      appBar: AppBar(title: const Text('Saisie du Rapport')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -63,22 +63,22 @@ class _ReportFormPageState extends State<ReportFormPage> {
                 _selectedCommission = val!;
                 _taskResponses = {}; // Reset des tâches si on change de commission
               }),
-              decoration: const InputDecoration(labelText: "Commission", border: OutlineInputBorder()),
+              decoration: const InputDecoration(labelText: 'Commission', border: OutlineInputBorder()),
             ),
             const SizedBox(height: 25),
 
             // Section FINANCES
-            const Text("FINANCES", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
+            const Text('FINANCES', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
             const Divider(),
             Row(
               children: [
-                Expanded(child: _buildTextField(_usdController, "Offrande USD", Icons.attach_money)),
+                Expanded(child: _buildTextField(_usdController, 'Offrande USD', Icons.attach_money)),
                 const SizedBox(width: 10),
-                Expanded(child: _buildTextField(_fcController, "Offrande FC", Icons.money)),
+                Expanded(child: _buildTextField(_fcController, 'Offrande FC', Icons.money)),
               ],
             ),
             const SizedBox(height: 15),
-            _buildTextField(_receiptController, "Numéro du Reçu (Obligatoire)", Icons.receipt_long, isRequired: true),
+            _buildTextField(_receiptController, 'Numéro du Reçu (Obligatoire)', Icons.receipt_long, isRequired: true),
             
             const SizedBox(height: 30),
 
@@ -99,7 +99,7 @@ class _ReportFormPageState extends State<ReportFormPage> {
             ElevatedButton(
               onPressed: _saveReport,
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50), backgroundColor: Colors.blue, foregroundColor: Colors.white),
-              child: const Text("VALIDER ET ENVOYER"),
+              child: const Text('VALIDER ET ENVOYER'),
             ),
           ],
         ),
@@ -112,7 +112,8 @@ class _ReportFormPageState extends State<ReportFormPage> {
       controller: controller,
       keyboardType: isRequired ? TextInputType.text : TextInputType.number,
       decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon), border: const OutlineInputBorder()),
-      validator: (v) => isRequired && (v == null || v.isEmpty) ? "Champ requis" : null,
+      validator: (v) => isRequired && (v == null || v.isEmpty) ? 'Champ requis' : null,
     );
   }
 }
+

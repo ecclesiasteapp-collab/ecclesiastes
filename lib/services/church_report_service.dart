@@ -18,3 +18,4 @@ class ChurchReportService {
     await _box.delete(id);
   }
 }
+

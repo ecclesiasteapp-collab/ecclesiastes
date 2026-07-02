@@ -1,66 +1,69 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ecclesiastes/services/auth_service.dart';
 import 'package:ecclesiastes/models/hierarchy_models.dart';
+// L'énumération EntityResponsibleRole est maintenant définie dans hierarchy_models.dart
+// import 'package:ecclesiastes/models/entity_responsible_role.dart'; // Supprimé car redondant
+
 import 'dashboards/member_dashboard.dart';
 import 'dashboards/minister_dashboard.dart';
 import 'dashboards/commission_dashboard.dart';
 import 'dashboards/main_dashboard.dart';
+import 'dashboards/dashboard_responsable_entite_page.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final roleStr = AuthService.currentUser?['role'] ?? 'MEMBRE';
-    final roleLabel = AuthService.currentUser?['role_label'] ?? '';
-    
-    UserRole userRole;
-    if (roleStr == 'SUPER_ADMIN' || roleStr == 'RESPONSABLE') {
-      userRole = UserRole.chefCommunaute;
-    } else if (roleStr == 'MINISTRE') {
-      userRole = UserRole.ministre;
-    } else if (roleLabel.contains('Commission')) {
-      userRole = UserRole.respCommission;
-    } else {
-      userRole = UserRole.membre;
+    final user = AuthService.currentUser;
+
+    if (user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          context.go('/login');
+        }
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    // Si c'est un rôle administratif, on utilise le nouveau MainDashboard qui gère son propre layout
-    if (userRole == UserRole.chefCommunaute || userRole == UserRole.apotrePatriarche || userRole == UserRole.apotreDistrict || userRole == UserRole.apotreChamp || userRole == UserRole.presidentTerritoriale) {
+    // Détermination du Dashboard selon la hiérarchie officielle
+    if (user.role == UserRole.superAdmin || _isAdministrativeRole(user.role)) {
       return const MainDashboard();
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ecclesiastes'),
-        actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () {
-            AuthService.logout();
-            Navigator.pushReplacementNamed(context, '/login');
-          })
-        ],
-      ),
-      body: _buildDashboard(userRole, roleLabel),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: const Color(0xFF003366),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Tableau'),
-          BottomNavigationBarItem(icon: Icon(Icons.library_books), label: 'Directives'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
-        ],
-      ),
-    );
+    if (user.entityRole == EntityResponsibleRole.responsable.name || user.entityRole == EntityResponsibleRole.suppleant.name) {
+      return const DashboardResponsableEntitePage();
+    }
+
+    if (user.commissionRole == CommissionRole.responsable ||
+        user.commissionRole == CommissionRole.adjoint) {
+      return CommissionDashboard(commissionName: user.commissionType?.name ?? 'Commission');
+    }
+
+    if (user.role == UserRole.membre) {
+      return const MemberDashboard();
+    }
+
+    // Par défaut pour les ministres de culte sans charge administrative globale
+    return const MinisterDashboard();
   }
 
-  Widget _buildDashboard(UserRole role, String commissionName) {
-    switch (role) {
-      case UserRole.ministre:
-        return const MinisterDashboard();
-      case UserRole.respCommission:
-        return CommissionDashboard(commissionName: commissionName);
-      case UserRole.membre:
-      default:
-        return const MemberDashboard();
-    }
+  /// Les rôles ayant accès au Dashboard de gestion globale (Synoptique)
+  bool _isAdministrativeRole(UserRole role) {
+    // Définir une énumération pour les rôles d'entité si elle n'existe pas déjà
+    // et l'utiliser ici pour éviter les chaînes de caractères en dur.
+    // Pour l'instant, nous utilisons des constantes.
+    // const String responsable = 'responsable';
+    // const String suppleant = 'suppleant';
+
+    return role == UserRole.superAdmin ||
+           role == UserRole.apotrePatriarche ||
+           role == UserRole.apotreDistrict ||
+           role == UserRole.apotreResponsable ||
+           role == UserRole.apotre ||
+           role == UserRole.eveque ||
+           role == UserRole.ancien; // Ancien = Responsable de District
   }
 }
+

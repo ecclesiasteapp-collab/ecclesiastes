@@ -35,3 +35,4 @@ L'application est conçue pour respecter la hiérarchie, la liturgie et les règ
 En cliquant sur "J'ACCEPTE", vous certifiez être un ministre ou un chargé de fonction autorisé, et vous vous engagez à utiliser cet outil dans le respect de la ligne directrice "Servir et diriger".
 """;
 }
+

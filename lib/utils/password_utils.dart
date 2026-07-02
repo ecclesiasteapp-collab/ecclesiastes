@@ -8,3 +8,4 @@ String hashPassword(String password) {
 bool verifyPassword(String password, String storedHash) {
   return hashPassword(password) == storedHash;
 }
+

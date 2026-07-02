@@ -85,3 +85,4 @@ class _MemberRegistrationScreenState extends State<MemberRegistrationScreen> {
     );
   }
 }
+

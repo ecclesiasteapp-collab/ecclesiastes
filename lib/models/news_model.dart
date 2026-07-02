@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'attachment_model.dart';
 
 part 'news_model.g.dart';
 
@@ -14,6 +15,8 @@ class News extends HiveObject {
   late String content;
   @HiveField(4)
   late DateTime date;
+  @HiveField(5)
+  late Attachment? posterAttachment;
 
   News({
     required this.id,
@@ -21,5 +24,7 @@ class News extends HiveObject {
     required this.imageUrl,
     required this.content,
     required this.date,
+    this.posterAttachment,
   });
 }
+

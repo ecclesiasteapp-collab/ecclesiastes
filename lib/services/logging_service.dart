@@ -13,3 +13,4 @@ class LoggingService {
     _logger.i('AUTH [$action]${userId != null ? " (User: $userId)" : ""}: $message');
   }
 }
+

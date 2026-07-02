@@ -35,3 +35,4 @@ class LocaleService extends ChangeNotifier {
     {'name': 'Tshiluba', 'code': 'tl'},
   ];
 }
+

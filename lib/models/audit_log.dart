@@ -22,3 +22,4 @@ class AuditLog extends HiveObject {
     DateTime? timestamp,
   }) : timestamp = timestamp ?? DateTime.now();
 }
+

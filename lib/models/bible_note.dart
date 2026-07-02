@@ -31,3 +31,4 @@ class BibleNote extends HiveObject {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 }
+

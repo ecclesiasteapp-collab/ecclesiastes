@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/admin_service.dart';
-import 'package:uuid/uuid.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/member_profile.dart';
 
 class GestionMembresPage extends StatefulWidget {
-  final String commissionName;
-  final String entiteId;
+  final String? commissionName;
+  final String? entiteId;
 
   const GestionMembresPage({
-    super.key, 
-    required this.commissionName, 
-    required this.entiteId
+    super.key,
+    this.commissionName,
+    this.entiteId,
   });
 
   @override
@@ -17,169 +18,207 @@ class GestionMembresPage extends StatefulWidget {
 }
 
 class _GestionMembresPageState extends State<GestionMembresPage> {
-  List<Map<String, dynamic>> _membres = [];
+  late Box<MemberProfile> _memberBox;
+  List<MemberProfile> _members = [];
+  List<MemberProfile> _filteredMembers = [];
   bool _isLoading = true;
-  final _uuid = const Uuid();
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _refresh();
+    _loadMembers();
+    _searchController.addListener(_filterMembers);
   }
 
-  // Charge les membres confirmés de cette commission pour cette entité
-  void _refresh() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMembers() async {
     setState(() => _isLoading = true);
-    try {
-      final data = await AdminService.getMembresByCommission(widget.commissionName);
-      // Filtrage local par entité pour plus de précision
-      setState(() {
-        _membres = data
-            .where((m) => (m['communaute_id'] ?? m['entite_id'])?.toString() == widget.entiteId)
-            .toList();
-      });
-    } catch (e) {
-      debugPrint("Erreur de chargement : $e");
-    } finally {
-      setState(() => _isLoading = false);
+    _memberBox = Hive.box<MemberProfile>('member_profiles');
+
+    List<MemberProfile> list = _memberBox.values.toList();
+
+    // Application des filtres initiaux (Commission / Entité)
+    if (widget.commissionName != null) {
+      // Note: On suppose que le profil membre a un champ commission ou similaire
+      // Si ce n'est pas le cas, on ignore ou on adapte.
     }
+
+    if (widget.entiteId != null) {
+      list = list.where((m) => m.communauteId == widget.entiteId).toList();
+    }
+
+    setState(() {
+      _members = list;
+      _filteredMembers = _members;
+      _isLoading = false;
+    });
   }
 
-  // Affiche le formulaire d'ajout ou de modification
-  void _showForm(Map<String, dynamic>? membre) {
-    final isEditing = membre != null;
-    final nomController = TextEditingController(text: membre?['nom']);
-    final prenomController = TextEditingController(text: membre?['prenom']);
-    final posteController = TextEditingController(text: membre?['poste'] ?? 'Membre');
-    final telController = TextEditingController(text: membre?['telephone']);
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          left: 20, right: 20, top: 20
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                isEditing ? "Modifier Responsable" : "Ajouter Responsable",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 15),
-              TextField(controller: nomController, decoration: const InputDecoration(labelText: "Nom")),
-              TextField(controller: prenomController, decoration: const InputDecoration(labelText: "Prénom")),
-              TextField(controller: posteController, decoration: const InputDecoration(labelText: "Poste (ex: Responsable, Adjoint)")),
-              TextField(controller: telController, decoration: const InputDecoration(labelText: "Téléphone"), keyboardType: TextInputType.phone),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueGrey[900],
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 45)
-                ),
-                onPressed: () async {
-                  if (nomController.text.isNotEmpty) {
-                    final data = {
-                      'id': isEditing ? membre['id'] : _uuid.v4(),
-                      'nom': nomController.text,
-                      'prenom': prenomController.text,
-                      'poste': posteController.text,
-                      'telephone': telController.text,
-                      'commission': widget.commissionName,
-                      'entite_id': widget.entiteId,
-                      'statut': 1, // Membre déjà confirmé car ajouté par l'admin
-                      'date_inscription': isEditing ? membre['date_inscription'] : DateTime.now().toIso8601String(),
-                    };
-                    
-                    await AdminService.saveMembre(data);
-                    if (mounted) Navigator.pop(context);
-                    _refresh();
-                  }
-                },
-                child: Text(isEditing ? "Mettre à jour" : "Enregistrer"),
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
-      ),
-    );
+  void _filterMembers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredMembers = _members.where((member) {
+        final fullName = '${member.prenom} ${member.nom}'.toLowerCase();
+        return fullName.contains(query) ||
+            (member.email?.toLowerCase().contains(query) ?? false) ||
+            member.telephone.contains(query);
+      }).toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(widget.commissionName, style: const TextStyle(fontSize: 16)),
-            const Text("Membres & Responsables", style: TextStyle(fontSize: 12, color: Colors.white70)),
-          ],
-        ),
-        backgroundColor: Colors.blueGrey[900],
+        backgroundColor: const Color(0xFF003366),
+        title: Text(widget.commissionName ?? 'Gestion des Membres'),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () => context.go('/member/register'),
+          ),
+        ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _membres.isEmpty
-              ? const Center(child: Text("Aucun membre dans cette commission"))
-              : ListView.builder(
-                  itemCount: _membres.length,
-                  itemBuilder: (context, index) {
-                    final m = _membres[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.blueGrey[100],
-                          child: Text(m['nom'][0], style: TextStyle(color: Colors.blueGrey[900])),
-                        ),
-                        title: Text("${m['nom']} ${m['prenom'] ?? ''}"),
-                        subtitle: Text("${m['poste']} • ${m['telephone'] ?? 'Pas de tél.'}"),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Rechercher un membre...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _searchController.clear(),
+                      )
+                    : null,
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+              ),
+            ),
+          ),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredMembers.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _showForm(m),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text("Supprimer ?"),
-                                    content: const Text("Voulez-vous retirer ce membre de la commission ?"),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Annuler")),
-                                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Supprimer")),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await AdminService.deleteMembre(m['id']);
-                                  _refresh();
-                                }
-                              },
-                            ),
+                            Icon(Icons.people_outline,
+                                size: 64, color: Colors.grey.shade400),
+                            const SizedBox(height: 16),
+                            Text('Aucun membre trouvé',
+                                style: TextStyle(
+                                    fontSize: 16, color: Colors.grey.shade600)),
                           ],
                         ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: _filteredMembers.length,
+                        itemBuilder: (context, index) =>
+                            _buildMemberCard(_filteredMembers[index]),
                       ),
-                    );
-                  },
-                ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showForm(null),
-        backgroundColor: Colors.orange[800],
-        child: const Icon(Icons.add, color: Colors.white),
+        onPressed: () => context.go('/member/register'),
+        backgroundColor: const Color(0xFF003366),
+        child: const Icon(Icons.add),
       ),
     );
   }
+
+  Widget _buildMemberCard(MemberProfile member) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: const Color(0xFF003366),
+          child: Text(
+            member.nom.isNotEmpty ? member.nom[0].toUpperCase() : '?',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        title: Text('${member.prenom} ${member.nom}',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (member.email != null) Text(member.email!),
+            Text(member.telephone),
+            Text('Statut: ${member.statutMembre.name}'),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          onSelected: (value) => _handleMenuAction(value, member),
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'view', child: Text('Voir')),
+            const PopupMenuItem(value: 'edit', child: Text('Modifier')),
+            const PopupMenuItem(
+                value: 'delete',
+                child: Text('Supprimer', style: TextStyle(color: Colors.red))),
+          ],
+        ),
+        onTap: () => _viewMemberDetails(member),
+      ),
+    );
+  }
+
+  void _handleMenuAction(String action, MemberProfile member) {
+    switch (action) {
+      case 'view':
+        _viewMemberDetails(member);
+        break;
+      case 'edit':
+        context.go('/member/edit/${member.id}');
+        break;
+      case 'delete':
+        _deleteMember(member);
+        break;
+    }
+  }
+
+  void _viewMemberDetails(MemberProfile member) {
+    context.go('/member/detail/${member.id}');
+  }
+
+  Future<void> _deleteMember(MemberProfile member) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmer'),
+        content: Text('Supprimer ${member.prenom} ${member.nom} ?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await _memberBox.delete(member.id);
+      _loadMembers();
+    }
+  }
 }
+

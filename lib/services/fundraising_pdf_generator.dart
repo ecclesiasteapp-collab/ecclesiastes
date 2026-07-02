@@ -4,11 +4,9 @@ import 'package:pdf/widgets.dart' as pw;
 import '../models/fundraising_report.dart';
 
 class FundraisingPdfGenerator {
-  static Future<Uint8List> generate(FundraisingReport report) async {
+  static Future<Uint8List> generate(FundraisingReport report, Uint8List logoBytes) async {
     final pdf = pw.Document();
     
-    final ByteData logoData = await rootBundle.load('assets/images/logo_ena.png');
-    final Uint8List logoBytes = logoData.buffer.asUint8List();
     final pw.MemoryImage logoImage = pw.MemoryImage(logoBytes);
 
     pdf.addPage(
@@ -166,3 +164,4 @@ class FundraisingPdfGenerator {
     );
   }
 }
+

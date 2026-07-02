@@ -109,3 +109,4 @@ class _SuperAdminView extends StatelessWidget {
   @override
   Widget build(BuildContext context) => const Center(child: Text('Vue Super Admin'));
 }
+

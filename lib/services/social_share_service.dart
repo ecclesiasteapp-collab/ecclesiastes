@@ -1,53 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:screenshot/screenshot.dart';
-import 'dart:typed_data';
+import '../models/hierarchy_models.dart';
 
 class SocialShareService {
-  final ScreenshotController screenshotController = ScreenshotController();
+  /// Génère un message brandé pour le partage social au profit de l'application officielle
+  Future<void> shareHierarchyBrandedContent(
+    BuildContext context,
+    String activityTitle,
+    String entityName,
+    EntityLevel level,
+    CommissionType commission
+  ) async {
+    final String commissionName = _getCommissionLabel(commission);
+    final String levelName = _getLevelLabel(level);
 
-  // Méthode pour générer une image brandée et la partager
-  Future<void> shareBrandedContent(BuildContext context, Widget contentWidget, String caption) async {
-    // 1. Capturer le widget en image
-    Uint8List imageBytes = await screenshotController.captureFromWidget(
-      Container(
-        color: Colors.white,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            contentWidget,
-            const SizedBox(height: 20),
-            // LE FILIGRANE / BRANDING OBLIGATOIRE
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF003366),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.church, color: Colors.white, size: 16),
-                  SizedBox(width: 8),
-                  Text(
-                    'Ecclésiastes | @EcclesiastesOfficiel',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      pixelRatio: 3.0, // Haute qualité pour les réseaux sociaux
-    );
+    final String message = """
+📢 ÉGLISE NÉO-APOSTOLIQUE
+✨ $activityTitle
+
+📍 Lieu : $entityName ($levelName)
+🎨 Organisé par : Commission $commissionName
+
+📲 Suivez nos activités et restez connectés via notre application officielle Ecclésiaste !
+🔗 Téléchargez l'application : https://ecclesiaste.rdc/download
+👍 Suivez-nous sur Facebook : https://facebook.com/ecclesiaste.app
+📺 Abonnez-vous sur YouTube : https://youtube.com/@ecclesiaste.app
+
+#EcclesiasteApp #ENA #RDC #$levelName #$commissionName
+""";
 
     await SharePlus.instance.share(
       ShareParams(
-        files: [XFile.fromData(imageBytes, mimeType: 'image/png', name: 'ecclesiastes_share.png')],
-        text: '$caption\n\n📖 Découvrez Ecclésiastes...',
+        text: message,
+        subject: 'Activité $entityName - Ecclésiaste',
       ),
     );
   }
+
+  String _getCommissionLabel(CommissionType commission) {
+    if (commission == CommissionType.none) return 'Générale';
+    return commission.name.toUpperCase();
+  }
+
+  String _getLevelLabel(EntityLevel level) {
+    return level.name.toUpperCase();
+  }
+
+  /// Partage d'un verset biblique
+  Future<void> shareBibleVerse(BuildContext context, String book, int chapter, int verse, String text) async {
+    final String message = "📖 LA SAINTE BIBLE \n✨ $book $chapter:$verse\n\n\"$text\"\n\n📲 Méditez la parole de Dieu sur l'application Ecclésiaste.";
+    await SharePlus.instance.share(
+      ShareParams(text: message),
+    );
+  }
 }
+
+

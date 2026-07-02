@@ -41,13 +41,13 @@ class _SignaturePadWidgetState extends State<SignaturePadWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(onPressed: () => _controller.clear(), child: const Text("Effacer")),
+            TextButton(onPressed: () => _controller.clear(), child: const Text('Effacer')),
             ElevatedButton(
               onPressed: () async {
                 final bytes = await _controller.toPngBytes();
                 widget.onSave(bytes);
               },
-              child: const Text("Valider la signature"),
+              child: const Text('Valider la signature'),
             ),
           ],
         ),
@@ -55,3 +55,4 @@ class _SignaturePadWidgetState extends State<SignaturePadWidget> {
     );
   }
 }
+

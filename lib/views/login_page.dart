@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/entite_scope_service.dart';
-import 'package:ecclesiastes/utils/constants.dart';
-import 'package:ecclesiastes/views/dashboard_page.dart';
-import 'package:ecclesiastes/views/forgot_password_page.dart';
-import 'package:ecclesiastes/views/register_page.dart';
-import 'package:ecclesiastes/widgets/ena_logo.dart';
-import 'package:ecclesiastes/widgets/searchable_dropdown.dart';
+import 'package:go_router/go_router.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,287 +11,244 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _identifiantController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isLoading = false;
-  
+  bool _obscurePassword = true;
+
   String? _selectedNiveau;
   String? _selectedMinistere;
   String? _selectedRole;
-  
-  // Liste déroulante pour Niveau (Entités)
-  final List<String> _niveaux = [
-    'Église internationale',
-    'Église territoriale',
-    'Champ apostolique',
-    'District',
-    'Communauté',
-    'Commissions',
-  ];
-  
-  // Rôles dynamiques selon le niveau sélectionné
-  final Map<String, List<String>> _rolesParNiveau = {
-    'Église internationale': [
-      'Apôtre-Patriarche',
-      'Secrétaire international',
-    ],
-    'Église territoriale': [
-      'Apôtre de district',
-      'Apôtre de district adjoint',
-      'Super Administrateur',
-    ],
-    'Champ apostolique': [
-      'Apôtre du champ apostolique',
-      'Apôtre du champ apostolique adjoint',
-      'Secrétaire de champ',
-    ],
-    'District': [
-      'Responsable de district (ministère sacerdotal)',
-      'Suppléant responsable de district (ministère sacerdotal)',
-      'Secrétaire de district',
-    ],
-    'Communauté': [
-      'Aucune fonction dirigeante',
-      'Responsable de communauté (ministère sacerdotal)',
-      'Suppléant responsable de communauté (ministère sacerdotal)',
-      'Secrétaire de communauté',
-      'Trésorier de communauté',
-    ],
-    'Commissions': AppConstants.commissions,
-  };
-  
-  List<String> _rolesDisponibles = [];
 
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
-  Future<void> _handleLogin() async {
-    if (_formKey.currentState!.validate()) {
-      final identifiant = _identifiantController.text.trim();
-      final isSuperAdminEmail = identifiant.toLowerCase() == 'superadmin@ecclesiastes.rdc';
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
 
-      if (!isSuperAdminEmail && (_selectedNiveau == null || _selectedMinistere == null)) {
-        _snack('Veuillez sélectionner votre niveau et ministère.');
-        return;
-      }
+    setState(() => _isLoading = true);
 
-      setState(() => _isLoading = true);
-      try {
-        final success = await AuthService.login(
-          identifiant: identifiant,
-          password: _passwordController.text,
-          communauteId: 'AUTO', 
-          ministere: _selectedMinistere,
-          roleLabel: _selectedRole ?? 'Membre',
+    try {
+      final success = await AuthService.login(
+        identifiant: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (success && mounted) {
+        context.go('/dashboard');
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email ou mot de passe incorrect'),
+            backgroundColor: Colors.red,
+          ),
         );
-
-        if (!mounted) return;
-        if (success) {
-          if (AuthService.currentUser != null) {
-            final cid = AuthService.currentUser!['communaute_id'];
-            if (AuthService.isSuperAdmin() && (cid == null || cid == 'ROOT' || cid == 'AUTO')) {
-              await EntiteScopeService.initDefaultForAdmin();
-            } else {
-              await EntiteScopeService.initFromCommunaute(cid ?? 'COMM_01');
-            }
-          }
-          if (!mounted) return;
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const DashboardPage()));
-        } else {
-          _snack('Identifiant ou mot de passe incorrect.');
-        }
-      } catch (e) {
-        _snack('Erreur de connexion : ${e.toString()}');
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
 
-  void _snack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFF1E6BA8);
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
+      body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 20),
-                // Logo ENA
-                const EnaLogo(size: 100),
-                
-                const SizedBox(height: 24),
-                const Text('Bienvenue !', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87)),
-                const SizedBox(height: 8),
-                const Text('Connectez-vous à votre communauté', style: TextStyle(fontSize: 16, color: Colors.black87)),
-                const SizedBox(height: 32),
-                
-                // Champ Identifiant
-                SizedBox(
-                  width: 320,
-                  child: TextFormField(
-                    controller: _identifiantController,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.person_outline, color: primaryColor),
-                      labelText: 'Identifiant ou Email',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    validator: (v) => v!.isEmpty ? 'Requis' : null,
-                  ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+          child: Column(
+            children: [
+              // Logo circulaire bleu conforme à l'image
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFF003366), width: 2),
+                  shape: BoxShape.circle,
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Champ Mot de passe
-                SizedBox(
-                  width: 320,
-                  child: TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.lock_outline, color: primaryColor),
-                      labelText: 'Mot de passe',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: primaryColor),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                    ),
-                    validator: (v) => v!.isEmpty ? 'Requis' : null,
-                  ),
+                child: Image.asset(
+                  'assets/branding/logo_accueil.png',
+                  height: 120,
+                  width: 120,
+                  fit: BoxFit.contain,
+                  errorBuilder: (ctx, _, __) => const Icon(Icons.church, size: 80, color: Color(0xFF003366)),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Dropdowns Niveau et Ministère (Empilés pour éviter les débordements)
-                SizedBox(
-                  width: 320,
-                  child: Column(
-                    children: [
-                      SearchableDropdown<String>(
-                        items: _niveaux,
-                        label: 'Niveau',
-                        initialValue: _selectedNiveau,
-                        displayStringForOption: (v) => v,
-                        onSelected: (newValue) {
-                          setState(() {
-                            _selectedNiveau = newValue;
-                            _selectedRole = null;
-                            _rolesDisponibles = _rolesParNiveau[newValue] ?? [];
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      SearchableDropdown<String>(
-                        items: AppConstants.ministeres,
-                        label: 'Ministère',
-                        initialValue: _selectedMinistere,
-                        displayStringForOption: (v) => v,
-                        onSelected: (v) => setState(() => _selectedMinistere = v),
-                      ),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'Bienvenue !',
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  fontFamily: 'Serif',
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Dropdown Role / Fonction (Pleine largeur)
-                SizedBox(
-                  width: 320,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedRole,
-                    isExpanded: true, // ✅ OBLIGATOIRE pour éviter l'overflow
-                    decoration: InputDecoration(
-                      labelText: 'Fonction / Rôle (optionnel)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    ),
-                    items: _rolesDisponibles.map((v) => DropdownMenuItem(
-                      value: v, 
-                      child: Text(
-                        v, 
-                        style: const TextStyle(fontSize: 14), 
-                        overflow: TextOverflow.ellipsis, // ✅ Coupe le texte si trop long
-                      ),
-                    )).toList(),
-                    onChanged: _selectedNiveau == null ? null : (v) => setState(() => _selectedRole = v),
-                  ),
-                ),
-                
-                const Padding(
-                  padding: EdgeInsets.only(top: 12.0, bottom: 20.0),
-                  child: Text(
-                    'Le ministère correspond à votre ordination.\nLa fonction est optionnelle pour les membres sans mandat.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11, color: Colors.grey, fontStyle: FontStyle.italic),
-                  ),
-                ),
-                
-                // Bouton Se connecter
-                SizedBox(
-                  width: 320,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Se connecter', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                
-                const SizedBox(height: 32),
-                
-                // Liens footer
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Connectez-vous à votre communauté',
+                style: TextStyle(color: Colors.black54, fontSize: 16),
+              ),
+              const SizedBox(height: 32),
+
+              Form(
+                key: _formKey,
+                child: Column(
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordPage())),
-                      child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.black87, decoration: TextDecoration.underline)),
+                    // Identifiant
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        hintText: 'Identifiant ou Email',
+                        prefixIcon: const Icon(Icons.alternate_email, color: Color(0xFF003366)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
                     ),
-                    const Text(' | '),
-                    TextButton(
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RegisterPage())),
-                      child: const Text('Créer un compte', style: TextStyle(color: Colors.black87, decoration: TextDecoration.underline)),
+                    const SizedBox(height: 16),
+
+                    // Mot de passe
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        hintText: 'Mot de passe',
+                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF003366)),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Ligne Niveau / Ministère
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedNiveau,
+                            decoration: InputDecoration(
+                              hintText: 'Niveau',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'champ', child: Text('Champ')),
+                              DropdownMenuItem(value: 'district', child: Text('District')),
+                              DropdownMenuItem(value: 'communaute', child: Text('Communauté')),
+                            ],
+                            onChanged: (v) => setState(() => _selectedNiveau = v),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue: _selectedMinistere,
+                            decoration: InputDecoration(
+                              hintText: 'Ministère',
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'apotre', child: Text('Apôtre')),
+                              DropdownMenuItem(value: 'eveque', child: Text('Évêque')),
+                              DropdownMenuItem(value: 'pretre', child: Text('Prêtre')),
+                            ],
+                            onChanged: (v) => setState(() => _selectedMinistere = v),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Rôle
+                    DropdownButtonFormField<String>(
+                      initialValue: _selectedRole,
+                      decoration: InputDecoration(
+                        hintText: 'Rôle',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'responsable', child: Text('Responsable')),
+                        DropdownMenuItem(value: 'suppleant', child: Text('Suppléant')),
+                      ],
+                      onChanged: (v) => setState(() => _selectedRole = v),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Bouton Se connecter
+                    SizedBox(
+                      width: double.infinity,
+                      height: 55,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _login,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF003366),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
+                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : const Text('Se connecter', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(height: 3, width: double.infinity, decoration: BoxDecoration(color: const Color(0xFF003366), borderRadius: BorderRadius.circular(2))),
+
+                    const SizedBox(height: 24),
+
+                    // Liens
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        TextButton(
+                          onPressed: () => context.go('/forgot-password'),
+                          child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                        ),
+                        const SizedBox(height: 30, child: VerticalDivider(color: Colors.grey)),
+                        TextButton(
+                          onPressed: () => context.go('/register'),
+                          child: const Text('Créer un nouveau compte', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 48),
+
+                    // Footer
+                    const Text(
+                      'Découvrez notre plateforme unifiée pour l\'Église Néo-Apostolique. Apprenez comment gérer votre communauté.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.5, fontStyle: FontStyle.italic),
                     ),
                   ],
                 ),
-                
-                const SizedBox(height: 40),
-                const Text(
-                  'Plateforme Ecclesiastes\nÉglise Néo-Apostolique RDC Ouest',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
-
-  @override
-  void dispose() {
-    _identifiantController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
 }
+

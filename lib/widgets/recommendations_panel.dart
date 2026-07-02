@@ -38,3 +38,4 @@ class RecommendationsPanel extends StatelessWidget {
     );
   }
 }
+

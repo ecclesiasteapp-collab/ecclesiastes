@@ -122,7 +122,7 @@ class _BibliothequePageState extends State<BibliothequePage> {
                   'commission': comm,
                   'entite_id': AuthService.currentEntiteId,
                   'niveau': UserAccessProfile.bibliothequeNiveau,
-                  'auteur_id': AuthService.currentUser?['id'],
+                  'auteur_id': AuthService.currentUser?.id,
                 });
 
                 if (!mounted) return;
@@ -223,10 +223,22 @@ class _BibliothequePageState extends State<BibliothequePage> {
                                     )
                                   : const Icon(Icons.download_for_offline, color: Colors.blue, size: 20),
                               onTap: () async {
-                                await Future.delayed(const Duration(milliseconds: 500));
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(this.context).showSnackBar(
-                                  const SnackBar(content: Text('Téléchargement du document...')),
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(d['titre']?.toString() ?? 'Document'),
+                                    content: const Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.picture_as_pdf, size: 64, color: Colors.redAccent),
+                                        SizedBox(height: 16),
+                                        Text('Visualisation du document non supportée dans cette version de démonstration.', textAlign: TextAlign.center),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Fermer'))
+                                    ],
+                                  ),
                                 );
                               },
                             ),
@@ -298,3 +310,4 @@ class _BibliothequePageState extends State<BibliothequePage> {
     );
   }
 }
+

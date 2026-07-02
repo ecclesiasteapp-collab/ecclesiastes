@@ -1,17 +1,25 @@
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
+import 'file_storage_service.dart';
 import '../models/church_report.dart';
 
 class ReportPdfGenerator {
-  static Future<Uint8List> generate(ChurchReport report) async {
+  static Future<Uint8List> generate(ChurchReport report, Uint8List logoBytes) async {
     final pdf = pw.Document();
     
-    // Chargement du logo
-    final ByteData logoData = await rootBundle.load('assets/images/logo_ena.png');
-    final Uint8List logoBytes = logoData.buffer.asUint8List();
     final pw.MemoryImage logoImage = pw.MemoryImage(logoBytes);
+
+    // On lit la signature depuis le fichier stocké
+    pw.MemoryImage? reporterSignature;
+    if (report.signaturePath != null) {
+      final signatureBytes = await FileStorageService.readFile(report.signaturePath!);
+      if (signatureBytes != null) {
+        reporterSignature = pw.MemoryImage(signatureBytes);
+      }
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -36,10 +44,9 @@ class ReportPdfGenerator {
                     pw.SizedBox(height: 20),
                     _buildActesSection(report),
                     pw.SizedBox(height: 30),
-                    _buildSignatureSection(report),
+                    _buildSignatureSection(report, reporterSignature),
                   ],
                 ),
-                // LE FILIGRANE DE PROTECTION
                 pw.Positioned(
                   bottom: -10,
                   right: 0,
@@ -50,7 +57,7 @@ class ReportPdfGenerator {
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
                     child: pw.Text(
-                      'Généré par Ecclésiastes v1.0 - ID: ${DateTime.now().millisecondsSinceEpoch}',
+                      'Généré par Ecclésiastes v1.0 - ID: ${report.id}',
                       style: pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
                     ),
                   ),
@@ -248,7 +255,7 @@ class ReportPdfGenerator {
     );
   }
 
-  static pw.Widget _buildSignatureSection(ChurchReport report) {
+  static pw.Widget _buildSignatureSection(ChurchReport report, pw.MemoryImage? reporterSig) {
     return pw.Row(
       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
@@ -256,18 +263,23 @@ class ReportPdfGenerator {
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text('Approuvé par :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
-            pw.SizedBox(height: 40),
-            pw.Text('_________________________', style: const pw.TextStyle(fontSize: 11)),
-            pw.Text('Nom & Signature', style: const pw.TextStyle(fontSize: 9)),
+            pw.SizedBox(height: 10),
+            pw.Text(report.validateur ?? '_________________________', style: const pw.TextStyle(fontSize: 11)),
+            pw.SizedBox(height: 5),
+            pw.Text('Validation numérique', style: pw.TextStyle(fontSize: 8, fontStyle: pw.FontStyle.italic)),
           ],
         ),
         pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
           children: [
             pw.Text('Le Rapporteur :', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
-            pw.SizedBox(height: 40),
+            pw.SizedBox(height: 5),
+            if (reporterSig != null)
+              pw.Container(height: 40, width: 80, child: pw.Image(reporterSig))
+            else
+              pw.SizedBox(height: 40),
             pw.Text(report.rapporteur, style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Nom & Signature', style: const pw.TextStyle(fontSize: 9)),
+            pw.Text('Nom & Signature tactile', style: const pw.TextStyle(fontSize: 9)),
           ],
         ),
       ],
@@ -276,15 +288,48 @@ class ReportPdfGenerator {
 
   static String _getReportTypeLabel(ReportTypeExt type) {
     switch (type) {
-      case ReportTypeExt.serviceDivin: return 'Rapport de Service Divin';
-      case ReportTypeExt.reunionFreres: return 'Réunion de Frères';
-      case ReportTypeExt.serviceJeunesse: return 'Service de Jeunesse';
-      case ReportTypeExt.seminaire: return 'Séminaire';
-      case ReportTypeExt.serviceEcodim: return 'Service Ecodim';
-      case ReportTypeExt.serviceFunebre: return 'Service Funèbre';
+      case ReportTypeExt.serviceDivin: return 'Service Divin';
+      case ReportTypeExt.visitePastorale: return 'Visite Pastorale';
+      case ReportTypeExt.communionFraternelle: return 'Communion Fraternelle';
+      case ReportTypeExt.ordinationInstallation: return 'Ordination / Installation';
+      case ReportTypeExt.funerailles: return 'Funérailles';
       case ReportTypeExt.mariage: return 'Mariage';
-      case ReportTypeExt.concert: return 'Concert';
-      default: return 'Rapport d\'activité';
+      case ReportTypeExt.bapteme: return 'Baptême';
+      case ReportTypeExt.sainteCene: return 'Sainte-Cène';
+      case ReportTypeExt.sacristie: return 'Sacristie';
+      case ReportTypeExt.ecodim: return 'ECODIM';
+      case ReportTypeExt.econfi: return 'ECONFI';
+      case ReportTypeExt.jeunesse: return 'Jeunesse';
+      case ReportTypeExt.papas: return 'Papas';
+      case ReportTypeExt.mamans: return 'Mamans';
+      case ReportTypeExt.aines: return 'Aînés';
+      case ReportTypeExt.musiqueTechnique: return 'Musique - Direction Technique';
+      case ReportTypeExt.musiqueOrchestre: return 'Musique - Orchestre';
+      case ReportTypeExt.presseMedias: return 'Presse / Médias';
+      case ReportTypeExt.josephArimathee: return 'Joseph d\'Arimathée';
+      case ReportTypeExt.securiteProtocole: return 'Sécurité / Protocole';
+      case ReportTypeExt.medicale: return 'Médicale';
+      case ReportTypeExt.construction: return 'Construction';
+      case ReportTypeExt.consolidationCommunaute: return 'Consolidation Communauté';
+      case ReportTypeExt.consolidationDistrict: return 'Consolidation District';
+      case ReportTypeExt.consolidationChamp: return 'Consolidation Champ';
+      case ReportTypeExt.consolidationTerritorial: return 'Consolidation Territorial';
+      case ReportTypeExt.consolidationInternational: return 'Consolidation International';
+      case ReportTypeExt.collecteFundraising: return 'Collecte / Fundraising';
+      case ReportTypeExt.evenementSpecial: return 'Événement';
+      case ReportTypeExt.mensuelActivite: return 'Mensuel d\'Activité';
+      case ReportTypeExt.trimestrielActivite: return 'Trimestriel d\'Activité';
+      case ReportTypeExt.annuelActivite: return 'Annuel d\'Activité';
+      case ReportTypeExt.scellement: return 'Saint-Scellement';
+      case ReportTypeExt.reunionCommission: return 'Réunion de Commission';
+      case ReportTypeExt.seminaire: return 'Séminaire';
+      case ReportTypeExt.repetition: return 'Répétition';
+      case ReportTypeExt.formation: return 'Formation';
+      case ReportTypeExt.activiteSociale: return 'Activité Sociale';
+      case ReportTypeExt.inventaire: return 'Rapport d\'Inventaire';
+      case ReportTypeExt.gestionDistrict: return 'Rapport de Gestion (District)';
+      case ReportTypeExt.gestionCommunaute: return 'Rapport de Gestion (Cté)';
+      case ReportTypeExt.autre: return 'Autre Rapport';
     }
   }
 
@@ -293,3 +338,4 @@ class ReportPdfGenerator {
     return jours[date.weekday - 1];
   }
 }
+

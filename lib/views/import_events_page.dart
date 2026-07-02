@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import '../services/event_parser_service.dart';
-import '../models/isar/event.dart';
+import '../models/event_models.dart';
 
 class ImportEventsPage extends StatefulWidget {
   const ImportEventsPage({super.key});
@@ -81,3 +81,4 @@ class _ImportEventsPageState extends State<ImportEventsPage> {
     );
   }
 }
+

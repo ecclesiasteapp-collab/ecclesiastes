@@ -32,3 +32,4 @@ class ReportModel extends HiveObject {
     this.signaturesJson,
   });
 }
+

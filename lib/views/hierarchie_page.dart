@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ecclesiastes/config/ministerial_ranks_config.dart';
 import 'package:ecclesiastes/services/database_helper.dart';
 import 'package:ecclesiastes/utils/entite_types.dart';
-import 'package:ecclesiastes/utils/constants.dart';
-import 'package:ecclesiastes/views/gestion_membres_page.dart';
+import 'package:ecclesiastes/config/organization_config.dart';
+import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:go_router/go_router.dart';
 
 class HierarchiePage extends StatefulWidget {
   final String? parentId;
@@ -12,7 +14,7 @@ class HierarchiePage extends StatefulWidget {
   const HierarchiePage({
     super.key,
     this.parentId,
-    this.title = "Hiérarchie Néo-Apostolique",
+    this.title = 'Hiérarchie Ecclésiaste',
     this.typeEntite = EntiteTypes.racine,
   });
 
@@ -23,8 +25,6 @@ class HierarchiePage extends StatefulWidget {
 class _HierarchiePageState extends State<HierarchiePage> {
   List<Map<String, dynamic>> _entites = [];
   bool _isLoading = true;
-
-  final List<String> commissionsKSO = AppConstants.commissions;
 
   @override
   void initState() {
@@ -51,7 +51,7 @@ class _HierarchiePageState extends State<HierarchiePage> {
 
       if (mounted) setState(() => _entites = normalized);
     } catch (e) {
-      debugPrint("Erreur hiérarchie : $e");
+      debugPrint('Erreur hiérarchie : $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -59,10 +59,12 @@ class _HierarchiePageState extends State<HierarchiePage> {
 
   IconData _iconForType(String type) {
     switch (EntiteTypes.normalize(type)) {
+      case EntiteTypes.internationale:
+        return Icons.public;
       case EntiteTypes.egliseTerritoriale:
         return Icons.account_balance;
       case EntiteTypes.champApostolique:
-        return Icons.public;
+        return Icons.language;
       case EntiteTypes.district:
         return Icons.corporate_fare;
       case EntiteTypes.communaute:
@@ -72,71 +74,60 @@ class _HierarchiePageState extends State<HierarchiePage> {
     }
   }
 
-  void _showApostleProfile(BuildContext context, String nomEntite) {
+  void _showApostleProfile(BuildContext context, String nomEntite, String roleCode) {
+    final apostleDefinition =
+        MinisterialRanksConfig.findByRole(_mapRoleCode(roleCode));
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Profil d\'Apôtre'),
+        title: const Text('Profil du Responsable'),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const ListTile(
-                leading: Icon(Icons.account_circle, color: Colors.blue),
-                title: Text('Apôtre Mpaka Gilbert Nzakimuena'),
-                subtitle: Text('Né en 1966\nChamp KSE depuis 2022'),
+              ListTile(
+                leading: const Icon(Icons.account_circle, color: Color(0xFF003366), size: 40),
+                title: Text(nomEntite),
+                subtitle: Text(apostleDefinition?.label ?? 'Responsable'),
               ),
               const Divider(),
-              _profileItem(Icons.verified_user, 'Ordination', '10 juillet 2022 par Apôtre-patriarche Jean-Luc Schneider'),
-              _profileItem(Icons.map, 'Champ apostolique', 'Kinshasa Sud-Est (KSE)'),
-              _profileItem(Icons.event, 'Actions récentes', 
-                '• Service divin avec Saint-Scellement à Totalana (02/2026)\n'
-                '• Séminaire pour choristes à Punda (11/2025)\n'
-                '• Représentations officielles avec l\'état'
+              Text(
+                apostleDefinition?.roleDescription ??
+                    'Le responsable veille à la direction spirituelle et administrative de l’entité.',
+                style: const TextStyle(fontSize: 13),
               ),
-              _profileItem(Icons.leaderboard, 'Style de leadership', 
-                'Engagement communautaire fort :\n'
-                '- Concours enfants\n'
-                '- Séminaires ministres\n'
-                '- Visites régulières'
-              ),
+              const SizedBox(height: 12),
+              if (apostleDefinition != null) ...[
+                const Text(
+                  'Principales tâches',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                for (final task in apostleDefinition.tasks)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text('• $task', style: const TextStyle(fontSize: 12)),
+                  ),
+              ],
             ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Fermer'))],
       ),
     );
   }
 
-  Widget _profileItem(IconData icon, String title, String content) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.blueGrey),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(content, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-        ],
-      ),
+  UserRole _mapRoleCode(String roleCode) {
+    return UserRole.values.firstWhere(
+      (r) => r.name.toLowerCase() == roleCode.toLowerCase(),
+      orElse: () => UserRole.membre,
     );
   }
 
   Color _colorForType(String type) {
     switch (EntiteTypes.normalize(type)) {
+      case EntiteTypes.internationale:
+        return Colors.purple;
       case EntiteTypes.egliseTerritoriale:
         return Colors.indigo;
       case EntiteTypes.champApostolique:
@@ -153,51 +144,99 @@ class _HierarchiePageState extends State<HierarchiePage> {
   void _showCommissionsBottomSheet(BuildContext context, String entiteId, String nomEntite) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.blueGrey[50],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, controller) => Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Color(0xFF003366),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+              ),
+              child: Column(
+                children: [
+                  const Text('RESPONSABLES DES COMMISSIONS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text(nomEntite, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                ],
+              ),
             ),
-            child: Text(
-              "Activités & Commissions :\n$nomEntite",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Expanded(
-            child: ListView.separated(
-              itemCount: commissionsKSO.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final c = commissionsKSO[index];
-                return ListTile(
-                  leading: const Icon(Icons.group_work, color: Colors.blueAccent),
-                  title: Text(c, style: const TextStyle(fontWeight: FontWeight.w500)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => GestionMembresPage(
-                          commissionName: c,
-                          entiteId: entiteId,
-                        ),
-                      ),
+            Expanded(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: DatabaseHelper.instance.getCommissionResponsables(entiteId: entiteId),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final commissions = snapshot.data!;
+                  if (commissions.isEmpty) {
+                    return const Center(
+                      child: Text('Aucune commission configurée pour cette communauté.'),
                     );
-                  },
-                );
-              },
+                  }
+
+                  return ListView.separated(
+                    controller: controller,
+                    itemCount: commissions.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final commissionData = commissions[index];
+                      final commissionType = commissionData['commission_type']?.toString();
+                      final commission = OrganizationConfig.commissions.firstWhere(
+                        (item) => item.type.name == commissionType,
+                        orElse: () => const CommissionDefinition(
+                          type: CommissionType.none,
+                          name: 'Commission',
+                          description: '',
+                          code: 'UNKNOWN',
+                        ),
+                      );
+                      final responsableNom =
+                          commissionData['responsable_nom']?.toString() ?? 'À désigner';
+                      final adjointNom =
+                          commissionData['adjoint_nom']?.toString() ?? 'À désigner';
+                      final sousCommissions =
+                          (commissionData['sous_commissions'] as List?)?.cast<String>() ??
+                              commission.sousCommissions;
+
+                      return ListTile(
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.orangeAccent,
+                          child: Icon(Icons.group, color: Colors.white, size: 20),
+                        ),
+                        title: Text(
+                          commissionData['commission_nom']?.toString() ?? commission.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        ),
+                        subtitle: Text(
+                          sousCommissions.isEmpty
+                              ? 'Responsable : $responsableNom\nAdjoint : $adjointNom'
+                              : 'Responsable : $responsableNom\nAdjoint : $adjointNom\nSous-commissions : ${sousCommissions.join(', ')}',
+                          style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                        ),
+                        isThreeLine: true,
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/members', extra: {
+                            'communauteId': entiteId,
+                            'commission': commission.type.name,
+                          });
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -206,16 +245,24 @@ class _HierarchiePageState extends State<HierarchiePage> {
   Widget build(BuildContext context) {
     final childLabel = EntiteTypes.enfantDe(widget.typeEntite);
     final emptyHint = childLabel != null
-        ? "Aucun ${EntiteTypes.label(childLabel).toLowerCase()} sous ${widget.title}"
-        : "Aucune sous-entité";
+        ? 'Aucun ${EntiteTypes.label(childLabel).toLowerCase()} sous ${widget.title}'
+        : 'Aucune sous-entité';
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
         elevation: 0,
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF003366),
+        foregroundColor: Colors.white,
+        leading: Navigator.canPop(context)
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios),
+              onPressed: () => Navigator.pop(context),
+              tooltip: 'Retour',
+            )
+          : null,
       ),
+
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _entites.isEmpty
@@ -238,6 +285,7 @@ class _HierarchiePageState extends State<HierarchiePage> {
                     final nom = entite['nom']?.toString() ?? 'Sans nom';
                     final type = EntiteTypes.normalize(entite['type']?.toString());
                     final responsable = entite['responsable_nom']?.toString() ?? 'À définir';
+                    final roleCode = entite['responsable_role']?.toString() ?? 'membre';
                     final color = _colorForType(type);
 
                     return Card(
@@ -251,28 +299,38 @@ class _HierarchiePageState extends State<HierarchiePage> {
                         ),
                         title: Text(nom, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
                         subtitle: Text(
-                          "${EntiteTypes.label(type)} • Responsable : $responsable",
+                          '${EntiteTypes.label(type)} • Responsable : $responsable',
                           style: const TextStyle(fontSize: 12),
                         ),
-                        trailing: Icon(
-                          EntiteTypes.peutNaviguerVersEnfants(type)
-                              ? Icons.arrow_forward_ios
-                              : Icons.assignment_outlined,
-                          size: 16,
-                          color: Colors.grey,
+                        trailing: Wrap(
+                          spacing: 4,
+                          children: [
+                            if (type == EntiteTypes.internationale || type == EntiteTypes.egliseTerritoriale || type == EntiteTypes.champApostolique)
+                              IconButton(
+                                icon: const Icon(Icons.info_outline, color: Colors.blue),
+                                onPressed: () => _showApostleProfile(context, nom, roleCode),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            Icon(
+                              EntiteTypes.peutNaviguerVersEnfants(type)
+                                  ? Icons.arrow_forward_ios
+                                  : Icons.group_work_outlined,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                          ],
                         ),
                         onTap: () {
                           if (type == EntiteTypes.communaute) {
                             _showCommissionsBottomSheet(context, id, nom);
-                          } else if (type == EntiteTypes.champApostolique && nom.contains("Kinshasa Sud-Est")) {
-                            _showApostleProfile(context, nom);
                           } else {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (_) => HierarchiePage(
                                   parentId: id,
-                                  title: "${EntiteTypes.label(type)} : $nom",
+                                  title: '${EntiteTypes.label(type)} : $nom',
                                   typeEntite: type,
                                 ),
                               ),
@@ -286,3 +344,4 @@ class _HierarchiePageState extends State<HierarchiePage> {
     );
   }
 }
+

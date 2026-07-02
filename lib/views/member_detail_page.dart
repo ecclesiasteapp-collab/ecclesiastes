@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../models/member_profile.dart';
-import '../models/hierarchy_models.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 class MemberDetailPage extends StatelessWidget {
@@ -177,6 +177,7 @@ class MemberDetailPage extends StatelessWidget {
   }
 
   void _showTransferDialog(BuildContext context, MemberProfile member) {
-    // Logique de transfert à implémenter
+    context.go('/member/transfer/${member.id}');
   }
 }
+

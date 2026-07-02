@@ -33,11 +33,11 @@ class _DashboardMembrePageState extends State<DashboardMembrePage> {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final ministere = user?['ministere']?.toString() ?? '—';
+    final ministere = user?.role.name ?? '—';
 
     return DashboardScaffold(
       title: 'Ma communauté',
-      subtitle: user?['role_label']?.toString(),
+      subtitle: user?.role.name,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -53,15 +53,15 @@ class _DashboardMembrePageState extends State<DashboardMembrePage> {
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: DashboardTheme.blue,
-                          child: Text((user?['nom_complet'] ?? 'M')[0], style: const TextStyle(color: Colors.white, fontSize: 22)),
+                          child: Text((user?.fullName ?? 'M')[0], style: const TextStyle(color: Colors.white, fontSize: 22)),
                         ),
                         const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(user?['nom_complet']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
-                              Text('Ministère : $ministere', style: const TextStyle(fontSize: 13)),
+                              Text(user?.fullName ?? '', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                              Text('Rang : $ministere', style: const TextStyle(fontSize: 13)),
                               const Text('Accès membre — consultation', style: TextStyle(fontSize: 11, color: Colors.grey)),
                             ],
                           ),
@@ -105,3 +105,4 @@ class _DashboardMembrePageState extends State<DashboardMembrePage> {
     );
   }
 }
+

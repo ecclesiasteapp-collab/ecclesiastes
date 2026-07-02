@@ -1,7 +1,8 @@
-/// Hiérarchie officielle : Église territoriale → Champ apostolique → District → Communauté.
+/// Hiérarchie officielle : Internationale → Église territoriale → Champ apostolique → District → Communauté.
 class EntiteTypes {
   EntiteTypes._();
 
+  static const String internationale = 'INTERNATIONALE';
   static const String egliseTerritoriale = 'EGLISE_TERRITORIALE';
   static const String champApostolique = 'CHAMP_APOSTOLIQUE';
   static const String district = 'DISTRICT';
@@ -11,6 +12,7 @@ class EntiteTypes {
   static const String racine = 'RACINE';
 
   static const List<String> hierarchie = [
+    internationale,
     egliseTerritoriale,
     champApostolique,
     district,
@@ -21,6 +23,8 @@ class EntiteTypes {
 
   static String label(String type) {
     switch (normalize(type)) {
+      case internationale:
+        return 'Église internationale';
       case egliseTerritoriale:
         return 'Église territoriale';
       case champApostolique:
@@ -38,6 +42,8 @@ class EntiteTypes {
   static String? enfantDe(String typeParent) {
     switch (normalize(typeParent)) {
       case racine:
+        return internationale;
+      case internationale:
         return egliseTerritoriale;
       case egliseTerritoriale:
         return champApostolique;
@@ -54,6 +60,9 @@ class EntiteTypes {
   static String normalize(String? type) {
     if (type == null || type.isEmpty) return type ?? '';
     switch (type.toUpperCase()) {
+      case 'INTERNATIONALE':
+      case 'ROOT':
+        return internationale;
       case 'TERRITOIRE':
       case 'EGLISE':
         return egliseTerritoriale;
@@ -70,5 +79,7 @@ class EntiteTypes {
     }
   }
 
+
   static bool peutNaviguerVersEnfants(String type) => type != communaute;
 }
+

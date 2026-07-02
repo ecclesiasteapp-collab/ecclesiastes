@@ -14,7 +14,7 @@ class EntityDashboard extends StatelessWidget {
         children: [
           _buildExecutiveSummary(primaryColor),
           const SizedBox(height: 20),
-          const Text("Suivi des 12 Commissions", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text('Suivi des 12 Commissions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           _buildCommissionGrid(),
           const SizedBox(height: 20),
@@ -31,9 +31,9 @@ class EntityDashboard extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _SummaryItem("Membres", "450"),
-          _SummaryItem("Validations", "3"),
-          _SummaryItem("Alertes", "1", isAlert: true),
+          _SummaryItem('Membres', '450'),
+          _SummaryItem('Validations', '3'),
+          _SummaryItem('Alertes', '1', isAlert: true),
         ],
       ),
     ),
@@ -46,25 +46,25 @@ class EntityDashboard extends StatelessWidget {
     mainAxisSpacing: 8,
     crossAxisSpacing: 8,
     children: [
-      _CommBadge("Ecodim", 85, Colors.green),
-      _CommBadge("Musique", 90, Colors.green),
-      _CommBadge("Econfi", 40, Colors.red),
-      _CommBadge("Jeunesse", 60, Colors.orange),
-      _CommBadge("Médicale", 10, Colors.red),
-      _CommBadge("Aînés", 75, Colors.green),
+      _CommBadge('Ecodim', 85, Colors.green),
+      _CommBadge('Musique', 90, Colors.green),
+      _CommBadge('Econfi', 40, Colors.red),
+      _CommBadge('Jeunesse', 60, Colors.orange),
+      _CommBadge('Médicale', 10, Colors.red),
+      _CommBadge('Aînés', 75, Colors.green),
     ],
   );
 
   Widget _buildValidationQueue() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text("📋 File de Validation", style: TextStyle(fontWeight: FontWeight.bold)),
+      const Text('📋 File de Validation', style: TextStyle(fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       Card(
         child: ListTile(
           leading: const Icon(Icons.description, color: Colors.blue),
-          title: const Text("Rapport Econfi - Mars 2026"),
-          subtitle: const Text("Par: Resp. Econfi"),
+          title: const Text('Rapport Econfi - Mars 2026'),
+          subtitle: const Text('Par: Resp. Econfi'),
           trailing: IconButton(icon: const Icon(Icons.check_circle, color: Colors.green), onPressed: () {}),
         ),
       ),
@@ -93,7 +93,8 @@ class _CommBadge extends StatelessWidget {
     child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
       Icon(Icons.group_work, color: color),
       Text(name, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-      Text("$pct%", style: TextStyle(fontSize: 10, color: color)),
+      Text('$pct%', style: TextStyle(fontSize: 10, color: color)),
     ]),
   );
 }
+

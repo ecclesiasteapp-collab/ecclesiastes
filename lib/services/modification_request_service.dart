@@ -8,7 +8,7 @@ class ModificationRequestService {
 
   static const String _boxName = 'modification_requests';
 
-  Future<Box<ModificationRequest>> get _box async => await Hive.openBox<ModificationRequest>(_boxName);
+  Future<Box<ModificationRequest>> get _box async => Hive.openBox<ModificationRequest>(_boxName);
 
   Future<void> createRequest(ModificationRequest request) async {
     final box = await _box;
@@ -56,3 +56,4 @@ class ModificationRequestService {
     }
   }
 }
+

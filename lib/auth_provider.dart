@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'models/models.dart';
+import 'models/user.dart';
+import 'models/hierarchy_models.dart';
 import 'services/database_service.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final DatabaseService _databaseService = DatabaseService();
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
-  AppUser? _currentUser;
+  User? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
 
-  AppUser? get currentUser => _currentUser;
+  User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _currentUser != null;
@@ -22,9 +22,9 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final userId = await _secureStorage.read(key: 'userId');
+      final userId = await _secureStorage.read(key: 'session_user_id');
       if (userId != null) {
-        final user = await _databaseService.getUser(userId);
+        final user = await DatabaseService.getUser(userId);
         if (user != null && user.isActive) {
           _currentUser = user;
           _errorMessage = null;
@@ -47,8 +47,7 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulation: dans une vrai app, vérifier le mot de passe hashé
-      final users = await _databaseService.getAllUsers();
+      final users = DatabaseService.getAllUsers();
       final user = users.firstWhere(
         (u) => u.email == email,
         orElse: () => throw Exception('Utilisateur non trouvé'),
@@ -58,8 +57,9 @@ class AuthProvider extends ChangeNotifier {
         throw Exception('Compte désactivé');
       }
 
+      // Note: In a real app, verify password here
       _currentUser = user;
-      await _secureStorage.write(key: 'userId', value: user.id);
+      await _secureStorage.write(key: 'session_user_id', value: user.id);
       notifyListeners();
       return true;
     } catch (e) {
@@ -74,72 +74,27 @@ class AuthProvider extends ChangeNotifier {
   /// Déconnexion
   Future<void> logout() async {
     _currentUser = null;
-    await _secureStorage.delete(key: 'userId');
+    await _secureStorage.delete(key: 'session_user_id');
     notifyListeners();
   }
 
-  /// Créer un nouvel utilisateur (admin only)
-  Future<bool> createUser(AppUser user) async {
-    if (_currentUser?.level != UserLevel.apostle) {
-      _errorMessage = 'Accès refusé';
-      return false;
-    }
-
-    try {
-      await _databaseService.insertUser(user);
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = 'Erreur création utilisateur: $e';
-      return false;
-    }
-  }
-
-  /// Mettre à jour le profil utilisateur
-  Future<bool> updateProfile(AppUser updatedUser) async {
-    if (_currentUser == null) {
-      _errorMessage = 'Non authentifié';
-      return false;
-    }
-
-    try {
-      await _databaseService.updateUser(updatedUser);
-      _currentUser = updatedUser;
-      notifyListeners();
-      return true;
-    } catch (e) {
-      _errorMessage = 'Erreur mise à jour: $e';
-      return false;
-    }
-  }
-
-  /// Vérifier les permissions
-  bool canAccessLevel(UserLevel requiredLevel) {
+  /// Vérifier les permissions par rôle
+  bool hasRole(UserRole requiredRole) {
     if (_currentUser == null) return false;
-
-    const levelHierarchy = {
-      UserLevel.apostle: 0,
-      UserLevel.bishop: 1,
-      UserLevel.deacon: 2,
-      UserLevel.committeeLead: 3,
-      UserLevel.minister: 4,
-      UserLevel.member: 5,
-    };
-
-    return (levelHierarchy[_currentUser!.level] ?? 99) <= (levelHierarchy[requiredLevel] ?? 99);
+    // Plus l'index est bas, plus le rôle est élevé (0: apotrePatriarche, 14: membre)
+    return _currentUser!.role.index <= requiredRole.index;
   }
 
   /// Vérifier l'accès par entité
-  bool canAccessEntity(EntityLevel entityLevel, String entityName) {
+  bool canAccessEntity(EntityLevel entityLevel, String entityId) {
     if (_currentUser == null) return false;
+    if (_currentUser!.role == UserRole.superAdmin) return true;
 
-    switch (entityLevel) {
-      case EntityLevel.commission:
-        return _currentUser!.apostleField == entityName || _currentUser!.level == UserLevel.apostle;
-      case EntityLevel.district:
-        return _currentUser!.district == entityName || _currentUser!.apostleField == _currentUser!.district;
-      case EntityLevel.community:
-        return _currentUser!.community == entityName;
-    }
+    // Logique simplifiée
+    if (_currentUser!.entityId == entityId) return true;
+
+    // On pourrait ajouter une logique de vérification de parenté ici
+    return false;
   }
 }
+

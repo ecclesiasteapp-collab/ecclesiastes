@@ -48,3 +48,4 @@ class ModificationRequest extends HiveObject {
     required this.createdAt,
   });
 }
+

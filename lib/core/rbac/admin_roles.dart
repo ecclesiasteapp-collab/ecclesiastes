@@ -12,9 +12,10 @@ class AdminPermissions {
     AdminLevel.district: {'view:community', 'view:district', 'validate:community', 'view:reports'},
     AdminLevel.champ: {'view:community', 'view:district', 'view:champ', 'validate:district', 'export:reports'},
     AdminLevel.territorial: {'view:all', 'validate:champ', 'manage:users', 'analytics:global'},
-    AdminLevel.superAdmin: {'view:all', 'edit:all', 'delete:all', 'manage:system', 'audit:logs'},
+    AdminLevel.superAdmin: {'view:all', 'edit:all', 'delete:all', 'manage:system', 'audit:logs', 'edit:international_church'},
   };
   
   static bool can(AdminLevel level, String permission) => 
       permissions[level]?.contains(permission) ?? false;
 }
+

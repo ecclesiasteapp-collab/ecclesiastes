@@ -81,8 +81,8 @@ class _DashboardMinistrePageState extends State<DashboardMinistrePage> {
     ];
 
     return DashboardScaffold(
-      title: 'eglise néo-apostolique',
-      subtitle: 'Dashboard KSO RDC Ouest',
+      title: 'Ecclésiaste',
+      subtitle: 'Direction Mondiale - Dashboard',
       showDrawer: true,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -102,15 +102,16 @@ class _DashboardMinistrePageState extends State<DashboardMinistrePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                user?['nom_complet']?.toString() ?? 'Apôtre',
+                                user?.fullName ?? 'Apôtre',
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
                               ),
-                              const Text('Profil ministre / direction KSO', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text('Profil Ministre / Direction Mondiale', style: TextStyle(fontSize: 12, color: Colors.grey)),
                             ],
                           ),
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 16),
                     Container(
                       width: double.infinity,
@@ -167,7 +168,7 @@ class _DashboardMinistrePageState extends State<DashboardMinistrePage> {
                     const Text('À la Une', style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     AlaUneCarousel(items: _annonces.isNotEmpty ? _annonces : [
-                      {'titre': "Un sourire fort - Journée de la Femme en Afrique"},
+                      {'titre': 'Un sourire fort - Journée de la Femme en Afrique'},
                       {'titre': "NACSEA Relief - Aide d'urgence"},
                     ]),
                     const SizedBox(height: 16),
@@ -263,3 +264,4 @@ class _DashboardMinistrePageState extends State<DashboardMinistrePage> {
     );
   }
 }
+

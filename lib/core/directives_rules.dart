@@ -49,7 +49,8 @@ class DirectiveRules {
 
   // 🚫 Message d'erreur conforme aux Directives
   static String getBlockMessage(UserLevel level, String action) {
-    return "Conformément aux Directives Ministres (§3.16), le niveau '$level' n'est pas autorisé à effectuer l'action : '$action'. "
-           "Veuillez soumettre une proposition au niveau supérieur pour examen pastoral.";
+    return 'Conformément aux Directives Ministres (§3.16), le niveau \'$level\' n\'est pas autorisé à effectuer l\'action : \'$action\'. '
+        'Veuillez soumettre une proposition au niveau supérieur pour examen pastoral.';
   }
 }
+

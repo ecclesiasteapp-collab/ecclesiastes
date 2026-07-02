@@ -1,893 +1,682 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:ecclesiastes/utils/password_utils.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import '../models/church_report.dart';
+import '../models/notification_model.dart';
 
 class DatabaseHelper {
-  static const int _dbVersion = 7;
-  static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  static final DatabaseHelper instance = DatabaseHelper._internal();
+  factory DatabaseHelper() => instance;
+  DatabaseHelper._internal();
 
-  DatabaseHelper._init();
+  Future<dynamic> get database async => null;
 
-  Future<Database?> get database async {
-    if (kIsWeb) return null;
-    if (_database != null) return _database!;
-    _database = await _initDB('ecclesiastes_v7.db');
-    return _database!;
+  // --- MEMBRES ---
+  Future<List<Map<String, dynamic>>> getMembresEnAttente({String? communauteId}) async {
+    final box = await Hive.openBox<Map>('membres');
+    return box.values
+        .where((m) => m['statut_validation'] == 0 && (communauteId == null || m['communaute_id'] == communauteId))
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
-    return openDatabase(
-      path,
-      version: _dbVersion,
-      onCreate: _createDB,
-      onUpgrade: _upgradeDB,
-    );
-  }
-
-  Future<void> _createDB(Database db, int version) async {
-    // --- STRUCTURE MULTI-TENANT (ÉGLISES TERRITORIALES) ---
-    await db.execute('''
-      CREATE TABLE eglises (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nom_officiel TEXT NOT NULL,
-        pays_siege TEXT NOT NULL,
-        date_creation_plateforme TEXT DEFAULT CURRENT_TIMESTAMP
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE communautes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        eglise_id INTEGER NOT NULL,
-        nom_communaute TEXT NOT NULL,
-        district_nom TEXT NOT NULL,
-        champ_apostolique TEXT NOT NULL,
-        ville TEXT NOT NULL,
-        province TEXT NOT NULL,
-        FOREIGN KEY(eglise_id) REFERENCES eglises(id) ON DELETE CASCADE
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE utilisateurs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        eglise_id INTEGER NOT NULL,
-        identifiant_email TEXT NOT NULL UNIQUE,
-        mot_de_passe_hash TEXT NOT NULL,
-        nom_complet TEXT NOT NULL,
-        niveau_geographique TEXT NOT NULL, -- 'Champ', 'District', 'Communauté'
-        ministere_ordonne TEXT NOT NULL,    -- 'Berger', 'Prêtre', etc.
-        role_applicatif TEXT NOT NULL,      -- 'SUPER_ADMIN', 'RESPONSABLE', etc.
-        communaute_id INTEGER,
-        statut_validation INTEGER DEFAULT 0,
-        FOREIGN KEY(eglise_id) REFERENCES eglises(id) ON DELETE CASCADE,
-        FOREIGN KEY(communaute_id) REFERENCES communautes(id)
-      )
-    ''');
-
-    // --- FINANCES (RÈGLE STRICTE MULTI-DEVISE + REÇU) ---
-    await db.execute('''
-      CREATE TABLE finances_mouvements (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        numero_recu TEXT NOT NULL UNIQUE,
-        montant REAL NOT NULL,
-        devise TEXT NOT NULL, -- 'FC', 'USD', 'EUR'
-        type_mouvement TEXT NOT NULL, -- 'OFFRANDE_CULTURE', 'OFFRANDE_REUNION'
-        communaute_id INTEGER NOT NULL,
-        enregistre_par INTEGER NOT NULL,
-        date_comptable TEXT NOT NULL,
-        eglise_id INTEGER NOT NULL,
-        FOREIGN KEY(communaute_id) REFERENCES communautes(id) ON DELETE CASCADE
-      )
-    ''');
-
-    // --- FORMULAIRES DE TERRAIN NUMÉRISÉS ---
-
-    // 1. Rapport de Sacristie
-    await db.execute('''
-      CREATE TABLE rapports_sacristie (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        communaute_id INTEGER NOT NULL,
-        date_rapport TEXT NOT NULL,
-        pointage_membres_notes TEXT,
-        ordre_eglise_notes TEXT,
-        depouillement_offrandes_notes TEXT,
-        calice_gauche_ouverture TEXT,
-        calice_droite_ouverture TEXT,
-        calice_gauche_couverture TEXT,
-        calice_droite_couverture TEXT,
-        sainte_cene_gauche TEXT,
-        sainte_cene_droite TEXT,
-        cas_maladie_signales TEXT,
-        demandes_prieres_reception TEXT,
-        rapporteur_id INTEGER NOT NULL,
-        eglise_id INTEGER NOT NULL
-      )
-    ''');
-
-    // 2. Rapport de Service Divin Néo-Apostolique
-    await db.execute('''
-      CREATE TABLE rapports_service_divin (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        communaute_id INTEGER NOT NULL,
-        date_service TEXT NOT NULL,
-        jour_semaine TEXT NOT NULL, -- 'DM', 'JMS'
-        type_service TEXT NOT NULL, -- 'SD', 'SE', 'SJ'
-        type_categorie TEXT NOT NULL, -- 'CO', 'MA', 'SF'
-        heure_debut TEXT NOT NULL,
-        heure_fin TEXT NOT NULL,
-        cantique_introduction TEXT,
-        texte_biblique TEXT NOT NULL,
-        officiant_nom TEXT NOT NULL,
-        assistants_liste TEXT,
-        presences_membres INTEGER DEFAULT 0,
-        presences_visiteurs INTEGER DEFAULT 0,
-        finance_mouvement_id INTEGER,
-        acte_saint_bapteme_total INTEGER DEFAULT 0,
-        acte_saint_scelle_total INTEGER DEFAULT 0,
-        acte_confirmation_total INTEGER DEFAULT 0, -- Traité comme bénédiction
-        acte_ordination_details TEXT,
-        acte_retraite_details TEXT,
-        signature_rapporteur TEXT NOT NULL,
-        eglise_id INTEGER NOT NULL
-      )
-    ''');
-
-    // 3. Rapport de Répétition (Musique)
-    await db.execute('''
-      CREATE TABLE rapports_repetition (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        communaute_id INTEGER NOT NULL,
-        date_repetition TEXT NOT NULL,
-        conducteur TEXT NOT NULL,
-        total_choristes_presents INTEGER NOT NULL,
-        voix_details_json TEXT, -- Détails Soprano, Alto, etc.
-        eglise_id INTEGER NOT NULL
-      )
-    ''');
-
-    // 4. Feuilles de Route
-    await db.execute('''
-      CREATE TABLE feuilles_route (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        communaute_id INTEGER NOT NULL,
-        voyageur_nom_complet TEXT NOT NULL,
-        motif_voyage TEXT NOT NULL,
-        date_emission TEXT NOT NULL,
-        eglise_id INTEGER NOT NULL
-      )
-    ''');
-
-    await db.execute('''
-      CREATE TABLE membres (
-        id TEXT PRIMARY KEY,
-        eglise_id INTEGER NOT NULL,
-        communaute_id INTEGER,
-        nom TEXT NOT NULL,
-        postnom TEXT,
-        prenom TEXT,
-        sexe TEXT,
-        date_naissance TEXT,
-        lieu_naissance TEXT,
-        nationalite TEXT,
-        etat_civil TEXT,
-        profession TEXT,
-        nom_pere TEXT,
-        pere_neo_apostolique TEXT,
-        nom_mere TEXT,
-        mere_neo_apostolique TEXT,
-        membre_neo_apostolique TEXT,
-        adresse_avenue TEXT,
-        adresse_numero TEXT,
-        adresse_quartier TEXT,
-        adresse_commune TEXT,
-        telephone TEXT,
-        email TEXT,
-        eglise_territoriale TEXT,
-        champ_apostolique TEXT,
-        district TEXT,
-        communaute TEXT,
-        date_entree_eglise TEXT,
-        statut_membre TEXT,
-        origine_transfert TEXT,
-        baptise TEXT,
-        date_bapteme TEXT,
-        scelle TEXT,
-        date_scellement TEXT,
-        sainte_cene TEXT,
-        ministere TEXT,
-        fonction TEXT,
-        commission TEXT,
-        dons_competences TEXT,
-        disponibilite TEXT,
-        urgence_nom TEXT,
-        urgence_lien TEXT,
-        urgence_telephone TEXT,
-        observations TEXT,
-        date_inscription TEXT,
-        statut_validation INTEGER DEFAULT 0,
-        photo_path TEXT,
-        FOREIGN KEY(eglise_id) REFERENCES eglises(id) ON DELETE CASCADE,
-        FOREIGN KEY(communaute_id) REFERENCES communautes(id) ON DELETE SET NULL
-      )
-    ''');
-
-    // 5. Rapports Génériques (Unifié pour tous les types)
-    await db.execute('''
-      CREATE TABLE reports (
-        id TEXT PRIMARY KEY,
-        type TEXT NOT NULL,
-        title TEXT NOT NULL,
-        author TEXT NOT NULL,
-        data TEXT NOT NULL,
-        createdAt TEXT NOT NULL,
-        isCompleted INTEGER DEFAULT 0
-      )
-    ''');
-
-    await _seedInitialDataV7(db);
-  }
-
-  Future<void> _seedInitialDataV7(Database db) async {
-    // 1. Création de l'Église Territoriale par défaut (Multi-tenancy)
-    final egliseId = await db.insert('eglises', {
-      'nom_officiel': 'Église Néo-Apostolique RDC Ouest',
-      'pays_siege': 'RD Congo',
-    });
-
-    // 2. Création du Super Admin
-    await db.insert('utilisateurs', {
-      'eglise_id': egliseId,
-      'identifiant_email': 'admin',
-      'mot_de_passe_hash': hashPassword('1234'),
-      'nom_complet': 'Nestor Mbuyi Kankolongo',
-      'niveau_geographique': 'Territoire',
-      'ministere_ordonne': 'Apôtre de District',
-      'role_applicatif': 'SUPER_ADMIN',
-      'statut_validation': 1,
-    });
-    
-    // 3. Communauté modèle
-    await db.insert('communautes', {
-      'eglise_id': egliseId,
-      'nom_communaute': 'Communauté Centrale',
-      'district_nom': 'District de Kinshasa',
-      'champ_apostolique': 'Kinshasa Sud-Ouest',
-      'ville': 'Kinshasa',
-      'province': 'Kinshasa',
-    });
-
-    // 4. Données du tableau synoptique
-    final synopticDistricts = [
-      {'nom': 'BILEKO', 'responsable': 'BANGAWE MBONGO', 'count': 511},
-      {'nom': 'BINZA', 'responsable': 'KIBUTILA & BAYOKA NSOBA & MATONDO AKHOKUAMA', 'count': 562},
-      {'nom': 'DJELO BINZA', 'responsable': 'ZABUNGANA, MAYITUKA, KANGALA & NANGA', 'count': 760},
-      {'nom': 'EBEN EZER', 'responsable': 'NGOIE NZAKIMUENA KABUIKU & TUDIZAYA', 'count': 703},
-      {'nom': 'KANGA MOTEMA', 'responsable': 'KASONGO NGWAMA', 'count': 762},
-      {'nom': 'KERITH', 'responsable': 'IBANDA & NKUNI', 'count': 381},
-      {'nom': 'KIMBWALA', 'responsable': 'KIBAMBE NGANA', 'count': 978},
-      {'nom': 'LUTENDELE', 'responsable': 'MUMBAYA MAKENGO', 'count': 1000},
-      {'nom': 'MALUEKA', 'responsable': 'KASAMBI MBENKIE GABANGA MUKWEYI & ABATA', 'count': 1416},
-      {'nom': 'MANENGA', 'responsable': 'LUKOMBO MUBELA WUTISA', 'count': 584},
-      {'nom': 'MBUDI', 'responsable': 'KINAVUIDI NDAMBELE NGBOKOLI & WATA', 'count': 965},
-      {'nom': 'MÉTÉO', 'responsable': 'NSIMUNDELE KABONGO & MASAKIDI LUKUSA', 'count': 511},
-      {'nom': 'MFINDA', 'responsable': 'KWAPA MULUMBA', 'count': 517},
-      {'nom': 'MOBATISI', 'responsable': 'MUKENDI & MANYAYI MAKENGO, LUMUMBA, MAYALA & MANZANZA', 'count': 821},
-      {'nom': 'MUNGANGA', 'responsable': 'MAMBOTE KIANGALA BOPE', 'count': 557},
-      {'nom': 'NGOMBA KINKUSA', 'responsable': 'BUWEKA KITOKO', 'count': 957},
-      {'nom': 'NGOMBI', 'responsable': 'ZIKU', 'count': 405},
-      {'nom': 'POMPAGE', 'responsable': 'LUBANA KABAMBA', 'count': 1016},
-      {'nom': 'SANGA MAMBA', 'responsable': 'KATUNGA NKISI', 'count': 960},
-      {'nom': 'SAREPTA', 'responsable': 'OBOMA KABEMBA', 'count': 1019},
-      {'nom': 'TSHIKAPA', 'responsable': 'LANDU POKI & KABASELE', 'count': 761},
-      {'nom': 'U.P.N', 'responsable': 'GIMAVU & SINDANI', 'count': 995},
-    ];
-
-    for (var d in synopticDistricts) {
-      await db.insert('communautes', {
-        'eglise_id': egliseId,
-        'nom_communaute': 'Centrale ${d['nom']}',
-        'district_nom': d['nom'],
-        'champ_apostolique': 'Kinshasa Sud-Ouest',
-        'ville': 'Kinshasa',
-        'province': 'Kinshasa',
-      });
+  Future<void> validerMembre(String id) async {
+    final box = await Hive.openBox<Map>('membres');
+    final membre = box.get(id);
+    if (membre != null) {
+      final updated = Map<String, dynamic>.from(membre);
+      updated['statut_validation'] = 1;
+      await box.put(id, updated);
     }
   }
 
-  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion < 7) {
-      await _createDB(db, newVersion);
+  Future<void> supprimerMembre(String id) async {
+    final box = await Hive.openBox<Map>('membres');
+    await box.delete(id);
+  }
+
+  Future<void> insertMembre(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('membres');
+    await box.put(data['id'], data);
+  }
+
+  Future<void> transfererMembre(String membreId, String nouveauDistrictId, String nouvelleCommunauteId, String commOrigine) async {
+    final box = await Hive.openBox<Map>('membres');
+    final membre = box.get(membreId);
+    if (membre != null) {
+      final updated = Map<String, dynamic>.from(membre);
+      updated['communaute_id'] = nouvelleCommunauteId;
+      await box.put(membreId, updated);
     }
   }
 
-  // --- HIÉRARCHIE (4 niveaux) ---
-  Future<List<Map<String, dynamic>>> getEglisesTerritoriales() async {
-    final db = await database;
-    if (db == null) return [];
-    return db.query(
-      'entites',
-      where: 'type = ?',
-      whereArgs: [EntiteTypes.egliseTerritoriale],
-      orderBy: 'nom ASC',
-    );
+  // --- UTILISATEURS ---
+  Future<List<Map<String, dynamic>>> getUtilisateursEnAttente({String? entiteId}) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    return box.values
+        .where((u) => u['est_valide'] == 0 && (entiteId == null || u['entite_id'] == entiteId))
+        .map((u) => Map<String, dynamic>.from(u))
+        .toList();
   }
 
-  Future<List<Map<String, dynamic>>> getChampsApostoliques(String egliseId) async {
-    return getSubEntites(egliseId, EntiteTypes.champApostolique);
-  }
-
-  Future<List<Map<String, dynamic>>> getDistricts({String? champId}) async {
-    final db = await database;
-    if (db == null) return [];
-    if (champId != null && champId.isNotEmpty) {
-      return getSubEntites(champId, EntiteTypes.district);
+  Future<void> validerUtilisateur(String id) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    final user = box.get(id);
+    if (user != null) {
+      final updated = Map<String, dynamic>.from(user);
+      updated['est_valide'] = 1;
+      await box.put(id, updated);
     }
-    return db.query(
-      'entites',
-      where: 'type = ?',
-      whereArgs: [EntiteTypes.district],
-      orderBy: 'nom ASC',
-    );
   }
 
-  Future<List<Map<String, dynamic>>> getCommunautesByDistrict(String districtId) async {
-    return getSubEntites(districtId, EntiteTypes.communaute);
+  Future<void> supprimerUtilisateur(String id) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    await box.delete(id);
   }
 
-  /// Enfants d'un parent, ou églises territoriales si [parentId] est null et [childType] est EGLISE_TERRITORIALE.
-  Future<List<Map<String, dynamic>>> getSubEntites(String? parentId, String childType) async {
-    final db = await database;
-    if (db == null) return [];
-    final type = EntiteTypes.normalize(childType);
-    if (parentId == null || parentId.isEmpty) {
-      return db.query(
-        'entites',
-        where: 'parent_id IS NULL AND type = ?',
-        whereArgs: [type],
-        orderBy: 'nom ASC',
-      );
+  Future<Map<String, dynamic>?> getUtilisateurByIdentifiant(String identifiant) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    try {
+      final found = box.values.cast<Map>().firstWhere((u) => u['identifiant'] == identifiant, orElse: () => {});
+      return found.isEmpty ? null : Map<String, dynamic>.from(found);
+    } catch (e) {
+      return null;
     }
-    return db.query(
-      'entites',
-      where: 'parent_id = ? AND type = ?',
-      whereArgs: [parentId, type],
-      orderBy: 'nom ASC',
-    );
   }
 
+  Future<void> mettreAJourMotDePasse(String id, String hashed) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    final user = box.get(id);
+    if (user != null) {
+      final updated = Map<String, dynamic>.from(user);
+      updated['mot_de_passe'] = hashed;
+      await box.put(id, updated);
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUserById(String id) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    final data = box.get(id);
+    if (data != null) {
+      return Map<String, dynamic>.from(data);
+    }
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getUtilisateur(String id) async {
+    // Alias for getUserById for compatibility
+    return getUserById(id);
+  }
+
+  // --- ANNONCES ---
+  Future<List<Map<String, dynamic>>> getAnnoncesRecent() async {
+    final box = await Hive.openBox<Map>('annonces');
+    final list = box.values.map((a) => Map<String, dynamic>.from(a)).toList();
+    list.sort((a, b) => (b['date_publication'] ?? '').compareTo(a['date_publication'] ?? ''));
+    return list;
+  }
+
+  Future<void> insertAnnonce(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('annonces');
+    await box.put(data['id'], data);
+  }
+
+  // --- ENTITES ---
   Future<List<Map<String, dynamic>>> getAllEntites() async {
-    final db = await database;
-    if (db == null) return [];
-    return db.query('entites', orderBy: 'type, nom');
-  }
-
-  Future<List<Map<String, dynamic>>> getEntitesByType(String type) async {
-    final db = await database;
-    if (db == null) return [];
-    return db.query(
-      'entites',
-      where: 'type = ?',
-      whereArgs: [EntiteTypes.normalize(type)],
-      orderBy: 'nom ASC',
-    );
+    final box = await Hive.openBox<Map>('entites');
+    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
   Future<Map<String, dynamic>?> getEntiteById(String id) async {
-    final db = await database;
-    if (db == null) return null;
-    final rows = await db.query('entites', where: 'id = ?', whereArgs: [id], limit: 1);
-    if (rows.isEmpty) return null;
-    return rows.first;
+    final box = await Hive.openBox<Map>('entites');
+    final data = box.get(id);
+    return data == null ? null : Map<String, dynamic>.from(data);
   }
 
-  /// Remonte la chaîne parentale jusqu'à la racine.
-  Future<List<Map<String, dynamic>>> getChaineAncestres(String entiteId) async {
-    final chain = <Map<String, dynamic>>[];
-    Map<String, dynamic>? current = await getEntiteById(entiteId);
-    while (current != null) {
-      chain.insert(0, current);
-      final parentId = current['parent_id']?.toString();
-      if (parentId == null || parentId.isEmpty) break;
-      current = await getEntiteById(parentId);
-    }
-    return chain;
-  }
+  Future<void> insertEntite({required String id, required String nom, required String type, String? parentId}) async {
+    final box = await Hive.openBox<Map>('entites');
 
-  /// Comptages districts / communautés (optionnellement sous un champ).
-  Future<Map<String, int>> getEntiteCounts({String? champId}) async {
-    final db = await database;
-    if (db == null) return {'districts': 0, 'communautes': 0, 'champs': 0};
-    if (champId != null && champId.isNotEmpty) {
-      final districts = await getSubEntites(champId, EntiteTypes.district);
-      var commCount = 0;
-      for (final d in districts) {
-        final comms = await getSubEntites(d['id'].toString(), EntiteTypes.communaute);
-        commCount += comms.length;
+    // Vérifier l'unicité de l'Église Internationale
+    if (type == 'INTERNATIONALE') { // Utilisation de la chaîne en dur pour éviter les problèmes d'import si EntiteTypes n'est pas dispo
+      final existingInternational = box.values.any((e) => e['type'] == 'INTERNATIONALE');
+      if (existingInternational) {
+        throw Exception("Une seule entité de type 'Internationale' est autorisée.");
       }
-      return {'districts': districts.length, 'communautes': commCount, 'champs': 1};
     }
-    final d = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM entites WHERE type = ?',
-          [EntiteTypes.district],
-        )) ??
-        0;
-    final c = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM entites WHERE type = ?',
-          [EntiteTypes.communaute],
-        )) ??
-        0;
-    final ch = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM entites WHERE type = ?',
-          [EntiteTypes.champApostolique],
-        )) ??
-        0;
-    return {'districts': d, 'communautes': c, 'champs': ch};
-  }
 
-  Future<int> insertEntite({
-    required String id,
-    required String nom,
-    required String type,
-    String? parentId,
-    String responsableNom = 'À définir',
-  }) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('entites', {
+    await box.put(id, {
       'id': id,
       'nom': nom,
       'type': type,
       'parent_id': parentId,
-      'responsable_nom': responsableNom,
     });
   }
 
-  Future<int> insertCommunaute(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('communautes', row);
+  Future<List<Map<String, dynamic>>> getMembresValides({String? commission, String? communauteId}) async {
+    final box = await Hive.openBox<Map>('membres');
+    return box.values
+        .where((m) => m['statut_validation'] == 1 &&
+                      (commission == null || m['commission'] == commission) &&
+                      (communauteId == null || m['communaute_id'] == communauteId))
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
   }
 
-  // --- UTILISATEURS ---
-  Future<Map<String, dynamic>?> getUtilisateurByIdentifiant(String identifiant) async {
-    final db = await database;
-    if (db == null) return null;
-    final rows = await db.rawQuery(
-      'SELECT * FROM utilisateurs WHERE LOWER(identifiant_email) = ? LIMIT 1',
-      [identifiant.toLowerCase()],
-    );
-    if (rows.isEmpty) return null;
-    return rows.first;
-  }
-
-  Future<bool> identifiantExiste(String identifiant) async {
-    final user = await getUtilisateurByIdentifiant(identifiant);
-    return user != null;
-  }
-
-  Future<int> creerUtilisateur({
-    required String identifiant,
-    required String motDePasseHash,
-    required String nomComplet,
-    required String role,
+  // --- COMMISSIONS ---
+  Future<List<Map<String, dynamic>>> getCommissionResponsables({
     String? entiteId,
-    String? typeEntite,
-    String? roleLabel,
-    String? ministere,
+    String? districtId,
+    String? commissionType,
   }) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('utilisateurs', {
-      'id': 'USR_${DateTime.now().millisecondsSinceEpoch}',
-      'identifiant': identifiant.toLowerCase(),
-      'mot_de_passe_hash': motDePasseHash,
-      'nom_complet': nomComplet,
-      'role': role,
-      'entite_id': entiteId,
-      'type_entite': typeEntite ?? EntiteTypes.communaute,
-      'statut_validation': 0, // En attente
-      'date_inscription': DateTime.now().toIso8601String(),
-      'role_label': roleLabel,
-      'ministere': ministere,
-    });
+    final box = await Hive.openBox<Map>('commissions_map');
+    final items = box.values
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((item) {
+      final matchesEntite =
+          entiteId == null || item['entite_id']?.toString() == entiteId;
+      final matchesDistrict =
+          districtId == null || item['district_id']?.toString() == districtId;
+      final matchesCommission = commissionType == null ||
+          item['commission_type']?.toString() == commissionType;
+      return matchesEntite && matchesDistrict && matchesCommission;
+    }).toList();
+
+    items.sort((a, b) => (a['commission_nom'] ?? '')
+        .toString()
+        .compareTo((b['commission_nom'] ?? '').toString()));
+    return items;
   }
 
-  Future<int> validerUtilisateur(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('utilisateurs', {'statut_validation': 1}, where: 'id = ?', whereArgs: [id]);
+  Future<void> upsertCommissionResponsable(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('commissions_map');
+    final id = data['id']?.toString() ??
+        'comm_${DateTime.now().millisecondsSinceEpoch}';
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = id;
+    await box.put(id, payload);
   }
 
-  Future<int> supprimerUtilisateur(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.delete('utilisateurs', where: 'id = ?', whereArgs: [id]);
+  Future<List<Map<String, dynamic>>> getEglisesTerritoriales() async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values.where((e) => e['type'] == 'EGLISE_TERRITORIALE').map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<List<Map<String, dynamic>>> getUtilisateursEnAttente({String? entiteId}) async {
-    final db = await database;
-    if (db == null) return [];
-    // Auto-nettoyage des inscriptions de plus de 3 jours expirées
-    final now = DateTime.now();
-    final users = await db.query('utilisateurs', where: 'statut_validation = ?', whereArgs: [0]);
-    for (final u in users) {
-      final dateStr = u['date_inscription']?.toString();
-      if (dateStr != null && dateStr.isNotEmpty) {
-        final d = DateTime.tryParse(dateStr);
-        if (d != null && now.difference(d).inDays >= 3) {
-          await supprimerUtilisateur(u['id'] as String);
-        }
-      }
-    }
-
-    if (entiteId == null || entiteId == 'TOUS') {
-      return db.query('utilisateurs', where: 'statut_validation = ? AND role != ?', whereArgs: [0, 'SUPER_ADMIN'], orderBy: 'nom_complet ASC');
-    }
-    return db.query(
-      'utilisateurs',
-      where: 'statut_validation = ? AND entite_id = ? AND role != ?',
-      whereArgs: [0, entiteId, 'SUPER_ADMIN'],
-      orderBy: 'nom_complet ASC',
-    );
+  Future<List<Map<String, dynamic>>> getChampsApostoliques([String? territorialId]) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => e['type'] == 'CHAMP_APOSTOLIQUE' && (territorialId == null || e['parent_id'] == territorialId))
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
-  Future<int> mettreAJourMotDePasse(String identifiant, String motDePasseHash) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update(
-      'utilisateurs',
-      {'mot_de_passe_hash': motDePasseHash},
-      where: 'LOWER(identifiant) = ?',
-      whereArgs: [identifiant.toLowerCase()],
-    );
+  Future<List<Map<String, dynamic>>> getDistricts({String? champId}) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => e['type'] == 'DISTRICT' && (champId == null || e['parent_id'] == champId))
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getCommunautesByDistrict(String districtId) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => e['type'] == 'COMMUNAUTE' && e['parent_id'] == districtId)
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 
   Future<List<Map<String, dynamic>>> getCommunautesAvecChemin() async {
-    final db = await database;
-    if (db == null) return [];
-    final all = await db.query('entites');
-    final byId = {for (final e in all) e['id'].toString(): e};
-    final comms = all.where((e) => EntiteTypes.normalize(e['type']?.toString()) == EntiteTypes.communaute);
-
-    String chemin(String id) {
-      final parts = <String>[];
-      Map<String, dynamic>? current = byId[id];
-      while (current != null) {
-        parts.insert(0, current['nom']?.toString() ?? '');
-        final pid = current['parent_id']?.toString();
-        current = pid != null ? byId[pid] : null;
-      }
-      return parts.join(' › ');
-    }
-
-    return comms
-        .map((c) => {
-              'id': c['id'].toString(),
-              'nom': c['nom']?.toString() ?? '',
-              'chemin': chemin(c['id'].toString()),
-            })
-        .toList()
-      ..sort((a, b) => (a['chemin'] as String).compareTo(b['chemin'] as String));
+    final box = await Hive.openBox<Map>('entites');
+    return box.values.where((e) => e['type'] == 'COMMUNAUTE').map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  // --- MEMBRES ---
-  Future<int> insertMembre(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    final data = Map<String, dynamic>.from(row);
-    data.putIfAbsent('date_inscription', () => DateTime.now().toIso8601String());
-    data.putIfAbsent('statut_validation', () => 0);
-    return db.insert('membres', data);
+  // --- BIBLIOTHEQUE ---
+  Future<List<Map<String, dynamic>>> getBibliotheque({String? entiteId, String? commission, String? niveau}) async {
+    final box = await Hive.openBox<Map>('bibliotheque');
+    return box.values
+        .map((d) => Map<String, dynamic>.from(d))
+        .where((d) =>
+            (entiteId == null || d['entite_id'] == entiteId) &&
+            (commission == null || d['commission'] == commission) &&
+            (niveau == null || d['niveau'] == niveau))
+        .toList();
   }
 
-  Future<int> updateMembre(String id, Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('membres', row, where: 'id = ?', whereArgs: [id]);
+  Future<void> insertDocument(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('bibliotheque');
+    final documentId = data['id']?.toString() ??
+        'doc_${DateTime.now().millisecondsSinceEpoch}';
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = documentId;
+    await box.put(documentId, payload);
   }
 
-  Future<int> validerMembre(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update('membres', {'statut_validation': 1}, where: 'id = ?', whereArgs: [id]);
+  Future<void> deleteDocument(dynamic id) async {
+    final box = await Hive.openBox<Map>('bibliotheque');
+    await box.delete(id);
   }
 
-  Future<int> supprimerMembre(String id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.delete('membres', where: 'id = ?', whereArgs: [id]);
+  // --- EVENEMENTS ---
+  Future<List<Map<String, dynamic>>> getEvenements() async {
+    final box = await Hive.openBox<Map>('evenements_map');
+    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<List<Map<String, dynamic>>> getMembresEnAttente({String? communauteId}) async {
-    final db = await database;
-    if (db == null) return [];
-    if (communauteId == null || communauteId == 'TOUS') {
-      return db.query('membres', where: 'statut_validation = ?', whereArgs: [0], orderBy: 'nom ASC');
-    }
-    return db.query(
-      'membres',
-      where: 'statut_validation = ? AND communaute_id = ?',
-      whereArgs: [0, communauteId],
-      orderBy: 'nom ASC',
-    );
-  }
-
-  Future<List<Map<String, dynamic>>> getMembresValides({
-    String? communauteId,
-    String? commission,
+  Future<List<Map<String, dynamic>>> getProgrammes({
+    String? entiteId,
+    String? niveau,
+    String? responsableType,
+    String? commissionLiee,
   }) async {
-    final db = await database;
-    if (db == null) return [];
-    String where = 'statut_validation = ?';
-    final args = <dynamic>[1];
-    if (communauteId != null && communauteId.isNotEmpty) {
-      where += ' AND communaute_id = ?';
-      args.add(communauteId);
-    }
-    if (commission != null && commission.isNotEmpty) {
-      where += ' AND commission = ?';
-      args.add(commission);
-    }
-    return db.query('membres', where: where, whereArgs: args, orderBy: 'nom ASC');
+    final box = await Hive.openBox<Map>('evenements_map');
+    final items = box.values
+        .map((item) => Map<String, dynamic>.from(item))
+        .where((item) {
+      final matchesEntite =
+          entiteId == null || item['entite_id']?.toString() == entiteId;
+      final matchesNiveau =
+          niveau == null || item['niveau']?.toString() == niveau;
+      final matchesResponsableType = responsableType == null ||
+          item['responsable_type']?.toString() == responsableType;
+      final matchesCommission = commissionLiee == null ||
+          item['commission_liee']?.toString() == commissionLiee;
+      return matchesEntite &&
+          matchesNiveau &&
+          matchesResponsableType &&
+          matchesCommission;
+    }).toList();
+
+    items.sort((a, b) => (a['date_evenement'] ?? '')
+        .toString()
+        .compareTo((b['date_evenement'] ?? '').toString()));
+    return items;
   }
 
-  Future<int> getTotalMembres({String? communauteId}) async {
-    final db = await database;
-    if (db == null) return 0;
-    if (communauteId != null && communauteId.isNotEmpty) {
-      return Sqflite.firstIntValue(await db.rawQuery(
-            'SELECT COUNT(*) FROM membres WHERE statut_validation = 1 AND communaute_id = ?',
-            [communauteId],
-          )) ??
-          0;
-    }
-    return Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM membres WHERE statut_validation = 1'),
-        ) ??
-        0;
+  Future<void> insertEvenement(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('evenements_map');
+    final eventId = data['id']?.toString() ??
+        'evt_${DateTime.now().millisecondsSinceEpoch}';
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = eventId;
+    await box.put(eventId, payload);
   }
 
-  Future<int> getUnvalidatedCount({String? communauteId}) async {
-    final db = await database;
-    if (db == null) return 0;
-    if (communauteId != null && communauteId.isNotEmpty) {
-      return Sqflite.firstIntValue(await db.rawQuery(
-            'SELECT COUNT(*) FROM membres WHERE statut_validation = 0 AND communaute_id = ?',
-            [communauteId],
-          )) ??
-          0;
-    }
-    return Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM membres WHERE statut_validation = 0'),
-        ) ??
-        0;
+  Future<List<Map<String, dynamic>>> getAnniversairesDuJour([String? dateStr]) async {
+    return [];
   }
 
-  // --- STATISTIQUES ---
-  Future<Map<String, int>> getStatsCommissions({String? districtId}) async {
-    final db = await database;
-    if (db == null) return {};
-    String where = 'statut_validation = 1';
-    final args = <dynamic>[];
-    if (districtId != null && districtId.isNotEmpty) {
-      where += ' AND district_id = ?';
-      args.add(districtId);
-    }
-    final res = await db.rawQuery(
-      'SELECT commission, COUNT(*) as count FROM membres WHERE $where GROUP BY commission',
-      args,
-    );
-    return {for (var item in res) (item['commission'] ?? 'Autre').toString(): item['count'] as int};
+  Future<List<Map<String, dynamic>>> getSacristyReportsByEvent(String eventId) async {
+    final box = await Hive.openBox<Map>('rapports');
+    return box.values.where((r) => r['eventId'] == eventId && r['type'] == ReportTypeExt.sacristie.index).map((r) => Map<String, dynamic>.from(r)).toList();
   }
 
-  Future<Map<String, int>> getStatsSacrements({String? districtId}) async {
-    final db = await database;
-    if (db == null) return {'Baptisés': 0, 'Scellés': 0};
-    String filter = '';
-    final args = <dynamic>[];
-    if (districtId != null && districtId.isNotEmpty) {
-      filter = ' AND district_id = ?';
-      args.add(districtId);
-    }
-    final b = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM membres WHERE baptise = 1$filter',
-          args,
-        )) ??
-        0;
-    final s = Sqflite.firstIntValue(await db.rawQuery(
-          'SELECT COUNT(*) FROM membres WHERE scelle = 1$filter',
-          args,
-        )) ??
-        0;
-    return {'Baptisés': b, 'Scellés': s};
+  Future<List<Map<String, dynamic>>> getReportsByAuthor(String authorId) async {
+    final box = await Hive.openBox<Map>('rapports');
+    return box.values.where((r) => r['rapporteurId'] == authorId).map((r) => Map<String, dynamic>.from(r)).toList();
   }
 
-  // --- ÉVÉNEMENTS ---
-  Future<List<Map<String, dynamic>>> getEvenements({String? entiteId}) async {
-    final db = await database;
-    if (db == null) return [];
-    if (entiteId != null && entiteId.isNotEmpty) {
-      return db.query(
-        'evenements',
-        where: 'entite_id = ? OR entite_id IS NULL',
-        whereArgs: [entiteId],
-        orderBy: 'date_evenement ASC',
-      );
-    }
-    return db.query('evenements', orderBy: 'date_evenement ASC');
+  Future<Map<String, dynamic>?> getReportById(String reportId) async {
+    final box = await Hive.openBox<Map>('rapports');
+    final report = box.get(reportId);
+    return report != null ? Map<String, dynamic>.from(report) : null;
   }
 
-  Future<int> insertEvenement(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    final data = Map<String, dynamic>.from(row);
-    data.remove('id');
-    if (data.containsKey('date_debut')) {
-      data['date_evenement'] = data.remove('date_debut');
-    }
-    return db.insert('evenements', data);
+  Future<List<Map<String, dynamic>>> getReportsByStatus(String status, {String? supervisingEntityId}) async {
+    final box = await Hive.openBox<Map>('rapports');
+    
+    return box.values
+        .where((report) {
+          final isStatusMatch = report['status'] == status;
+          if (!isStatusMatch) return false;
+
+          // Si aucun ID de supervision n'est fourni, on retourne tous les rapports avec le bon statut (comportement admin)
+          if (supervisingEntityId == null) return true;
+
+          // Logique de supervision : le rapport doit provenir d'une entité directement supervisée.
+          // Exemple : un responsable de district (entityId) voit les rapports de ses communautés (report['parentId']).
+          // Cette logique suppose que le rapport contient l'ID de l'entité parente.
+          final reportParentId = report['parentEntityId']?.toString();
+          return reportParentId == supervisingEntityId;
+        })
+        .map((r) => Map<String, dynamic>.from(r))
+        .toList();
   }
 
-  // --- ANNONCES & FINANCES ---
-  Future<List<Map<String, dynamic>>> getAnnoncesRecent() async {
-    final db = await database;
-    if (db == null) return [];
-    return db.query('annonces', orderBy: 'date_publication DESC', limit: 10);
-  }
-
-  Future<int> insertAnnonce(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.insert('annonces', row);
-  }
-
-  Future<List<Map<String, dynamic>>> getAnniversairesDuJour() async {
-    final db = await database;
-    if (db == null) return [];
-    final dateDuJour = DateTime.now().toIso8601String().substring(5, 10);
-    return db.rawQuery(
-      "SELECT nom, prenom, telephone, date_naissance FROM membres WHERE strftime('%m-%d', date_naissance) = ?",
-      [dateDuJour],
-    );
+  // --- FINANCES ---
+  Future<void> insertFinances(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('finances');
+    await box.put(DateTime.now().millisecondsSinceEpoch.toString(), data);
   }
 
   Future<List<Map<String, dynamic>>> getJournalFinancier({String? entiteId}) async {
-    final db = await database;
-    if (db == null) return [];
-    if (entiteId != null && entiteId.isNotEmpty) {
-      return db.query(
-        'finances',
-        where: 'entite_id = ?',
-        whereArgs: [entiteId],
-        orderBy: 'date_saisie DESC',
-      );
-    }
-    return db.query('finances', orderBy: 'date_saisie DESC');
+    final box = await Hive.openBox<Map>('finances');
+    return box.values
+        .where((f) => entiteId == null || f['entite_id'] == entiteId)
+        .map((f) => Map<String, dynamic>.from(f))
+        .toList();
   }
 
-  Future<int> insertFinances(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    final data = Map<String, dynamic>.from(row);
-    data.remove('id');
-    if (data.containsKey('date_paiement')) {
-      data['date_saisie'] = data.remove('date_paiement');
-    }
-    data.putIfAbsent('date_saisie', () => DateTime.now().toIso8601String().split('T').first);
-    return db.insert('finances', data);
+  // --- STATISTIQUES ---
+  Future<Map<String, int>> getStatsCommissions({String? communauteId, String? districtId}) async {
+    return {};
   }
 
-  Future<int> transfererMembre(
-    String membreId,
-    String nuevoDistrictId,
-    String nouvelleCommunauteId,
-    String commOrigine,
-  ) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.update(
-      'membres',
-      {
-        'district_id': nuevoDistrictId,
-        'communaute_id': nouvelleCommunauteId,
-        'communaute_origine': commOrigine,
-        'statut_membre': 'Transfert',
-      },
-      where: 'id = ?',
-      whereArgs: [membreId],
-    );
+  Future<Map<String, int>> getStatsSacrements({String? communauteId, String? districtId}) async {
+    return {};
   }
 
-  Future<Map<String, int>> getStatsRetraite({String? entiteId}) async {
-    final db = await database;
-    if (db == null) return {'total': 0, 'proches_retraite': 0, 'deja_retraites': 0};
-    final now = DateTime.now();
-    final retraiteLimit = DateTime(now.year - 65, now.month, now.day);
-    final dateStr = retraiteLimit.toIso8601String().split('T').first;
+  Future<Map<String, int>> getStatsRetraite({String? communauteId, String? entiteId}) async {
+    return {};
+  }
 
-    String where = 'statut_validation = 1 AND date_naissance IS NOT NULL AND date_naissance != \'\'';
-    final args = <dynamic>[];
-    if (entiteId != null && entiteId.isNotEmpty) {
-      where += ' AND communaute_id = ?';
-      args.add(entiteId);
+  Future<int> getUnvalidatedCount({String? communauteId}) async {
+    final membres = await getMembresEnAttente(communauteId: communauteId);
+    final users = await getUtilisateursEnAttente(entiteId: communauteId);
+    return membres.length + users.length;
+  }
+
+  // --- KPI / SUPER ADMIN ---
+  Future<int> getTotalUsers() async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    return box.length;
+  }
+
+  Future<int> getTotalMembers() async {
+    final box = await Hive.openBox<Map>('membres');
+    return box.length;
+  }
+
+  Future<int> getTotalEntities() async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.length;
+  }
+
+  Future<Map<String, int>> getMembersByCommission() async {
+    final box = await Hive.openBox<Map>('membres');
+    final out = <String, int>{};
+
+    for (final raw in box.values) {
+      final commission = raw['commission']?.toString().trim();
+      if (commission == null || commission.isEmpty) continue;
+      out[commission] = (out[commission] ?? 0) + 1;
     }
 
-    final proches = await db.rawQuery(
-      'SELECT COUNT(*) as cnt FROM membres WHERE $where AND date_naissance >= ?',
-      [...args, dateStr],
-    );
-    final retraites = await db.query('membres',
-      where: 'statut_retraite = ?', whereArgs: [1]);
+    return out;
+  }
 
-    final total = Sqflite.firstIntValue(await db.rawQuery(
-      'SELECT COUNT(*) FROM membres WHERE $where', args)) ?? 0;
+  Future<Map<String, int>> getEntitiesByTypeDistribution() async {
+    final box = await Hive.openBox<Map>('entites');
+    final out = <String, int>{};
+
+    for (final raw in box.values) {
+      final type = raw['type']?.toString().trim();
+      if (type == null || type.isEmpty) continue;
+      out[type] = (out[type] ?? 0) + 1;
+    }
+
+    return out;
+  }
+
+  Future<Map<String, int>> getGovernanceStatus() async {
+    final entitesBox = await Hive.openBox<Map>('entites');
+    final usersBox = await Hive.openBox<Map>('utilisateurs');
+
+    var vacants = 0;
+    for (final e in entitesBox.values) {
+      final responsableId = e['responsable_id']?.toString();
+      if (responsableId == null || responsableId.isEmpty) {
+        vacants += 1;
+      }
+    }
+
+    var interims = 0;
+    for (final u in usersBox.values) {
+      final isInterim = u['is_interim'] == true;
+      final role = u['entity_role']?.toString();
+      if (isInterim && role == 'responsable') {
+        interims += 1;
+      }
+    }
 
     return {
-      'total': total,
-      'proches_retraite': Sqflite.firstIntValue(proches) ?? 0,
-      'deja_retraites': retraites.length,
+      'Vacants': vacants,
+      'Intérims': interims,
     };
   }
 
-  Future<List<Map<String, dynamic>>> getMembresProchesRetraite({String? entiteId}) async {
-    final db = await database;
-    if (db == null) return [];
-    final now = DateTime.now();
-    final retraiteLimit = DateTime(now.year - 65, now.month, now.day);
-    final dateStr = retraiteLimit.toIso8601String().split('T').first;
+  Future<Map<String, int>> getSecurityStats() async {
+    final usersBox = await Hive.openBox<Map>('utilisateurs');
 
-    String where = 'statut_validation = 1 AND date_naissance IS NOT NULL AND date_naissance != \'\' AND date_naissance >= ?';
-    final args = <dynamic>[dateStr];
-    if (entiteId != null && entiteId.isNotEmpty) {
-      where += ' AND communaute_id = ?';
-      args.add(entiteId);
+    var suspended = 0;
+    var pending = 0;
+    for (final u in usersBox.values) {
+      final status = u['status']?.toString();
+      if (status == 'suspended') suspended += 1;
+      if (status == 'pending') pending += 1;
     }
-    return db.query('membres', where: where, whereArgs: args, orderBy: 'date_naissance ASC');
+
+    return {
+      'Suspendus': suspended,
+      'En attente': pending,
+    };
   }
 
-  Future<List<Map<String, dynamic>>> getBibliotheque({
-    String? entiteId,
-    String? commission,
-    String? niveau,
-  }) async {
-    final db = await database;
-    if (db == null) return [];
-    String where = '1=1';
-    final args = <dynamic>[];
-    if (entiteId != null && entiteId.isNotEmpty) {
-      where += ' AND entite_id = ?';
-      args.add(entiteId);
+  Future<int> getActiveDelegationsCount() async {
+    final usersBox = await Hive.openBox<Map>('utilisateurs');
+
+    var count = 0;
+    for (final u in usersBox.values) {
+      final perms = u['delegated_permissions'];
+      if (perms is List && perms.isNotEmpty) {
+        count += 1;
+      }
     }
-    if (commission != null && commission.isNotEmpty) {
-      where += ' AND commission = ?';
-      args.add(commission);
-    }
-    if (niveau != null && niveau.isNotEmpty) {
-      where += ' AND niveau = ?';
-      args.add(niveau);
-    }
-    return db.query('bibliotheque', where: where, whereArgs: args, orderBy: 'date_ajout DESC');
+
+    return count;
   }
 
-  Future<int> insertDocument(Map<String, dynamic> row) async {
-    final db = await database;
-    if (db == null) return 0;
-    final data = Map<String, dynamic>.from(row);
-    data.putIfAbsent('date_ajout', () => DateTime.now().toIso8601String());
-    data.putIfAbsent('type_document', () => 'Document');
-    data.putIfAbsent('niveau', () => 'communaute');
-    return db.insert('bibliotheque', data);
+  Future<void> compactAll() async {
+    // Hive compacte par box. On le fait sur les boîtes principales.
+    final boxes = await Future.wait([
+      Hive.openBox<Map>('membres'),
+      Hive.openBox<Map>('utilisateurs'),
+      Hive.openBox<Map>('entites'),
+      Hive.openBox<Map>('commissions_map'),
+      Hive.openBox<Map>('rapports'),
+      Hive.openBox<Map>('evenements_map'),
+    ]);
+
+    for (final b in boxes) {
+      await b.compact();
+      await b.flush();
+    }
   }
 
-  Future<int> deleteDocument(int id) async {
-    final db = await database;
-    if (db == null) return 0;
-    return db.delete('bibliotheque', where: 'id = ?', whereArgs: [id]);
+  Future<void> insertDirective(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('directives');
+    final id = data['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = id;
+    await box.put(id, payload);
+  }
+
+  Future<Map<String, int>> getEntiteCounts({String? champId}) async {
+    final entitesBox = await Hive.openBox<Map>('entites');
+    final membresBox = await Hive.openBox<Map>('membres');
+    final usersBox = await Hive.openBox<Map>('utilisateurs');
+
+    final allEntites = entitesBox.values.map((e) => Map<String, dynamic>.from(e)).toList();
+
+    final List<String> districtIds;
+    final List<String> communauteIds;
+
+    if (champId != null) {
+      districtIds = allEntites
+          .where((e) => e['type'] == 'DISTRICT' && e['parent_id'] == champId)
+          .map((e) => e['id'] as String)
+          .toList();
+      
+      communauteIds = allEntites
+          .where((e) => e['type'] == 'COMMUNAUTE' && districtIds.contains(e['parent_id']))
+          .map((e) => e['id'] as String)
+          .toList();
+    } else {
+      districtIds = [];
+      communauteIds = [];
+    }
+
+    final membresCount = membresBox.values.where((m) => communauteIds.contains(m['communaute_id'])).length;
+    final ministresCount = usersBox.values.where((u) => communauteIds.contains(u['entite_id'])).length;
+
+    return {
+      'districts': districtIds.length,
+      'communautes': communauteIds.length,
+      'membres': membresCount,
+      'ministres': ministresCount,
+    };
+  }
+
+  // --- ENTITE SCOPE HELPERS ---
+  Future<List<Map<String, dynamic>>> getChaineAncestres(String entiteId) async {
+    final box = await Hive.openBox<Map>('entites');
+    final List<Map<String, dynamic>> chain = [];
+    String? currentId = entiteId;
+
+    while (currentId != null) {
+      final e = box.get(currentId);
+      if (e == null) break;
+      final map = Map<String, dynamic>.from(e);
+      chain.add(map);
+      currentId = map['parent_id']?.toString();
+    }
+    return chain;
+  }
+
+  Future<List<Map<String, dynamic>>> getEntitesByType(String type) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => e['type'] == type)
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getSubEntites(String? parentId, String type) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => (parentId == null || e['parent_id']?.toString() == parentId) && e['type'] == type)
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getAllUtilisateurs() async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    return box.values
+        .map((u) => Map<String, dynamic>.from(u))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getAllEvents() async {
+    final box = await Hive.openBox<Map>('evenements_map');
+    return box.values.map((e) => Map<String, dynamic>.from(e)).toList();
+  }
+
+  Future<void> updateUtilisateur(String id, Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('utilisateurs');
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = id;
+    await box.put(id, payload);
+  }
+
+  Future<void> updateEntite(String id, Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('entites');
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = id;
+    await box.put(id, payload);
+  }
+
+  Future<void> deleteEntite(String id) async {
+    final box = await Hive.openBox<Map>('entites');
+    await box.delete(id);
+  }
+
+  Future<void> rejectReport(String reportId, String reason) async {
+    final box = await Hive.openBox<Map>('rapports');
+    final report = box.get(reportId);
+    if (report != null) {
+      final updatedReport = Map<String, dynamic>.from(report);
+      updatedReport['status'] = 'rejete';
+      updatedReport['rejectionReason'] = reason;
+      updatedReport['rejectionDate'] = DateTime.now().toIso8601String();
+
+      // Créer une notification pour l'auteur du rapport
+      final authorId = report['rapporteurId'];
+      if (authorId != null) {
+        await createNotification(
+          userId: authorId,
+          title: 'Rapport Rejeté',
+          message: 'Votre rapport "${report['type']}" a été rejeté. Motif : $reason',
+          relatedObjectId: reportId,
+          relatedObjectType: 'report',
+        );
+      }
+
+      await box.put(reportId, updatedReport);
+    }
+  }
+
+  Future<void> validateReport(String reportId) async {
+    final box = await Hive.openBox<Map>('rapports');
+    final report = box.get(reportId);
+    if (report != null) {
+      final updatedReport = Map<String, dynamic>.from(report);
+      updatedReport['status'] = 'valide';
+      updatedReport['validationDate'] = DateTime.now().toIso8601String();
+      await box.put(reportId, updatedReport);
+    }
+  }
+
+  // --- NOTIFICATIONS ---
+  Future<void> createNotification({required String userId, required String title, required String message, String? relatedObjectId, String? relatedObjectType}) async {
+    final box = await Hive.openBox<AppNotification>('notifications');
+    final notification = AppNotification(
+      id: 'notif_${DateTime.now().millisecondsSinceEpoch}',
+      userId: userId,
+      title: title,
+      message: message,
+      createdAt: DateTime.now(),
+      relatedObjectId: relatedObjectId,
+      relatedObjectType: relatedObjectType,
+    );
+    await box.put(notification.id, notification);
+  }
+
+  Future<List<AppNotification>> getNotificationsForUser(String userId) async {
+    final box = await Hive.openBox<AppNotification>('notifications');
+    return box.values.where((n) => n.userId == userId).toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  }
+
+  Future<void> markNotificationAsRead(String notificationId) async {
+    final box = await Hive.openBox<AppNotification>('notifications');
+    final notification = box.get(notificationId);
+    if (notification != null && !notification.isRead) {
+      notification.isRead = true;
+      await notification.save();
+    }
   }
 }
+
+extension ReportActions on DatabaseHelper {
+  Future<void> resubmitReport(String reportId, Map<String, dynamic> newPayload) async {
+    final box = await Hive.openBox<Map>('rapports');
+    final report = box.get(reportId);
+
+    if (report != null) {
+      final updatedReport = Map<String, dynamic>.from(report);
+      updatedReport['payload'] = newPayload;
+      updatedReport['status'] = 'soumis';
+      updatedReport['dateSoumission'] = DateTime.now().toIso8601String();
+      updatedReport.remove('rejectionReason');
+      updatedReport.remove('rejectionDate');
+      await box.put(reportId, updatedReport);
+    }
+  }
+}
+

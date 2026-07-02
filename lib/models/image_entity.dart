@@ -3,7 +3,7 @@ import 'hierarchy_models.dart';
 
 part 'image_entity.g.dart';
 
-@HiveType(typeId: 102)
+@HiveType(typeId: 112)
 class ImageEntity extends HiveObject {
   @HiveField(0)
   final String id;
@@ -53,3 +53,4 @@ class ImageEntity extends HiveObject {
 
   String get fullImagePath => '$entityPath$imagePath';
 }
+

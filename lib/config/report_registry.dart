@@ -52,7 +52,7 @@ class ReportRegistry {
 
     // 4. FUNERAILLE
     'funeraille': ReportConfig(
-      id: 'funeraille', title: 'Rapport Funéraire', icon: Icons.local_florist,
+      id: 'funeraille', title: 'Rapport de Funérailles', icon: Icons.local_florist,
       kpis: [KPIConfig(label: 'Respect délais', target: 100, unit: '%', directiveRef: '§4.6.7')],
       fields: [
         ReportField(key: 'defunt_nom', label: 'Nom du défunt', type: FieldType.text, required: true),
@@ -220,6 +220,206 @@ class ReportRegistry {
       libraryRefs: ['Directives §3.20.5', 'Guide Comptabilité'],
     ),
 
+    // --- RAPPORTS MENSUELS UNIVERSELS POUR LES 12 COMMISSIONS ---
+
+    'ecodim_mensuel': ReportConfig(
+      id: 'ecodim_mensuel', title: 'Rapport Mensuel Ecodim', icon: Icons.child_care,
+      kpis: [
+        KPIConfig(label: 'Présence enfants', target: 85, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Présence moniteurs', target: 80, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.8'),
+      ],
+      fields: [
+        ReportField(key: 'enfants_presents', label: 'Nombre d\'enfants présents', type: FieldType.number, required: true),
+        ReportField(key: 'moniteurs_presents', label: 'Nombre de moniteurs présents', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'resolutions', label: 'Résolutions (Moi aussi je veux...)', type: FieldType.textarea, maxLines: 5),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Assurer une présence régulière des moniteurs', 'Encourager les enfants à prendre des résolutions'],
+      libraryRefs: ['Manuel Catéchisme Prof', 'Directives Ecodim'],
+    ),
+
+    'econfi_mensuel': ReportConfig(
+      id: 'econfi_mensuel', title: 'Rapport Mensuel Econfi', icon: Icons.school,
+      kpis: [
+        KPIConfig(label: 'Présence catéchumènes', target: 85, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Présence moniteurs', target: 80, unit: '%', directiveRef: '§7.8'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.8'),
+      ],
+      fields: [
+        ReportField(key: 'catechumenes_presents', label: 'Nombre de catéchumènes présents', type: FieldType.number, required: true),
+        ReportField(key: 'moniteurs_presents', label: 'Nombre de moniteurs présents', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'lecons_traitees', label: 'Leçons traitées', type: FieldType.textarea, maxLines: 3),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Suivre le programme des leçons', 'Préparer les catéchumènes à la confirmation'],
+      libraryRefs: ['Manuel Catéchisme Prof', 'Directives Econfi'],
+    ),
+
+    'jeunesse_mensuel': ReportConfig(
+      id: 'jeunesse_mensuel', title: 'Rapport Mensuel Jeunesse', icon: Icons.emoji_people,
+      kpis: [
+        KPIConfig(label: 'Présence jeunes', target: 70, unit: '%', directiveRef: '§7.9'),
+        KPIConfig(label: 'Activités réalisées', target: 2, unit: '', directiveRef: '§7.9'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.9'),
+      ],
+      fields: [
+        ReportField(key: 'jeunes_presents', label: 'Nombre de jeunes présents', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'themes_abordes', label: 'Thèmes abordés', type: FieldType.textarea, maxLines: 3),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Organiser des activités attractives', 'Encourager la participation active'],
+      libraryRefs: ['Directives Jeunesse', 'Guide Jeunesse'],
+    ),
+
+    'papas_mensuel': ReportConfig(
+      id: 'papas_mensuel', title: 'Rapport Mensuel Papas', icon: Icons.man,
+      kpis: [
+        KPIConfig(label: 'Présence papas', target: 60, unit: '%', directiveRef: '§7.11'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.11'),
+      ],
+      fields: [
+        ReportField(key: 'papas_presents', label: 'Nombre de papas présents', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'reunions_tenues', label: 'Réunions tenues', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Renforcer la communion fraternelle', 'Soutenir les activités de la communauté'],
+      libraryRefs: ['Directives Papas'],
+    ),
+
+    'mamans_mensuel': ReportConfig(
+      id: 'mamans_mensuel', title: 'Rapport Mensuel Mamans', icon: Icons.woman,
+      kpis: [
+        KPIConfig(label: 'Présence mamans', target: 70, unit: '%', directiveRef: '§7.12'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.12'),
+      ],
+      fields: [
+        ReportField(key: 'mamans_presentes', label: 'Nombre de mamans présentes', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'reunions_tenues', label: 'Réunions tenues', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Encourager l\'entraide', 'Participer à l\'entretien de l\'église'],
+      libraryRefs: ['Directives Mamans'],
+    ),
+
+    'aines_mensuel': ReportConfig(
+      id: 'aines_mensuel', title: 'Rapport Mensuel Aînés', icon: Icons.elderly,
+      kpis: [
+        KPIConfig(label: 'Aînés visités', target: 90, unit: '%', directiveRef: '§7.10'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.10'),
+      ],
+      fields: [
+        ReportField(key: 'aines_visites', label: 'Nombre d\'aînés visités', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'besoins_signales', label: 'Besoins particuliers signalés', type: FieldType.textarea, maxLines: 3),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Assurer un suivi régulier', 'Apporter un soutien spirituel et moral'],
+      libraryRefs: ['Directives Aînés'],
+    ),
+
+    'musique_mensuel': ReportConfig(
+      id: 'musique_mensuel', title: 'Rapport Mensuel Musique', icon: Icons.music_note,
+      kpis: [
+        KPIConfig(label: 'Présence choristes', target: 80, unit: '%', directiveRef: '§8.1'),
+        KPIConfig(label: 'Répétitions', target: 4, unit: '', directiveRef: '§8.1'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§8.1'),
+      ],
+      fields: [
+        ReportField(key: 'choristes_presents', label: 'Nombre moyen de choristes', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'nouveaux_cantiques', label: 'Nouveaux cantiques appris', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Préparer les cantiques à l\'avance', 'Veiller à la qualité de l\'interprétation'],
+      libraryRefs: ['Directives Musique'],
+    ),
+
+    'presse_mensuel': ReportConfig(
+      id: 'presse_mensuel', title: 'Rapport Mensuel Presse & Sonorisation', icon: Icons.camera_alt,
+      kpis: [
+        KPIConfig(label: 'Couverture événements', target: 100, unit: '%', directiveRef: '§8.2'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§8.2'),
+      ],
+      fields: [
+        ReportField(key: 'evenements_couverts', label: 'Événements couverts', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'etat_materiel', label: 'État du matériel', type: FieldType.dropdown, options: ['Bon', 'Moyen', 'À réparer']),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Vérifier le matériel régulièrement', 'Assurer une bonne communication'],
+      libraryRefs: ['Directives Presse'],
+    ),
+
+    'arimathee_mensuel': ReportConfig(
+      id: 'arimathee_mensuel', title: 'Rapport Mensuel Joseph d\'Arimathée', icon: Icons.volunteer_activism,
+      kpis: [
+        KPIConfig(label: 'Actions de soutien', target: 2, unit: '', directiveRef: '§7.13'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.13'),
+      ],
+      fields: [
+        ReportField(key: 'actions_realisees', label: 'Actions réalisées', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'fonds_collectes', label: 'Fonds collectés (FC)', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Soutenir les projets de l\'église', 'Agir dans la discrétion'],
+      libraryRefs: ['Directives Arimathée'],
+    ),
+
+    'securite_mensuel': ReportConfig(
+      id: 'securite_mensuel', title: 'Rapport Mensuel Sécurité & Protocole', icon: Icons.security,
+      kpis: [
+        KPIConfig(label: 'Incidents', target: 0, unit: '', directiveRef: '§4.2'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§4.2'),
+      ],
+      fields: [
+        ReportField(key: 'agents_presents', label: 'Nombre moyen d\'agents', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'incidents_majeurs', label: 'Incidents majeurs', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Maintenir l\'ordre et la discipline', 'Accueillir les fidèles avec courtoisie'],
+      libraryRefs: ['Directives Sécurité'],
+    ),
+
+    'medicale_mensuel': ReportConfig(
+      id: 'medicale_mensuel', title: 'Rapport Mensuel Commission Médicale', icon: Icons.local_hospital,
+      kpis: [
+        KPIConfig(label: 'Interventions', target: 5, unit: '', directiveRef: '§7.10'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§7.10'),
+      ],
+      fields: [
+        ReportField(key: 'interventions', label: 'Nombre d\'interventions', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'cas_graves', label: 'Cas graves orientés', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Assurer les premiers soins', 'Orienter vers les structures adaptées'],
+      libraryRefs: ['Directives Médicales'],
+    ),
+
+    'construction_mensuel': ReportConfig(
+      id: 'construction_mensuel', title: 'Rapport Mensuel Construction', icon: Icons.build,
+      kpis: [
+        KPIConfig(label: 'Avancement travaux', target: 10, unit: '%', directiveRef: '§13.1'),
+        KPIConfig(label: 'Taux présence Responsable', target: 95, unit: '%', directiveRef: '§13.1'),
+      ],
+      fields: [
+        ReportField(key: 'chantiers_actifs', label: 'Chantiers actifs', type: FieldType.number, required: true),
+        ReportField(key: 'taux_presence_responsable', label: 'Taux de présence du responsable (%)', type: FieldType.number, required: true),
+        ReportField(key: 'etat_avancement', label: 'État d\'avancement global (%)', type: FieldType.number),
+        ReportField(key: 'activites_mois', label: 'Activités du mois', type: FieldType.textarea, maxLines: 5),
+      ],
+      recommendations: ['Suivre les normes de construction', 'Veiller à la sécurité sur les chantiers'],
+      libraryRefs: ['Directives Construction'],
+    ),
+
     // 13. MEDICALE
     'medicale': ReportConfig(
       id: 'medicale', title: 'Rapport Commission Médicale', icon: Icons.local_hospital,
@@ -329,3 +529,4 @@ class ReportRegistry {
     ),
   };
 }
+

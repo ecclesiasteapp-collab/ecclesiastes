@@ -58,13 +58,15 @@ class MemberProfileAdapter extends TypeAdapter<MemberProfile> {
       contactUrgenceLien: fields[36] as String?,
       contactUrgenceTel: fields[37] as String?,
       observations: fields[38] as String?,
+      roleEntite: fields[41] as String?,
+      roleCommission: fields[42] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, MemberProfile obj) {
     writer
-      ..writeByte(41)
+      ..writeByte(43)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -146,7 +148,11 @@ class MemberProfileAdapter extends TypeAdapter<MemberProfile> {
       ..writeByte(39)
       ..write(obj.dateInscription)
       ..writeByte(40)
-      ..write(obj.inscritParMinistreId);
+      ..write(obj.inscritParMinistreId)
+      ..writeByte(41)
+      ..write(obj.roleEntite)
+      ..writeByte(42)
+      ..write(obj.roleCommission);
   }
 
   @override

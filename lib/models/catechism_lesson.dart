@@ -15,3 +15,4 @@ class CatechismLesson extends HiveObject {
     required this.moiAussi, this.isVow = false,
   });
 }
+

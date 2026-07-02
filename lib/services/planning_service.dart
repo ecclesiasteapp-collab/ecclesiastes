@@ -5,7 +5,7 @@ class PlanningService {
   static List<ChurchEvent> detectConflicts(ChurchEvent newEvent, List<ChurchEvent> hierarchyEvents) {
     return hierarchyEvents.where((hEvent) {
       // Vérification du chevauchement de dates
-      bool overlap = newEvent.start.isBefore(hEvent.end) && hEvent.start.isBefore(newEvent.end);
+      final bool overlap = newEvent.start.isBefore(hEvent.end) && hEvent.start.isBefore(newEvent.end);
       
       if (overlap) {
         // Un événement supérieur bloquant interdit toute activité locale
@@ -17,3 +17,4 @@ class PlanningService {
     }).toList();
   }
 }
+

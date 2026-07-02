@@ -16,56 +16,57 @@ class Permission {
 
 class RBACGuard {
   static bool can(UserRole role, String permission) {
-    // 🔴 PORTE DÉROBÉE / GOD-MODE : L'Apôtre-Patriarche et le Super Admin ont TOUTES les permissions
+    // Super Admin et Apôtre Patriarche ont tous les droits
     if (role == UserRole.apotrePatriarche || role == UserRole.superAdmin) return true;
 
     switch (role) {
-      case UserRole.presidentTerritoriale:
+      case UserRole.apotreDistrict:
         return [
           Permission.viewGlobalStats, Permission.manageTerritoriale, 
           Permission.approveChampLeader, Permission.exportAnalytics
         ].contains(permission);
 
-      case UserRole.apotreChamp:
+      case UserRole.apotreResponsable:
+      case UserRole.apotre:
         return [
           Permission.viewGlobalStats, Permission.approveDistrictLeader, 
           Permission.manageCommissions, Permission.validateReport
         ].contains(permission);
 
-      case UserRole.apotreDistrict:
+      case UserRole.eveque:
+      case UserRole.ancien: // Responsable de District
         return [
           Permission.viewGlobalStats, Permission.approveCommunityLeader, 
           Permission.manageCommissions, Permission.validateReport, Permission.exportAnalytics
         ].contains(permission);
 
-      case UserRole.chefCommunaute:
+      case UserRole.lead:
+      case UserRole.berger:
+      case UserRole.evangeliste:
+      case UserRole.pretre:
         return [
           Permission.submitReport, Permission.manageCommissions, Permission.viewPastoralNotes,
           Permission.validateReport
         ].contains(permission);
 
-      case UserRole.ministre:
-        return [Permission.viewPastoralNotes, Permission.viewGlobalStats].contains(permission);
-
-      case UserRole.respCommission:
-        return [Permission.submitReport, Permission.validateReport].contains(permission);
+      case UserRole.diacre:
+      case UserRole.sousDiacre:
+      case UserRole.frereCharge:
+      case UserRole.conductrice:
+        return [Permission.viewPastoralNotes, Permission.submitReport].contains(permission);
 
       case UserRole.membre:
-        return false;
       default:
         return false;
     }
   }
 
   static List<UserRole> getValidationChain(UserRole initiator) {
-    switch (initiator) {
-      case UserRole.respCommission:
-      case UserRole.chefCommunaute:
-        return [UserRole.apotreDistrict, UserRole.apotreChamp, UserRole.presidentTerritoriale];
-      case UserRole.apotreDistrict:
-        return [UserRole.apotreChamp, UserRole.presidentTerritoriale, UserRole.apotrePatriarche];
-      default:
-        return [];
+    // Logique de cascade simplifiée selon la nouvelle hiérarchie
+    if (initiator.index >= UserRole.pretre.index) {
+      return [UserRole.ancien, UserRole.eveque, UserRole.apotre];
     }
+    return [];
   }
 }
+

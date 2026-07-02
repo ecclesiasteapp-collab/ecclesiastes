@@ -23,9 +23,17 @@ class UserAdapter extends TypeAdapter<User> {
       passwordHash: fields[3] as String,
       role: fields[4] as UserRole,
       entityId: fields[5] as String?,
-      commissionType: fields[6] as String?,
+      commissionType: fields[6] as CommissionType?,
       isActive: fields[7] as bool,
-      entityLevel: fields[10] as String?,
+      entityLevel: fields[10] as EntityLevel?,
+      phone: fields[11] as String?,
+      commissionRole: fields[12] as CommissionRole?,
+      profil: fields[13] as ProfilDocumentaire?,
+      entityRole: fields[14] as String?,
+      photoPath: fields[15] as String?,
+      status: fields[16] as String,
+      pendingSince: fields[17] as DateTime?,
+      validatedAt: fields[18] as DateTime?,
       createdAt: fields[8] as DateTime?,
       lastLogin: fields[9] as DateTime?,
     );
@@ -34,7 +42,7 @@ class UserAdapter extends TypeAdapter<User> {
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(19)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -56,7 +64,23 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(9)
       ..write(obj.lastLogin)
       ..writeByte(10)
-      ..write(obj.entityLevel);
+      ..write(obj.entityLevel)
+      ..writeByte(11)
+      ..write(obj.phone)
+      ..writeByte(12)
+      ..write(obj.commissionRole)
+      ..writeByte(13)
+      ..write(obj.profil)
+      ..writeByte(14)
+      ..write(obj.entityRole)
+      ..writeByte(15)
+      ..write(obj.photoPath)
+      ..writeByte(16)
+      ..write(obj.status)
+      ..writeByte(17)
+      ..write(obj.pendingSince)
+      ..writeByte(18)
+      ..write(obj.validatedAt);
   }
 
   @override
