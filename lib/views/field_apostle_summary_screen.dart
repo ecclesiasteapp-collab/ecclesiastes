@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:ecclesiastes/models/church_report.dart';
+import 'package:ecclesiaste/models/church_report.dart';
 
 class FieldApostleSummaryScreen extends StatelessWidget {
   const FieldApostleSummaryScreen({super.key});

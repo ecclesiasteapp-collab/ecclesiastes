@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/utils/constants.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/utils/user_access.dart';
+import 'package:ecclesiaste/utils/constants.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/utils/user_access.dart';
 
 class BibliothequePage extends StatefulWidget {
   const BibliothequePage({super.key});

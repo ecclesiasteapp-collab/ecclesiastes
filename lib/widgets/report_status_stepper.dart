@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/services/report_cascading_service.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/report_cascading_service.dart';
 
 /// Widget affichant la progression de validation sur les 5 niveaux hiérarchiques.
 class ReportStatusStepper extends StatelessWidget {

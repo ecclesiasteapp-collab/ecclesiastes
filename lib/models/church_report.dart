@@ -57,11 +57,6 @@ enum ReportTypeExt {
   @HiveField(41) gestionCommunaute,
 }
 
-
-
-
-
-
 @HiveType(typeId: 51)
 enum ReportStatus {
   @HiveField(0) brouillon,
@@ -78,7 +73,9 @@ class ChurchReport extends HiveObject {
   @HiveField(2) late EntityLevel niveauEntite;
   @HiveField(3) late String nomEntite;           
   @HiveField(4) late String nomChamp;            
-  @HiveField(5) late String nomDistrict;         
+  @HiveField(5) late String nomDistrict;
+  @HiveField(38) String nomRegion = ''; // Conforme au DCG Juillet 2026 (6 niveaux)
+         
   @HiveField(6) late DateTime dateRapport;
   @HiveField(7) late DateTime heureDebut;
   @HiveField(8) DateTime? heureFin;
@@ -120,7 +117,7 @@ class ChurchReport extends HiveObject {
 
   // --- SIGNATURE NUMÉRIQUE (Production Ready) ---
   @HiveField(35) String? signaturePath;
-  @HiveField(37) String? signatureBase64; // Champ pour la compatibilité ou la migration
+  @HiveField(37) String? signatureBase64; 
 
   // --- VERSIONING & CONFLITS (Production Ready) ---
   @HiveField(32) int version = 1;
@@ -134,6 +131,7 @@ class ChurchReport extends HiveObject {
     required this.nomEntite,
     required this.nomChamp,
     required this.nomDistrict,
+    this.nomRegion = '',
     required this.dateRapport,
     required this.heureDebut,
     this.heureFin,
@@ -175,7 +173,6 @@ class ChurchReport extends HiveObject {
     lastModifiedBy = userId;
   }
 
-  // Méthodes pour la sérialisation/désérialisation, utiles pour les Isolates
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -184,6 +181,7 @@ class ChurchReport extends HiveObject {
       'nomEntite': nomEntite,
       'nomChamp': nomChamp,
       'nomDistrict': nomDistrict,
+      'nomRegion': nomRegion,
       'dateRapport': dateRapport.toIso8601String(),
       'heureDebut': heureDebut.toIso8601String(),
       'heureFin': heureFin?.toIso8601String(),
@@ -227,6 +225,7 @@ class ChurchReport extends HiveObject {
       nomEntite: map['nomEntite'],
       nomChamp: map['nomChamp'],
       nomDistrict: map['nomDistrict'],
+      nomRegion: map['nomRegion'] ?? '',
       dateRapport: DateTime.parse(map['dateRapport']),
       heureDebut: DateTime.parse(map['heureDebut']),
       heureFin: map['heureFin'] != null ? DateTime.parse(map['heureFin']) : null,
@@ -262,4 +261,3 @@ class ChurchReport extends HiveObject {
     );
   }
 }
-

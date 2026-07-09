@@ -1,7 +1,7 @@
-name: ecclesiastes
+name: ecclesiaste
 description: "Application de gestion Ecclesiastes pour le Champ Kin Sud-Ouest - Eglise Néo-Apostolique."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
@@ -47,6 +47,7 @@ dependencies:
   barcode: ^2.2.6
   uuid: ^4.2.2
   crypto: ^3.0.3
+  equatable: ^2.0.5
 
   # --- CALENDRIER ET DATE --
   table_calendar: ^3.1.2

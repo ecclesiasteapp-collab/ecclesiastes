@@ -1,14 +1,21 @@
-import 'package:hive/hive.dart';
 import '../models/church_report.dart';
 import '../models/hierarchy_models.dart';
-import '../config/kso_districts_config.dart';
+import '../domain/repositories/report_repository.dart';
+import '../domain/repositories/member_repository.dart';
 
+/// Service d'agrégation de données pour les graphiques et KPIs.
+/// Utilise les Repositories pour l'accès aux données.
 class PastoralAnalyticsService {
-  Box<ChurchReport> get _reportBox => Hive.box<ChurchReport>('church_reports');
+  final ReportRepository reportRepository;
+  final MemberRepository memberRepository;
 
-  /// Filtre les rapports selon l'entité et le niveau sélectionnés
-  Iterable<ChurchReport> _getFilteredReports(String? entityId, EntityLevel? level) {
-    final allReports = _reportBox.values;
+  PastoralAnalyticsService({
+    required this.reportRepository,
+    required this.memberRepository,
+  });
+
+  /// Filtre les rapports selon l'entité et le niveau sélectionnés (Conforme aux 6 niveaux)
+  List<ChurchReport> _filterReports(List<ChurchReport> allReports, String? entityId, EntityLevel? level) {
     if (entityId == null || level == null) return allReports;
 
     return allReports.where((r) {
@@ -19,67 +26,69 @@ class PastoralAnalyticsService {
           return r.nomDistrict == entityId;
         case EntityLevel.champ:
           return r.nomChamp == entityId;
-        default:
+        case EntityLevel.regionApostolique:
+          return r.nomRegion == entityId;
+        case EntityLevel.territoriale:
+          return true; // À affiner selon le stockage du territoire
+        case EntityLevel.internationale:
           return true;
       }
-    });
+    }).toList();
   }
 
   /// Récupère les statistiques réelles de l’entité sélectionnée
-  Map<String, dynamic> getGlobalOverview({String? entityId, EntityLevel? level}) {
-    final reports = _getFilteredReports(entityId, level);
+  Future<Map<String, dynamic>> getGlobalOverview({String? entityId, EntityLevel? level}) async {
+    final allReports = await reportRepository.getAllChurchReports();
+    final reports = _filterReports(allReports, entityId, level);
     
-    // Fallback sur les constantes si aucun rapport n'est encore saisi pour KSO
-    if (reports.isEmpty && (entityId == null || entityId == 'kso')) {
-      return {
-        'champs': 1,
-        'districts': KSODistrictsConfig.totalDistricts,
-        'communautes': KSODistrictsConfig.totalCommunautes,
-        'membres': KSODistrictsConfig.totalMembres,
-        'ministres': KSODistrictsConfig.totalMinistres,
-        'derniere_maj': KSODistrictsConfig.dateTableau,
-      };
-    }
+    // Pour les membres et ministres, on utilise le MemberRepository
+    final allMembers = await memberRepository.getAllMembers();
+    // Filtre simplifié : on pourrait affiner selon la hiérarchie
+    final membersCount = allMembers.length; 
 
     return {
       'rapports': reports.length,
       'offrandes_total': reports.fold(0.0, (sum, r) => sum + r.offrandeFC),
-      'presences_moyenne': reports.isEmpty ? 0 : reports.fold(0, (sum, r) => sum + r.presenceTotale) / reports.length,
+      'presences_moyenne': reports.isEmpty ? 0.0 : reports.fold(0, (sum, r) => sum + r.presenceTotale) / reports.length,
+      'membres': membersCount,
+      'champs': 1, // Dynamiser si possible via HierarchyRepository
+      'districts': 12,
       'derniere_maj': reports.isNotEmpty ? reports.last.dateRapport.toString().split(' ')[0] : 'N/A',
     };
   }
 
-
-  /// Récupère la tendance de présence sur les 6 derniers mois pour une entité
-  Map<String, double> getPresenceTrend({String? entityId, EntityLevel? level}) {
+  /// Récupère la tendance de présence sur les 6 derniers mois
+  Future<Map<String, double>> getPresenceTrend({String? entityId, EntityLevel? level}) async {
     final Map<String, double> data = {};
     final now = DateTime.now();
-    final filteredReports = _getFilteredReports(entityId, level);
+    final allReports = await reportRepository.getAllChurchReports();
+    final filteredReports = _filterReports(allReports, entityId, level);
     
     for (int i = 5; i >= 0; i--) {
-      final month = DateTime(now.year, now.month - i, 1);
-      final monthKey = _getMonthKey(month);
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      final monthKey = _getMonthKey(monthDate);
 
       final monthlyReports = filteredReports.where((r) =>
-        r.dateRapport.year == month.year &&
-        r.dateRapport.month == month.month &&
+        r.dateRapport.year == monthDate.year &&
+        r.dateRapport.month == monthDate.month &&
         r.type == ReportTypeExt.serviceDivin
       );
 
       if (monthlyReports.isEmpty) {
-        data[monthKey] = 0;
+        data[monthKey] = 0.0;
       } else {
         final totalPresence = monthlyReports.fold(0, (sum, r) => sum + r.presenceTotale);
-        data[monthKey] = totalPresence / monthlyReports.length; // Moyenne par service
+        data[monthKey] = totalPresence / monthlyReports.length;
       }
     }
     return data;
   }
 
-  /// Récupère le total des actes sacramentels de l'année pour une entité
-  Map<String, int> getYearlySacraments({String? entityId, EntityLevel? level}) {
+  /// Récupère le total des actes sacramentels de l'année
+  Future<Map<String, int>> getYearlySacraments({String? entityId, EntityLevel? level}) async {
     final now = DateTime.now();
-    final yearlyReports = _getFilteredReports(entityId, level)
+    final allReports = await reportRepository.getAllChurchReports();
+    final yearlyReports = _filterReports(allReports, entityId, level)
         .where((r) => r.dateRapport.year == now.year);
 
     int baptemes = 0;
@@ -99,18 +108,19 @@ class PastoralAnalyticsService {
     };
   }
 
-  /// Récupère l'évolution des offrandes (FC) sur 6 mois pour une entité
-  Map<String, double> getOfferingsTrend({String? entityId, EntityLevel? level}) {
+  /// Récupère l'évolution des offrandes (FC) sur 6 mois
+  Future<Map<String, double>> getOfferingsTrend({String? entityId, EntityLevel? level}) async {
     final Map<String, double> data = {};
     final now = DateTime.now();
-    final filteredReports = _getFilteredReports(entityId, level);
+    final allReports = await reportRepository.getAllChurchReports();
+    final filteredReports = _filterReports(allReports, entityId, level);
 
     for (int i = 5; i >= 0; i--) {
-      final month = DateTime(now.year, now.month - i, 1);
-      final monthKey = _getMonthKey(month);
+      final monthDate = DateTime(now.year, now.month - i, 1);
+      final monthKey = _getMonthKey(monthDate);
 
       final monthlyTotal = filteredReports
-        .where((r) => r.dateRapport.year == month.year && r.dateRapport.month == month.month)
+        .where((r) => r.dateRapport.year == monthDate.year && r.dateRapport.month == monthDate.month)
         .fold(0.0, (sum, r) => sum + r.offrandeFC);
 
       data[monthKey] = monthlyTotal;
@@ -122,17 +132,4 @@ class PastoralAnalyticsService {
     final months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
     return months[date.month - 1];
   }
-
-  /// Récupère le statut sacramentel pour une entité donnée
-  static Map<String, int> getSacramentalStatus(String entityName, EntityLevel level) {
-    // Dans une version réelle, on filtrerait la Box Hive MemberProfile
-    return {
-      'Jeunes (14+) baptisés non scellés': 12,
-      'Besoins pastoraux (Incohérences)': 5,
-      'Baptisés non scellés': 24,
-      'Membres nés NAC': 150,
-      'Convertis': 30,
-    };
-  }
 }
-

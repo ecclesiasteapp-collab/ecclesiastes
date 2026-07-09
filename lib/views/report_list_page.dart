@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/pdf_service.dart'; // Import du service PDF
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/pdf_service.dart'; // Import du service PDF
 
 class ReportListPage extends StatefulWidget {
   const ReportListPage({super.key});

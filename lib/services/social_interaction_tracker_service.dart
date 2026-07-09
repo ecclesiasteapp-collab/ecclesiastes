@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:ecclesiastes/models/social_interaction.dart';
+import 'package:ecclesiaste/models/social_interaction.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
 

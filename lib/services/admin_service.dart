@@ -1,4 +1,4 @@
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
 class AdminService {
   static Future<List<Map<String, dynamic>>> getAllPending() async {

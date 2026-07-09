@@ -20,8 +20,10 @@ class EntityLevelAdapter extends TypeAdapter<EntityLevel> {
       case 2:
         return EntityLevel.champ;
       case 3:
-        return EntityLevel.territoriale;
+        return EntityLevel.regionApostolique;
       case 4:
+        return EntityLevel.territoriale;
+      case 5:
         return EntityLevel.internationale;
       default:
         return EntityLevel.communaute;
@@ -40,11 +42,14 @@ class EntityLevelAdapter extends TypeAdapter<EntityLevel> {
       case EntityLevel.champ:
         writer.writeByte(2);
         break;
-      case EntityLevel.territoriale:
+      case EntityLevel.regionApostolique:
         writer.writeByte(3);
         break;
-      case EntityLevel.internationale:
+      case EntityLevel.territoriale:
         writer.writeByte(4);
+        break;
+      case EntityLevel.internationale:
+        writer.writeByte(5);
         break;
     }
   }

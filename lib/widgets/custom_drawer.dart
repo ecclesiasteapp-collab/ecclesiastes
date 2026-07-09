@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
 /// Un menu latéral (Drawer) qui adapte ses options selon le rôle de l'utilisateur.
 class CustomDrawer extends StatelessWidget {

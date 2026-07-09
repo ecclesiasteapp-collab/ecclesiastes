@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ecclesiastes/models/event.dart';
+import 'package:ecclesiaste/models/event.dart';
 
 class EventCardWithAttachment extends StatelessWidget {
   final ChurchEvent event;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/utils/constants.dart';
+import 'package:ecclesiaste/utils/constants.dart';
 
 // ─── PALETTE ──────────────────────────────────────────────────────────────────
 const _bg     = Color(0xFF1E3A5F);

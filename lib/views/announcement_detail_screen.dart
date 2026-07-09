@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 import 'dart:typed_data';
 import 'package:intl/intl.dart';
-import 'package:ecclesiastes/models/news_model.dart';
+import 'package:ecclesiaste/models/news_model.dart';
+import 'package:ecclesiaste/services/repository_providers.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
-class AnnouncementDetailScreen extends StatefulWidget {
+class AnnouncementDetailScreen extends ConsumerStatefulWidget {
   final News announcement;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
@@ -17,16 +20,17 @@ class AnnouncementDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<AnnouncementDetailScreen> createState() =>
+  ConsumerState<AnnouncementDetailScreen> createState() =>
       _AnnouncementDetailScreenState();
 }
 
-class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
+class _AnnouncementDetailScreenState extends ConsumerState<AnnouncementDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final attachment = widget.announcement.posterAttachment;
     final hasAttachment = attachment != null;
     final isImage = attachment?.isImage ?? false;
+    final canManage = AuthService.isResponsable();
 
     return Scaffold(
       appBar: AppBar(
@@ -34,13 +38,14 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
         backgroundColor: const Color(0xFF003366),
         foregroundColor: Colors.white,
         actions: [
-          if (widget.onEdit != null)
+          if (canManage) ...[
             IconButton(
               icon: const Icon(Icons.edit),
-              onPressed: widget.onEdit,
+              onPressed: widget.onEdit ?? () {
+                // TODO: Implémenter la modification
+              },
               tooltip: 'Modifier',
             ),
-          if (widget.onDelete != null)
             IconButton(
               icon: const Icon(Icons.delete),
               onPressed: () {
@@ -56,10 +61,16 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
                         child: const Text('Annuler'),
                       ),
                       TextButton(
-                        onPressed: () {
-                          widget.onDelete!();
-                          Navigator.pop(ctx);
-                          Navigator.pop(context);
+                        onPressed: () async {
+                          if (widget.onDelete != null) {
+                            widget.onDelete!();
+                          } else {
+                            await ref.read(newsRepositoryProvider).deleteNews(widget.announcement.id);
+                          }
+                          if (mounted) {
+                            Navigator.pop(ctx);
+                            Navigator.pop(context);
+                          }
                         },
                         child: const Text('Supprimer',
                             style: TextStyle(color: Colors.red)),
@@ -70,6 +81,7 @@ class _AnnouncementDetailScreenState extends State<AnnouncementDetailScreen> {
               },
               tooltip: 'Supprimer',
             ),
+          ]
         ],
       ),
       body: CustomScrollView(

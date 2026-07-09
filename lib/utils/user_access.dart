@@ -1,5 +1,5 @@
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/utils/constants.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/utils/constants.dart';
 import '../models/hierarchy_models.dart';
 
 /// Profils d'accès déterminés au login (rôle + ministère).

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 // L'énumération EntityResponsibleRole est maintenant définie dans hierarchy_models.dart
-// import 'package:ecclesiastes/models/entity_responsible_role.dart'; // Supprimé car redondant
+// import 'package:ecclesiaste/models/entity_responsible_role.dart'; // Supprimé car redondant
 
 import 'dashboards/member_dashboard.dart';
 import 'dashboards/minister_dashboard.dart';

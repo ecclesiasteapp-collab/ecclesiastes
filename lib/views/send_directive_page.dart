@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
 
 class SendDirectivePage extends StatefulWidget {
   final String? entiteId;

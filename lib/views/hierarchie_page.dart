@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/config/ministerial_ranks_config.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
-import 'package:ecclesiastes/config/organization_config.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/config/ministerial_ranks_config.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
+import 'package:ecclesiaste/config/organization_config.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 import 'package:go_router/go_router.dart';
 
 class HierarchiePage extends StatefulWidget {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
 class ManageUsersPage extends StatefulWidget {
   const ManageUsersPage({super.key});

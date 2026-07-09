@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/config/organization_config.dart';
-import 'package:ecclesiastes/config/ministry_config.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/config/organization_config.dart';
+import 'package:ecclesiaste/config/ministry_config.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 class OrganizationOverviewPage extends StatelessWidget {
   const OrganizationOverviewPage({super.key});

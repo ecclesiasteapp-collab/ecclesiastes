@@ -166,6 +166,8 @@ class _CommissionsPageState extends State<CommissionsPage> {
         return 'District';
       case EntityLevel.champ:
         return 'Champ Apostolique';
+      case EntityLevel.regionApostolique:
+        return 'Région Apostolique';
       case EntityLevel.territoriale:
         return 'Territoriale';
       case EntityLevel.internationale:

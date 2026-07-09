@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/attachment_model.dart';
-import 'package:ecclesiastes/widgets/attachment_picker_widget.dart';
-import 'package:ecclesiastes/services/attachment_storage_service.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/widgets/attachment_picker_widget.dart';
+import 'package:ecclesiaste/services/attachment_storage_service.dart';
 import 'dart:typed_data';
 
 /// Page de test du système d'attachments

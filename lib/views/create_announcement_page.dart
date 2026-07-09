@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:ecclesiastes/models/news_model.dart';
-import 'package:ecclesiastes/models/attachment_model.dart';
-import 'package:ecclesiastes/widgets/attachment_picker_widget.dart';
+import 'package:ecclesiaste/models/news_model.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/widgets/attachment_picker_widget.dart';
+import 'package:ecclesiaste/services/repository_providers.dart';
 
-class CreateAnnouncementPage extends StatefulWidget {
+class CreateAnnouncementPage extends ConsumerStatefulWidget {
   const CreateAnnouncementPage({super.key});
 
   @override
-  State<CreateAnnouncementPage> createState() => _CreateAnnouncementPageState();
+  ConsumerState<CreateAnnouncementPage> createState() => _CreateAnnouncementPageState();
 }
 
-class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
+class _CreateAnnouncementPageState extends ConsumerState<CreateAnnouncementPage> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
@@ -26,7 +27,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
       setState(() => _isLoading = true);
 
       try {
-        final newsBox = await Hive.openBox<News>('news');
+        final repo = ref.read(newsRepositoryProvider);
 
         final announcement = News(
           id: _uuid.v4(),
@@ -37,7 +38,7 @@ class _CreateAnnouncementPageState extends State<CreateAnnouncementPage> {
           posterAttachment: _posterAttachment,
         );
 
-        await newsBox.add(announcement);
+        await repo.addNews(announcement);
 
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/ministry_notification_service.dart';
+import 'package:ecclesiaste/services/ministry_notification_service.dart';
 
 /// Widget pour afficher un indicateur de notifications
 class NotificationIndicator extends StatefulWidget {

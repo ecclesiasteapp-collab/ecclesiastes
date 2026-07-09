@@ -27,6 +27,7 @@ class User extends HiveObject {
   @HiveField(16) String status; // 'active', 'pending', 'rejected'
   @HiveField(17) DateTime? pendingSince;
   @HiveField(18) DateTime? validatedAt;
+  @HiveField(19) String? personId; // Lien vers le Dossier Ecclésiastique Unique
 
   User({
     required this.id,
@@ -133,6 +134,8 @@ class User extends HiveObject {
         return AdminLevel.district;
       case EntityLevel.champ:
         return AdminLevel.champ;
+      case EntityLevel.regionApostolique:
+        return AdminLevel.apostolicRegion;
       case EntityLevel.territoriale:
         return AdminLevel.territorial;
       case EntityLevel.internationale:

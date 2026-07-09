@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/directives_rules.dart';
-import 'package:ecclesiastes/models/attachment_model.dart';
-import 'package:ecclesiastes/widgets/attachment_picker_widget.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/widgets/attachment_picker_widget.dart';
 
 class SimpleActionWizard extends StatefulWidget {
   final UserLevel userLevel;

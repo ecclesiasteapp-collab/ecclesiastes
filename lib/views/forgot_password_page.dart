@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/utils/security_policy.dart';
-import 'package:ecclesiastes/widgets/ena_logo.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/utils/security_policy.dart';
+import 'package:ecclesiaste/widgets/ena_logo.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});

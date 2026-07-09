@@ -2,10 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 // Les fichiers l10n générés sont référencés depuis `lib/l10n/`.
-import 'package:ecclesiastes/l10n/app_localizations.dart';
+import 'package:ecclesiaste/l10n/app_localizations.dart';
+import 'package:ecclesiaste/providers/theme_provider.dart';
 import '../models/app_settings.dart';
 import '../providers/locale_provider.dart';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import '../services/export_service.dart';
+import '../services/cloud_sync_service.dart';
+import '../domain/repositories/sync_repository.dart';
+import '../services/repository_providers.dart';
+import '../models/sync_queue_model.dart';
+import '../services/migration/legacy_to_erp_migration_service.dart';
+import '../data/repositories/hive_organization_repository.dart';
 
 /// Page de paramètres améliorée avec toutes les fonctionnalités modernes
 class SettingsPageEnhanced extends ConsumerWidget {
@@ -100,6 +109,7 @@ class SettingsPageEnhanced extends ConsumerWidget {
                 onChanged: (v) {
                   settings.isDarkMode = v;
                   settings.save();
+                  ref.read(themeProvider.notifier).toggleTheme(v);
                 },
               ),
 
@@ -131,6 +141,7 @@ class SettingsPageEnhanced extends ConsumerWidget {
 
               // ========== SYNCHRONISATION & SAUVEGARDE ==========
               _buildSectionHeader(l10n.syncAndBackup, Icons.cloud_sync),
+              _buildSyncTile(context, ref),
               _buildSwitchTile(
                 icon: Icons.backup,
                 color: Colors.teal,
@@ -141,6 +152,27 @@ class SettingsPageEnhanced extends ConsumerWidget {
                   settings.autoBackup = v;
                   settings.save();
                 },
+              ),
+              _buildListTile(
+                icon: Icons.upload_file,
+                title: 'Sauvegarder maintenant (Backup)',
+                subtitle: 'Créer un point de restauration complet',
+                onTap: () => _performBackup(context),
+              ),
+              _buildListTile(
+                icon: Icons.restore,
+                title: 'Restaurer les données',
+                subtitle: 'Restaurer à partir d\'un fichier .bak',
+                onTap: () => _showRestoreDialog(context),
+              ),
+
+              // ========== TRANSITION ERP (PHASE 1-3) ==========
+              _buildSectionHeader('ARCHITECTURE ERP', Icons.upgrade),
+              _buildListTile(
+                icon: Icons.data_thresholding,
+                title: 'Migrer vers le moteur ERP',
+                subtitle: 'Convertir les membres et entités vers le nouveau système de Mandats.',
+                onTap: () => _showMigrationDialog(context),
               ),
 
               const SizedBox(height: 30),
@@ -218,17 +250,51 @@ class SettingsPageEnhanced extends ConsumerWidget {
     String? subtitle,
     VoidCallback? onTap,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: Colors.grey.withAlpha(25), shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.grey.shade700),
-      ),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(fontSize: 12)) : null,
-      trailing: const Icon(Icons.chevron_right, size: 18),
-      onTap: onTap,
+    // ... existant
+  }
+
+  Widget _buildSyncTile(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<List<SyncQueueItem>>(
+      future: ref.read(syncRepositoryProvider).getPendingItems(),
+      builder: (context, snapshot) {
+        final pendingCount = snapshot.data?.length ?? 0;
+        return ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: Colors.blue.withAlpha(25), shape: BoxShape.circle),
+            child: Icon(Icons.sync, color: pendingCount > 0 ? Colors.orange : Colors.blue),
+          ),
+          title: const Text('Synchronisation Cloud', style: TextStyle(fontWeight: FontWeight.w500)),
+          subtitle: Text(pendingCount > 0 
+            ? '$pendingCount éléments en attente' 
+            : 'Toutes les données sont synchronisées'),
+          trailing: IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () => _runSync(context, ref),
+          ),
+          onTap: () => _runSync(context, ref),
+        );
+      },
     );
+  }
+
+  Future<void> _runSync(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final syncService = ref.read(cloudSyncServiceProvider);
+    
+    messenger.showSnackBar(const SnackBar(content: Text('Début de la synchronisation...')));
+    final result = await syncService.synchronize();
+    
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(result.success ? 'Succès' : 'Info Sync'),
+          content: Text(result.message),
+          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))],
+        ),
+      );
+    }
   }
 
   void _showExportData(BuildContext context) {
@@ -252,6 +318,37 @@ class SettingsPageEnhanced extends ConsumerWidget {
               }
             },
             child: const Text('EXPORTER'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMigrationDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Migration vers ERP'),
+        content: const Text('Cette action va transformer vos membres actuels en "Personnes" avec des "Mandats". Cela est nécessaire pour activer le nouveau Hub dynamique.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+              Navigator.pop(ctx);
+              try {
+                final migrationService = LegacyToErpMigrationService(HiveOrganizationRepository());
+                await migrationService.runMigration();
+                messenger.showSnackBar(
+                  const SnackBar(content: Text('✅ Migration réussie ! Redémarrez pour voir les changements.')),
+                );
+              } catch (e) {
+                messenger.showSnackBar(
+                  SnackBar(content: Text('❌ Erreur : $e')),
+                );
+              }
+            },
+            child: const Text('LANCER LA MIGRATION'),
           ),
         ],
       ),
@@ -352,21 +449,67 @@ class SettingsPageEnhanced extends ConsumerWidget {
   }
 
   void _showDeleteAccount(BuildContext context) {
-    showDialog(
+    // ... existant
+  }
+
+  Future<void> _performBackup(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ExportService.performFullBackup();
+      messenger.showSnackBar(const SnackBar(content: Text('✅ Sauvegarde réussie !')));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('❌ Erreur de sauvegarde : $e')));
+    }
+  }
+
+  Future<void> _showRestoreDialog(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Supprimer mon compte'),
-        content: const Text('Cette action est irréversible. Toutes vos données seront supprimées.'),
+        title: const Text('Restaurer les données'),
+        content: const Text('Attention : cette action va écraser TOUTES vos données locales par celles du fichier de sauvegarde. Voulez-vous continuer ?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
           ElevatedButton(
-            onPressed: () => Navigator.pop(ctx),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Supprimer'),
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('RESTAURER'),
           ),
         ],
       ),
     );
+
+    if (confirmed == true) {
+      try {
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.any,
+        );
+
+        if (result != null && result.files.single.path != null) {
+          await ExportService.restoreFromBackup(File(result.files.single.path!));
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (ctx) => AlertDialog(
+                title: const Text('Restauration terminée'),
+                content: const Text('Les données ont été restaurées avec succès. L\'application va redémarrer pour appliquer les changements.'),
+                actions: [
+                  ElevatedButton(
+                    onPressed: () => exit(0),
+                    child: const Text('Quitter l\'application'),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('❌ Erreur de restauration : $e')));
+        }
+      }
+    }
   }
 }
 

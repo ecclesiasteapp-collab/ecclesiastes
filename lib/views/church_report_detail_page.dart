@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';

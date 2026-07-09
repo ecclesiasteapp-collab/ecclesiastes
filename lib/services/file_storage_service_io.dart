@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:path_provider/path_provider.dart';
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 
 class FileStorageService {
   static Future<String> _getAppDirectory() async {

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
+import 'package:ecclesiaste/theme/app_theme.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,9 +18,10 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
   bool _obscurePassword = true;
 
-  String? _selectedNiveau;
-  String? _selectedMinistere;
-  String? _selectedRole;
+  EntityLevel _selectedNiveau = EntityLevel.communaute;
+  UserRole _selectedMinistere = UserRole.membre;
+  EntityResponsibleRole _selectedRole = EntityResponsibleRole.responsable;
+  CommissionType _selectedCommission = CommissionType.none;
 
   @override
   void dispose() {
@@ -29,226 +32,231 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-
+    
     setState(() => _isLoading = true);
 
-    try {
-      final success = await AuthService.login(
-        identifiant: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+    final success = await AuthService.login(
+      identifiant: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
-      if (success && mounted) {
-        context.go('/dashboard');
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email ou mot de passe incorrect'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    if (success && mounted) {
+      // On injecte les choix du dropdown dans l'utilisateur courant pour la démo/simulation
+      AuthService.currentUser?.entityLevel = _selectedNiveau;
+      AuthService.currentUser?.role = _selectedMinistere;
+      AuthService.currentUser?.entityRole = _selectedRole.name;
+      AuthService.currentUser?.commissionType = _selectedCommission;
+      
+      if (_selectedCommission != CommissionType.none) {
+        AuthService.currentUser?.role = UserRole.respCommission;
+        AuthService.currentUser?.commissionRole = _selectedRole == EntityResponsibleRole.responsable 
+          ? CommissionRole.responsable 
+          : CommissionRole.adjoint;
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+
+      context.go('/dashboard');
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email ou mot de passe incorrect'), backgroundColor: Colors.red),
+      );
     }
+    
+    if (mounted) setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-          child: Column(
-            children: [
-              // Logo circulaire bleu conforme à l'image
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFF003366), width: 2),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset(
-                  'assets/branding/logo_accueil.png',
-                  height: 120,
-                  width: 120,
-                  fit: BoxFit.contain,
-                  errorBuilder: (ctx, _, __) => const Icon(Icons.church, size: 80, color: Color(0xFF003366)),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Bienvenue !',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                  fontFamily: 'Serif',
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Connectez-vous à votre communauté',
-                style: TextStyle(color: Colors.black54, fontSize: 16),
-              ),
-              const SizedBox(height: 32),
-
-              Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Identifiant
-                    TextFormField(
-                      controller: _emailController,
-                      decoration: InputDecoration(
-                        hintText: 'Identifiant ou Email',
-                        prefixIcon: const Icon(Icons.alternate_email, color: Color(0xFF003366)),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+    return Theme(
+      data: AppTheme.lightTheme,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFF003366), width: 2),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 16),
-
-                    // Mot de passe
-                    TextFormField(
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      decoration: InputDecoration(
-                        hintText: 'Mot de passe',
-                        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF003366)),
-                        suffixIcon: IconButton(
-                          icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                        ),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                      ),
-                      validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                    child: Image.asset(
+                      'assets/logos/logo_accueil.png',
+                      height: 100,
+                      width: 100,
+                      errorBuilder: (ctx, _, __) => const Icon(Icons.church, size: 80, color: Color(0xFF003366)),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('Bienvenue !', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF003366))),
+                  const Text('connectez-vous à votre communauté', style: TextStyle(color: Colors.black54, fontSize: 16)),
+                  const SizedBox(height: 32),
 
-                    // Ligne Niveau / Ministère
-                    Row(
-                      children: [
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedNiveau,
-                            decoration: InputDecoration(
-                              hintText: 'Niveau',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            ),
-                            items: const [
-                              DropdownMenuItem(value: 'champ', child: Text('Champ')),
-                              DropdownMenuItem(value: 'district', child: Text('District')),
-                              DropdownMenuItem(value: 'communaute', child: Text('Communauté')),
-                            ],
-                            onChanged: (v) => setState(() => _selectedNiveau = v),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            initialValue: _selectedMinistere,
-                            decoration: InputDecoration(
-                              hintText: 'Ministère',
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                            ),
-                            items: const [
-                              DropdownMenuItem(value: 'apotre', child: Text('Apôtre')),
-                              DropdownMenuItem(value: 'eveque', child: Text('Évêque')),
-                              DropdownMenuItem(value: 'pretre', child: Text('Prêtre')),
-                            ],
-                            onChanged: (v) => setState(() => _selectedMinistere = v),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
+                  // EMAIL
+                  _buildLabel('Adresse Email ou Identifiant'),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: _inputDecoration('ex: nom@ena.org', Icons.alternate_email),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                  ),
+                  const SizedBox(height: 16),
 
-                    // Rôle
-                    DropdownButtonFormField<String>(
-                      initialValue: _selectedRole,
-                      decoration: InputDecoration(
-                        hintText: 'Rôle',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                      ),
-                      items: const [
-                        DropdownMenuItem(value: 'responsable', child: Text('Responsable')),
-                        DropdownMenuItem(value: 'suppleant', child: Text('Suppléant')),
-                      ],
-                      onChanged: (v) => setState(() => _selectedRole = v),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Bouton Se connecter
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : _login,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003366),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 2,
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Se connecter', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  // MOT DE PASSE
+                  _buildLabel('Mot de passe'),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    decoration: _inputDecoration('••••••••', Icons.lock_outline).copyWith(
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Container(height: 3, width: double.infinity, decoration: BoxDecoration(color: const Color(0xFF003366), borderRadius: BorderRadius.circular(2))),
+                    validator: (v) => (v == null || v.isEmpty) ? 'Requis' : null,
+                  ),
+                  const SizedBox(height: 24),
 
-                    const SizedBox(height: 24),
+                  // NIVEAU
+                  _buildLabel('Niveau'),
+                  DropdownButtonFormField<EntityLevel>(
+                    initialValue: _selectedNiveau,
+                    decoration: _inputDecoration('', null),
+                    items: EntityLevel.values.map((l) => DropdownMenuItem(value: l, child: Text(_getLevelLabel(l)))).toList(),
+                    onChanged: (v) => setState(() => _selectedNiveau = v!),
+                  ),
+                  const SizedBox(height: 16),
 
-                    // Liens
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () => context.go('/forgot-password'),
-                          child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                        ),
-                        const SizedBox(height: 30, child: VerticalDivider(color: Colors.grey)),
-                        TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: const Text('Créer un nouveau compte', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline)),
-                        ),
-                      ],
+                  // MINISTÈRE
+                  _buildLabel('Ministère'),
+                  DropdownButtonFormField<UserRole>(
+                    initialValue: _selectedMinistere,
+                    decoration: _inputDecoration('', null),
+                    items: UserRole.values.take(15).map((r) => DropdownMenuItem(value: r, child: Text(_getRoleLabel(r)))).toList(),
+                    onChanged: (v) => setState(() => _selectedMinistere = v!),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // COMMISSION
+                  _buildLabel('Commission (si applicable)'),
+                  DropdownButtonFormField<CommissionType>(
+                    initialValue: _selectedCommission,
+                    decoration: _inputDecoration('', null),
+                    items: CommissionType.values.map((c) => DropdownMenuItem(value: c, child: Text(_getCommLabel(c)))).toList(),
+                    onChanged: (v) => setState(() => _selectedCommission = v!),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // ROLE
+                  _buildLabel('Rôle'),
+                  DropdownButtonFormField<EntityResponsibleRole>(
+                    initialValue: _selectedRole,
+                    decoration: _inputDecoration('', null),
+                    items: EntityResponsibleRole.values.map((r) => DropdownMenuItem(value: r, child: Text(r == EntityResponsibleRole.responsable ? 'Responsable' : 'Suppléant'))).toList(),
+                    onChanged: (v) => setState(() => _selectedRole = v!),
+                  ),
+                  
+                  const SizedBox(height: 32),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF003366),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Se connecter', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
-                    const SizedBox(height: 48),
-
-                    // Footer
-                    const Text(
-                      'Découvrez notre plateforme unifiée pour l\'Église Néo-Apostolique. Apprenez comment gérer votre communauté.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Colors.black87, height: 1.5, fontStyle: FontStyle.italic),
-                    ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton(onPressed: () {}, child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))),
+                      const SizedBox(height: 20, child: VerticalDivider()),
+                      TextButton(onPressed: () => context.go('/register'), child: const Text('Créer un nouveau compte', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, decoration: TextDecoration.underline))),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
-}
 
+  Widget _buildLabel(String text) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+    );
+  }
+
+  InputDecoration _inputDecoration(String hint, IconData? icon) {
+    return InputDecoration(
+      hintText: hint,
+      prefixIcon: icon != null ? Icon(icon, color: const Color(0xFF003366)) : null,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
+  String _getLevelLabel(EntityLevel l) {
+    switch (l) {
+      case EntityLevel.communaute: return 'Communauté';
+      case EntityLevel.district: return 'District';
+      case EntityLevel.champ: return 'Champ';
+      case EntityLevel.regionApostolique: return 'Région Apostolique';
+      case EntityLevel.territoriale: return 'Territoriale';
+      case EntityLevel.internationale: return 'Internationale';
+    }
+  }
+
+  String _getRoleLabel(UserRole r) {
+    switch (r) {
+      case UserRole.apotrePatriarche: return 'Apôtre Patriarche';
+      case UserRole.apotreDistrict: return 'Apôtre de District';
+      case UserRole.apotreResponsable: return 'Apôtre Responsable';
+      case UserRole.apotre: return 'Apôtre';
+      case UserRole.eveque: return 'Évêque';
+      case UserRole.ancien: return 'Ancien';
+      case UserRole.lead: return 'Lead';
+      case UserRole.berger: return 'Berger';
+      case UserRole.evangeliste: return 'Évangéliste';
+      case UserRole.pretre: return 'Prêtre';
+      case UserRole.diacre: return 'Diacre';
+      case UserRole.sousDiacre: return 'Sous-Diacre';
+      case UserRole.frereCharge: return 'Frère Chargé';
+      case UserRole.conductrice: return 'Conductrice';
+      case UserRole.membre: return 'Membre';
+      default: return 'Autre';
+    }
+  }
+
+  String _getCommLabel(CommissionType c) {
+    switch (c) {
+      case CommissionType.ecodim: return 'Ecodim';
+      case CommissionType.econfi: return 'Econfi';
+      case CommissionType.jeunesse: return 'Jeunesse';
+      case CommissionType.papas: return 'Papas';
+      case CommissionType.mamans: return 'Mamans';
+      case CommissionType.aines: return 'Aînés';
+      case CommissionType.musique: return 'Musique';
+      case CommissionType.presseMediasSonorisation: return 'Presse & Médias';
+      case CommissionType.josephArimathee: return 'Joseph d\'Arimathée';
+      case CommissionType.securiteProtocole: return 'Sécurité';
+      case CommissionType.medicale: return 'Médicale';
+      case CommissionType.construction: return 'Construction';
+      case CommissionType.sacristie: return 'Sacristie';
+      case CommissionType.none: return 'Aucune (Ministre)';
+    }
+  }
+}

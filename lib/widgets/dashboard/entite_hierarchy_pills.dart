@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/entite_scope_service.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
-import 'package:ecclesiastes/widgets/dashboard/dashboard_shared.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/entite_scope_service.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
+import 'package:ecclesiaste/widgets/dashboard/dashboard_shared.dart';
+import 'package:ecclesiaste/providers/scope_provider.dart';
 
-/// Trois pills Champ / District / Communauté branchées sur la table [entites].
-class EntiteHierarchyPills extends StatefulWidget {
+/// Quatre pills Région / Champ / District / Communauté branchées sur la table [entites].
+/// Conforme au DCG Juillet 2026 (6 niveaux).
+class EntiteHierarchyPills extends ConsumerStatefulWidget {
   final VoidCallback? onScopeChanged;
 
   const EntiteHierarchyPills({super.key, this.onScopeChanged});
 
   @override
-  State<EntiteHierarchyPills> createState() => _EntiteHierarchyPillsState();
+  ConsumerState<EntiteHierarchyPills> createState() => _EntiteHierarchyPillsState();
 }
 
-class _EntiteHierarchyPillsState extends State<EntiteHierarchyPills> {
+class _EntiteHierarchyPillsState extends ConsumerState<EntiteHierarchyPills> {
+  List<Map<String, dynamic>> _territoriales = [];
+  List<Map<String, dynamic>> _regions = [];
   List<Map<String, dynamic>> _champs = [];
   List<Map<String, dynamic>> _districts = [];
   List<Map<String, dynamic>> _communautes = [];
@@ -29,31 +34,85 @@ class _EntiteHierarchyPillsState extends State<EntiteHierarchyPills> {
   Future<void> _bootstrap() async {
     setState(() => _loading = true);
     await EntiteScopeService.initFromSession();
-    _champs = await DatabaseHelper.instance.getEntitesByType(EntiteTypes.champApostolique);
-    if (_champs.isEmpty) {
-      if (mounted) setState(() => _loading = false);
-      return;
+    
+    // Charger l'entité internationale
+    final internationales = await DatabaseHelper.instance.getEntitesByType(EntiteTypes.internationale);
+    if (internationales.isNotEmpty) {
+      EntiteScopeService.internationaleId = internationales.first['id'].toString();
     }
-    if (EntiteScopeService.champId == null ||
-        !_champs.any((c) => c['id'].toString() == EntiteScopeService.champId)) {
-      EntiteScopeService.champId = _champs.first['id'].toString();
+
+    // Charger les églises territoriales
+    _territoriales = await DatabaseHelper.instance.getEglisesTerritoriales();
+    
+    // Si on a des territoriales, on s'assure qu'une est sélectionnée
+    if (_territoriales.isNotEmpty) {
+      if (EntiteScopeService.territorialeId == null ||
+          !_territoriales.any((t) => t['id'].toString() == EntiteScopeService.territorialeId)) {
+        // Ne force pas la sélection si on veut rester au niveau International (Super Admin)
+        if (!AuthService.isSuperAdmin()) {
+          EntiteScopeService.territorialeId = _territoriales.first['id'].toString();
+        }
+      }
     }
-    await _loadDistricts(keepSelection: false);
+
+    await _loadRegions(keepSelection: true);
+    
     if (mounted) {
       setState(() => _loading = false);
       widget.onScopeChanged?.call();
     }
   }
 
+  void _selectInternationale() {
+    EntiteScopeService.setScope(internationale: EntiteScopeService.internationaleId);
+    _regions = [];
+    _champs = [];
+    _districts = [];
+    _communautes = [];
+    _notify();
+  }
+
+  Future<void> _loadRegions({required bool keepSelection}) async {
+    final territorialeId = EntiteScopeService.territorialeId;
+    if (territorialeId == null) return;
+    _regions = await DatabaseHelper.instance.getSubEntites(territorialeId, EntiteTypes.regionApostolique);
+
+    if (_regions.isEmpty) {
+      EntiteScopeService.setScope(
+        internationale: EntiteScopeService.internationaleId,
+        territoriale: territorialeId,
+      );
+      _champs = [];
+      _districts = [];
+      _communautes = [];
+      return;
+    }
+
+    if (!keepSelection ||
+        EntiteScopeService.regionApostoliqueId == null ||
+        !_regions.any((r) => r['id'].toString() == EntiteScopeService.regionApostoliqueId)) {
+      EntiteScopeService.regionApostoliqueId = _regions.first['id'].toString();
+    }
+
+    await _loadChamps(keepSelection: keepSelection);
+  }
+
   Future<void> _loadDistricts({required bool keepSelection}) async {
     final champId = EntiteScopeService.champId;
     if (champId == null) return;
     _districts = await DatabaseHelper.instance.getSubEntites(champId, EntiteTypes.district);
+    
     if (_districts.isEmpty) {
-      EntiteScopeService.setScope(champ: champId);
+      EntiteScopeService.setScope(
+        internationale: EntiteScopeService.internationaleId,
+        territoriale: EntiteScopeService.territorialeId,
+        region: EntiteScopeService.regionApostoliqueId,
+        champ: champId,
+      );
       _communautes = [];
       return;
     }
+
     if (!keepSelection ||
         EntiteScopeService.districtId == null ||
         !_districts.any((d) => d['id'].toString() == EntiteScopeService.districtId)) {
@@ -66,28 +125,54 @@ class _EntiteHierarchyPillsState extends State<EntiteHierarchyPills> {
     final districtId = EntiteScopeService.districtId;
     if (districtId == null) return;
     _communautes = await DatabaseHelper.instance.getSubEntites(districtId, EntiteTypes.communaute);
+    
     if (_communautes.isEmpty) {
       EntiteScopeService.setScope(
+        internationale: EntiteScopeService.internationaleId,
+        territoriale: EntiteScopeService.territorialeId,
+        region: EntiteScopeService.regionApostoliqueId,
         champ: EntiteScopeService.champId,
         district: districtId,
       );
       return;
     }
+
     if (!keepSelection ||
         EntiteScopeService.communauteId == null ||
         !_communautes.any((c) => c['id'].toString() == EntiteScopeService.communauteId)) {
       EntiteScopeService.communauteId = _communautes.first['id'].toString();
     }
+
     EntiteScopeService.setScope(
+      internationale: EntiteScopeService.internationaleId,
+      territoriale: EntiteScopeService.territorialeId,
+      region: EntiteScopeService.regionApostoliqueId,
       champ: EntiteScopeService.champId,
-      district: districtId,
+      district: EntiteScopeService.districtId,
       communaute: EntiteScopeService.communauteId,
     );
   }
 
   void _notify() {
+    final activeId = EntiteScopeService.getActiveScope()['id'];
+    if (activeId != null) {
+      ref.read(activeEntityIdProvider.notifier).state = activeId;
+    }
+
     if (mounted) setState(() {});
     widget.onScopeChanged?.call();
+  }
+
+  Future<void> _selectTerritoriale(int index) async {
+    EntiteScopeService.territorialeId = _territoriales[index]['id'].toString();
+    await _loadRegions(keepSelection: false);
+    _notify();
+  }
+
+  Future<void> _selectRegion(int index) async {
+    EntiteScopeService.regionApostoliqueId = _regions[index]['id'].toString();
+    await _loadChamps(keepSelection: false);
+    _notify();
   }
 
   Future<void> _selectChamp(int index) async {
@@ -105,6 +190,9 @@ class _EntiteHierarchyPillsState extends State<EntiteHierarchyPills> {
   void _selectCommunaute(int index) {
     EntiteScopeService.communauteId = _communautes[index]['id'].toString();
     EntiteScopeService.setScope(
+      internationale: EntiteScopeService.internationaleId,
+      territoriale: EntiteScopeService.territorialeId,
+      region: EntiteScopeService.regionApostoliqueId,
       champ: EntiteScopeService.champId,
       district: EntiteScopeService.districtId,
       communaute: EntiteScopeService.communauteId,
@@ -130,21 +218,44 @@ class _EntiteHierarchyPillsState extends State<EntiteHierarchyPills> {
         child: Center(child: LinearProgressIndicator(minHeight: 2)),
       );
     }
-    if (_champs.isEmpty) {
-      return Text(
-        'Aucune entité en base. Créez la hiérarchie dans Config.',
-        style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-      );
-    }
+    
+    final isSuperAdmin = AuthService.isSuperAdmin();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        EntityPillRow(
-          labels: _labelsFor(_champs, 'Champ'),
-          selectedIndex: _indexOf(_champs, EntiteScopeService.champId),
-          onSelected: _selectChamp,
-        ),
+        if (isSuperAdmin) ...[
+          EntityPillRow(
+            labels: const ['Niveau International (ENA)'],
+            selectedIndex: EntiteScopeService.territorialeId == null ? 0 : -1,
+            onSelected: (_) => _selectInternationale(),
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (_territoriales.isNotEmpty) ...[
+          EntityPillRow(
+            labels: _labelsFor(_territoriales, 'Territoriale'),
+            selectedIndex: _indexOf(_territoriales, EntiteScopeService.territorialeId),
+            onSelected: _selectTerritoriale,
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (_regions.isNotEmpty) ...[
+          EntityPillRow(
+            labels: _labelsFor(_regions, 'Région'),
+            selectedIndex: _indexOf(_regions, EntiteScopeService.regionApostoliqueId),
+            onSelected: _selectRegion,
+          ),
+          const SizedBox(height: 10),
+        ],
+        if (_champs.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          EntityPillRow(
+            labels: _labelsFor(_champs, 'Champ'),
+            selectedIndex: _indexOf(_champs, EntiteScopeService.champId),
+            onSelected: _selectChamp,
+          ),
+        ],
         if (_districts.isNotEmpty) ...[
           const SizedBox(height: 10),
           EntityPillRow(
@@ -221,4 +332,3 @@ class _DistrictFilterPillsState extends State<DistrictFilterPills> {
     );
   }
 }
-

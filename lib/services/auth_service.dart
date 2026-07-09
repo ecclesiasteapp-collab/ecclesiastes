@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/database_service.dart';
-import 'package:ecclesiastes/utils/password_utils.dart';
-import 'package:ecclesiastes/utils/secure_storage_helper.dart';
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/database_service.dart';
+import 'package:ecclesiaste/utils/password_utils.dart';
+import 'package:ecclesiaste/utils/secure_storage_helper.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 import 'package:hive/hive.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ecclesiastes/providers/auth_state_provider.dart';
+import 'package:ecclesiaste/providers/auth_state_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user.dart';
 import '../models/hierarchy_models.dart';
@@ -40,6 +40,11 @@ class AuthService {
     // Tous les ministres (du Diacre à l'Apôtre Patriarche) et responsables de commission
     // sont considérés comme "Responsables" dans le système.
     return currentUser!.role != UserRole.membre;
+  }
+
+  static bool isMinistre() {
+    if (currentUser == null) return false;
+    return currentUser!.role != UserRole.membre && currentUser!.role != UserRole.superAdmin;
   }
 
   // Dans la classe AuthService

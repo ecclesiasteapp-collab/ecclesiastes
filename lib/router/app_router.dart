@@ -15,7 +15,7 @@ import '../providers/auth_state_provider.dart';
 import '../config/report_registry.dart';
 
 // Views
-import 'welcome_page.dart';
+import '../views/welcome_page.dart';
 import '../views/login_page.dart';
 import '../views/register_page.dart';
 import '../views/pending_confirmation_page.dart';
@@ -45,17 +45,35 @@ import '../views/profile_page.dart';
 import '../views/member_detail_page.dart';
 import '../views/member_transfer_page.dart';
 import '../views/inscription_membre_page.dart';
+import '../views/espace_famille_page.dart';
+import '../views/communication_groupee_page.dart';
 import '../views/social_hub_screen.dart';
 import '../views/pastoral_statistics_screen.dart';
 import '../views/church_report_detail_page.dart';
 import '../views/admin_entites_page.dart';
+import '../views/organization/entity_management_page.dart';
+import '../views/ministers_list_view.dart';
+import '../screens/champ/entity_dashboard_screen.dart';
+import '../screens/champ/kso_districts_screen.dart';
 import '../views/structure_test_page.dart';
 import '../views/dashboards/main_dashboard.dart';
 import '../views/dashboards/member_dashboard.dart';
 import '../views/dashboards/minister_dashboard.dart';
-import '../views/dashboards/commission_dashboard.dart';
+import '../views/dashboards/dashboard_responsable_commission_modulaire_page.dart';
 import '../views/dashboards/dashboard_responsable_entite_page.dart';
 import '../views/admin/super_admin_dashboard.dart';
+import '../views/admin/user_management_page.dart';
+import '../views/admin/governance_dashboard_page.dart';
+import '../views/erp/hub_page.dart';
+import '../views/erp/library_page.dart';
+import '../views/erp/official_report_form.dart';
+import '../views/erp/report_approval_screen.dart';
+import '../views/erp/finance_dashboard.dart';
+import '../views/erp/record_offering_form.dart';
+import '../views/erp/family_list_page.dart';
+import '../views/erp/arimathee_page.dart';
+import '../views/erp/inventory_page.dart';
+import '../views/erp/construction_page.dart';
 
 import '../views/reports/rapport_ecodim.dart';
 import '../views/reports/fundraising_report_screen.dart';
@@ -68,6 +86,14 @@ import '../views/signature_screen.dart';
 import '../views/help_page.dart';
 import '../views/journal_finances_page.dart';
 import '../views/saisie_finances_page.dart';
+import '../views/person_dossier_page.dart';
+import '../views/governance_management_page.dart';
+import '../views/reports/official_reports_list_page.dart';
+import '../views/reports/official_report_form_dynamic.dart';
+import '../models/official_report.dart';
+import '../views/advanced_statistics_page.dart';
+
+import '../views/reports/official_reports_pages.dart';
 
 // Page de secours
 class _ComingSoonPage extends StatelessWidget {
@@ -159,23 +185,33 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final authState = ref.read(authStateProvider);
       final isLoggedIn = authState == AuthState.authenticated;
       final isInitializing = authState == AuthState.loading;
+      final currentUser = AuthService.currentUser;
 
       final path = state.matchedLocation;
       final isGoingToLogin = path == '/login';
       final isWelcome = path == '/';
+      final isPendingPage = path == '/pending-confirmation';
+      final isBiblePage = path == '/bible';
 
-      // Si l'authentification est en cours d'initialisation, ne redirigez pas encore
       if (isInitializing) return null;
 
-      // Si pas connecté et essaie d'accéder à une page protégée, redirige vers le login
+      // Si pas connecté
       if (!isLoggedIn && !isGoingToLogin && !isWelcome &&
-          path != '/register' && path != '/forgot-password' && path != '/legal' && path != '/pending-confirmation') {
+          path != '/register' && path != '/forgot-password' && path != '/legal' && !isPendingPage) {
         return '/login';
       }
-      // Si connecté et essaie d'accéder à la page de login ou welcome, redirige vers le dashboard
-      if (isLoggedIn && (isGoingToLogin || isWelcome)) {
+
+      // Si connecté mais pas encore validé (status != active)
+      if (isLoggedIn && currentUser != null && currentUser.status != 'active') {
+        if (!isPendingPage && !isBiblePage) return '/pending-confirmation';
+        return null; 
+      }
+
+      // Si connecté et actif, et essaie d'aller sur login/welcome/pending
+      if (isLoggedIn && currentUser?.status == 'active' && (isGoingToLogin || isWelcome || isPendingPage)) {
         return '/dashboard';
       }
+
       return null;
     },
     routes: _routes,
@@ -187,7 +223,6 @@ final appRouter = GoRouter(
   initialLocation: '/',
   routes: _routes,
   errorBuilder: _errorBuilder,
-  // La logique de redirection sera gérée par le nouveau goRouterProvider
 );
 
 final List<RouteBase> _routes = [
@@ -198,6 +233,18 @@ final List<RouteBase> _routes = [
     GoRoute(path: '/forgot-password', builder: (context, state) => const ForgotPasswordPage()),
     GoRoute(path: '/legal', builder: (context, state) => const LegalDisclaimerPage()),
 
+    // --- NOUVELLE ARCHITECTURE ERP (Phase 3) ---
+    GoRoute(path: '/erp/hub', builder: (context, state) => const ERPHubPage()),
+    GoRoute(path: '/erp/library', builder: (context, state) => const ERPLibraryPage()),
+    GoRoute(path: '/erp/report/:type', builder: (context, state) => OfficialReportForm(reportType: state.pathParameters['type']!)),
+    GoRoute(path: '/erp/workflow/approve/:id', builder: (context, state) => ReportApprovalScreen(instanceId: state.pathParameters['id']!)),
+    GoRoute(path: '/erp/finance', builder: (context, state) => const ERPFinanceDashboard()),
+    GoRoute(path: '/erp/finance/record', builder: (context, state) => const RecordOfferingForm()),
+    GoRoute(path: '/erp/families', builder: (context, state) => const ERPFamilyListPage()),
+    GoRoute(path: '/erp/arimathee', builder: (context, state) => const ArimatheePage()),
+    GoRoute(path: '/erp/inventory', builder: (context, state) => const InventoryPage()),
+    GoRoute(path: '/erp/construction', builder: (context, state) => const ConstructionPage()),
+
     GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
 
     GoRoute(path: '/organization', builder: (context, state) => const OrganizationOverviewPage()),
@@ -206,9 +253,13 @@ final List<RouteBase> _routes = [
 
     GoRoute(path: '/admin/super-admin', builder: (context, state) => SuperAdminDashboard(admin: AuthService.currentUser!)),
     GoRoute(path: '/admin/panel', builder: (context, state) => const AdminEntitesPage()),
-    GoRoute(path: '/admin/users', builder: (context, state) => const _ComingSoonPage(title: 'Gestion Utilisateurs')),
+    GoRoute(path: '/admin/users', builder: (context, state) => const UserManagementPage()),
+    GoRoute(path: '/admin/governance', builder: (context, state) => const GovernanceDashboardPage()),
 
     GoRoute(path: '/bible', builder: (context, state) => const BiblePage()),
+    GoRoute(path: '/ministers', builder: (context, state) => const MinistersListView()),
+    GoRoute(path: '/districts', builder: (context, state) => const KsoDistrictsScreen()),
+    GoRoute(path: '/entity/:id', builder: (context, state) => EntityDashboardScreen(entityId: state.pathParameters['id']!)),
 
     GoRoute(
         path: '/members',
@@ -217,15 +268,39 @@ final List<RouteBase> _routes = [
           return GestionMembresPage(
             entiteId: extras?['communauteId'],
             commissionName: extras?['commission'],
+            initialSearch: extras?['search'],
           );
         }),
     GoRoute(path: '/member/detail/:id', builder: (context, state) => MemberDetailPage(memberId: state.pathParameters['id']!)),
+    GoRoute(path: '/member/dossier/:id', builder: (context, state) => PersonDossierPage(personId: state.pathParameters['id']!)),
+    GoRoute(path: '/member/governance/:id', builder: (context, state) => GovernanceManagementPage(personId: state.pathParameters['id']!)),
     GoRoute(path: '/member/register', builder: (context, state) => const InscriptionMembrePage()),
     GoRoute(path: '/member/register-stepper', builder: (context, state) => const InscriptionMembreStepper()),
     GoRoute(path: '/member/transfer/:id', builder: (context, state) => MemberTransferPage(memberId: state.pathParameters['id']!)),
+    GoRoute(path: '/member/family', builder: (context, state) => const EspaceFamillePage()),
+    GoRoute(path: '/member/communication', builder: (context, state) => const CommunicationGroupeePage()),
 
     GoRoute(path: '/reports', builder: (context, state) => const ReportListScreen()),
     GoRoute(path: '/reports/inbox', builder: (context, state) => const ReportInboxPage()),
+    GoRoute(path: '/reports/official-list', builder: (context, state) => const OfficialReportsListPage()),
+    GoRoute(path: '/reports/create/:type', builder: (context, state) {
+      final type = state.pathParameters['type']!;
+      final reportType = OfficialReportType.values.firstWhere(
+        (e) => e.toString().split('.').last == type,
+        orElse: () => OfficialReportType.sacristie,
+      );
+      return OfficialReportFormDynamic(reportType: reportType);
+    }),
+
+    // --- RAPPORTS OFFICIELS ENA RDC OUEST ---
+    GoRoute(path: '/reports/official/sd', builder: (context, state) => RapportServiceDivinPage(rapportData: state.extra as Map<String, dynamic>)),
+    GoRoute(path: '/reports/official/sacristie', builder: (context, state) => RapportSacristiePage(rapportData: state.extra as Map<String, dynamic>)),
+    GoRoute(path: '/reports/official/presence', builder: (context, state) => ListePresencePage(data: state.extra as Map<String, dynamic>)),
+    GoRoute(path: '/reports/official/communique', builder: (context, state) => CommuniquePage(data: state.extra as Map<String, dynamic>)),
+    GoRoute(path: '/reports/official/generic', builder: (context, state) {
+      final extras = state.extra as Map<String, dynamic>;
+      return RapportGeneriquePage(title: extras['official_title'] ?? 'Rapport', data: extras);
+    }),
 
     GoRoute(path: '/reports/detail/:id', builder: (context, state) => ChurchReportDetailPage(reportId: state.pathParameters['id']!)),
     GoRoute(
@@ -234,15 +309,18 @@ final List<RouteBase> _routes = [
           final type = state.pathParameters['type']!;
           final config = ReportRegistry.all[type] ?? ReportRegistry.all['service_divin']!;
           if (type.endsWith('_mensuel')) {
-            // Pour les rapports mensuels, utiliser UniversalMonthlyReportScreen
-            // Il faudra passer la config et des données réelles ici
-            return UniversalMonthlyReportScreen(reportConfig: config, reportData: {}); // Placeholder pour reportData
+            return UniversalMonthlyReportScreen(reportConfig: config, reportData: const {}); 
           }
           return UniversalReportScreen(config: config);
         }),
 
-    GoRoute(path: 
-'/reports/ecodim', builder: (context, state) => const ReportEcodimPage()),
+    GoRoute(path: '/reports/create', builder: (context, state) {
+      final config = ReportRegistry.all['service_divin'];
+      if (config == null) return const _ComingSoonPage(title: 'Configuration Rapport Manquante');
+      return UniversalReportScreen(config: config);
+    }),
+
+    GoRoute(path: '/reports/ecodim', builder: (context, state) => const ReportEcodimPage()),
     GoRoute(path: '/fundraising-report', builder: (context, state) => const FundraisingReportScreen()),
 
     GoRoute(path: '/announcements', builder: (context, state) => const AnnoncesPage()),
@@ -282,6 +360,7 @@ final List<RouteBase> _routes = [
 
     GoRoute(path: '/settings', builder: (context, state) => const SettingsPageEnhanced()),
     GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
+    GoRoute(path: '/stats/advanced', builder: (context, state) => const AdvancedStatisticsPage()),
     GoRoute(path: '/stats', builder: (context, state) => const PastoralStatisticsScreen()),
     GoRoute(path: '/social-hub', builder: (context, state) => const SocialHubScreen()),
     GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
@@ -302,10 +381,13 @@ final List<RouteBase> _routes = [
         builder: (context, state) => const DashboardResponsableEntitePage()),
     GoRoute(
         path: '/dashboard/commission',
-        builder: (context, state) => CommissionDashboard(
-              commissionName:
-                  AuthService.currentUser?.commissionType?.name ?? 'Commission',
-            )),
+        builder: (context, state) {
+          final extras = state.extra as Map<String, dynamic>?;
+          return DashboardResponsableCommissionModulairePage(
+            isSuppleant: AuthService.currentUser?.entityRole == EntityResponsibleRole.suppleant.name,
+            initialCommissionType: extras?['type'],
+          );
+        }),
     GoRoute(
         path: '/dashboard/minister',
         builder: (context, state) => const MinisterDashboard()),
@@ -329,4 +411,3 @@ Widget _errorBuilder(BuildContext context, GoRouterState state) => Scaffold(
     ),
   ),
 );
-

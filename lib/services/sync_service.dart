@@ -1,57 +1,49 @@
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
-import 'package:hive/hive.dart';
 import '../models/sync_queue_model.dart';
+import '../domain/repositories/sync_repository.dart';
 
 class SyncService {
+  final SyncRepository syncRepo;
   final Connectivity _connectivity = Connectivity();
 
-  static Future<void> enqueue(String actionType, Map<String, dynamic> data) async {
-    // Note: This implementation seems to be based on a different model (SyncQueueItem)
-    // than the one discussed previously (Report). The testing principle remains the same.
-    // I will adapt the test to this SyncQueueItem model.
-    final box = Hive.box<SyncQueueItem>('sync_queue');
+  SyncService(this.syncRepo);
+
+  Future<void> enqueue(String actionType, Map<String, dynamic> data, {String priority = 'normal'}) async {
     final item = SyncQueueItem(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       actionType: actionType,
       payloadJson: jsonEncode(data),
       createdAt: DateTime.now(),
+      priority: priority,
     );
-    await box.add(item);
-    SyncService().trySync();
+    await syncRepo.addToQueue(item);
+    trySync();
   }
 
   /// Tente de synchroniser la file d'attente
   Future<void> trySync({http.Client? client}) async {
-    // If no client is provided for testing, use a real one.
     client ??= http.Client();
 
     final List<ConnectivityResult> connectivityResult = await _connectivity.checkConnectivity();
-    
-    if (connectivityResult.every((result) => result == ConnectivityResult.none)) {
-      return; // Pas de réseau
-    }
+    if (connectivityResult.every((result) => result == ConnectivityResult.none)) return;
 
-    final box = await Hive.openBox<SyncQueueItem>('sync_queue');
-    final pendingItems = box.values.where((item) => item.status == SyncStatus.pending).toList();
+    final pendingItems = await syncRepo.getPendingItems();
 
     for (var item in pendingItems) {
       item.status = SyncStatus.syncing;
-      await item.save();
+      await syncRepo.updateItem(item);
 
       try {
-        // Logique de résolution de conflit avant envoi
         await _resolveConflictsAndSend(item, client);
-
         item.status = SyncStatus.synced;
         item.isSynced = true;
-        await item.save();
+        await syncRepo.updateItem(item);
       } catch (e) {
         item.status = SyncStatus.failed;
         item.retryCount++;
-// item.errorMessage = e.toString(); // Champ supprimé du modèle
-        await item.save();
+        await syncRepo.updateItem(item);
       }
     }
   }

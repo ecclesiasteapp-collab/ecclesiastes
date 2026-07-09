@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/report.dart';
+import 'package:ecclesiaste/models/report.dart';
 
 class KPICard extends StatelessWidget {
   final KPI kpi;

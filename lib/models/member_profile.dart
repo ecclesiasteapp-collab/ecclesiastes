@@ -131,6 +131,12 @@ class MemberProfile extends HiveObject {
   String? roleEntite; // "responsable", "suppleant" or null
   @HiveField(42)
   String? roleCommission; // "responsable", "suppleant" or null
+  @HiveField(43)
+  String? personId; // Lien vers le Dossier Ecclésiastique Unique
+  @HiveField(44)
+  String? internationaleId;
+  @HiveField(45)
+  String? regionApostoliqueId;
 
   MemberProfile({
     required this.id,
@@ -176,6 +182,8 @@ class MemberProfile extends HiveObject {
     this.observations,
     this.roleEntite,
     this.roleCommission,
+    this.internationaleId,
+    this.regionApostoliqueId,
   });
 
   String get fullName => '$prenom $nom $postNom'.trim();

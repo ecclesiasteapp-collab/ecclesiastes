@@ -1,5 +1,5 @@
-import 'package:ecclesiastes/services/image_service.dart';
-import 'package:ecclesiastes/views/import_events_page.dart';
+import 'package:ecclesiaste/services/image_service.dart';
+import 'package:ecclesiaste/views/import_events_page.dart';
 import 'package:flutter/material.dart';
 import '../models/event_models.dart';
 import '../services/announcement_service.dart';

@@ -1,4 +1,4 @@
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 class EntityDefinition {
   final EntityLevel level;

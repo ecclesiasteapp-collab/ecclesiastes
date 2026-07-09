@@ -1,72 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
 import '../../models/church_report.dart';
 import '../../models/hierarchy_models.dart';
 import '../../services/auth_service.dart';
 import '../../services/entite_scope_service.dart';
-import '../../core/theme.dart';
+import '../../services/repository_providers.dart';
 
-class ReportInboxPage extends StatefulWidget {
+class ReportInboxPage extends ConsumerStatefulWidget {
   const ReportInboxPage({super.key});
 
   @override
-  State<ReportInboxPage> createState() => _ReportInboxPageState();
+  ConsumerState<ReportInboxPage> createState() => _ReportInboxPageState();
 }
 
-class _ReportInboxPageState extends State<ReportInboxPage> {
-  late Box<ChurchReport> _reportBox;
+class _ReportInboxPageState extends ConsumerState<ReportInboxPage> {
+  List<ChurchReport> _reports = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _reportBox = Hive.box<ChurchReport>('church_reports');
-    setState(() => _isLoading = false);
+    _loadReports();
   }
 
-  List<ChurchReport> _getIncomingReports() {
-    final user = AuthService.currentUser;
-    if (user == null) return [];
-
+  Future<void> _loadReports() async {
+    setState(() => _isLoading = true);
+    final repo = ref.read(reportRepositoryProvider);
+    final allReports = await repo.getReportsByStatus(ReportStatus.soumis);
+    
     final scope = EntiteScopeService.getActiveScope();
     final String? activeId = scope['id'];
     final activeLevel = scope['level'];
 
-    return _reportBox.values.where((report) {
-      // 1. Uniquement les rapports soumis (en attente de validation)
-      if (report.statut != ReportStatus.soumis) return false;
-
-      // 2. Filtrage par supervision hiérarchique
-      // Un responsable voit les rapports de son entité ou de ses sous-entités
-      if (activeLevel == EntityLevel.communaute) {
-        return report.nomEntite == activeId;
-      } else if (activeLevel == EntityLevel.district) {
-        return report.nomDistrict == activeId;
-      } else if (activeLevel == EntityLevel.champ) {
-        return report.nomChamp == activeId;
-      }
-      
-      return true; // Niveau international voit tout
-    }).toList()
-      ..sort((a, b) => b.dateRapport.compareTo(a.dateRapport));
+    setState(() {
+      _reports = allReports.where((report) {
+        if (activeLevel == EntityLevel.communaute) {
+          return report.nomEntite == activeId;
+        } else if (activeLevel == EntityLevel.district) {
+          return report.nomDistrict == activeId;
+        } else if (activeLevel == EntityLevel.champ) {
+          return report.nomChamp == activeId;
+        }
+        return true;
+      }).toList()
+        ..sort((a, b) => b.dateRapport.compareTo(a.dateRapport));
+      _isLoading = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final reports = _getIncomingReports();
-
     return Scaffold(
-      backgroundColor: AppTheme.primaryDark,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Boîte de Réception', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => context.pop(),
-        ),
+        backgroundColor: const Color(0xFF003366),
+        foregroundColor: Colors.white,
+        title: const Text('Boîte de Réception', style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -76,17 +67,17 @@ class _ReportInboxPageState extends State<ReportInboxPage> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
-                    '${reports.length} rapports en attente de validation',
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    '${_reports.length} rapports en attente de validation',
+                    style: const TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                 ),
                 Expanded(
-                  child: reports.isEmpty
+                  child: _reports.isEmpty
                       ? _buildEmptyState()
                       : ListView.builder(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: reports.length,
-                          itemBuilder: (context, index) => _buildReportCard(reports[index]),
+                          itemCount: _reports.length,
+                          itemBuilder: (context, index) => _buildReportCard(_reports[index]),
                         ),
                 ),
               ],
@@ -97,24 +88,24 @@ class _ReportInboxPageState extends State<ReportInboxPage> {
   Widget _buildReportCard(ChurchReport report) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      color: Colors.white.withValues(alpha: 0.05),
+      elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: Colors.white10),
+        side: BorderSide(color: Colors.grey.shade200),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.all(12),
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.accent.withValues(alpha: 0.1),
+            color: const Color(0xFF003366).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(Icons.description, color: AppTheme.accent),
+          child: const Icon(Icons.description, color: Color(0xFF003366)),
         ),
         title: Text(
           report.type.name.toUpperCase(),
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,15 +113,15 @@ class _ReportInboxPageState extends State<ReportInboxPage> {
             const SizedBox(height: 4),
             Text(
               'De: ${report.nomEntite}',
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
             ),
             Text(
               'Le ${DateFormat('dd/MM/yyyy').format(report.dateRapport)}',
-              style: const TextStyle(color: Colors.white54, fontSize: 12),
+              style: const TextStyle(color: Colors.black54, fontSize: 12),
             ),
           ],
         ),
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24),
+        trailing: const Icon(Icons.chevron_right, color: Color(0xFF003366)),
         onTap: () => context.push('/reports/detail/${report.id}'),
       ),
     );
@@ -141,15 +132,20 @@ class _ReportInboxPageState extends State<ReportInboxPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inbox, size: 64, color: Colors.white.withValues(alpha: 0.1)),
+          Icon(Icons.inbox, size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
           const Text(
             'Aucun rapport en attente',
-            style: TextStyle(color: Colors.white38, fontSize: 16),
+            style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => context.pop(),
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF003366), foregroundColor: Colors.white),
+            child: const Text('Retour'),
+          )
         ],
       ),
     );
   }
 }
-

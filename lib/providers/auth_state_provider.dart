@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
 enum AuthState {
   loading,

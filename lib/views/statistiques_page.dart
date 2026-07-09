@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/constants.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/constants.dart';
 
 class StatistiquesPage extends StatefulWidget {
   const StatistiquesPage({super.key});

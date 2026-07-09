@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
-import 'package:ecclesiastes/models/member_profile.dart';
-import 'package:ecclesiastes/utils/constants.dart';
-import 'package:ecclesiastes/services/image_service.dart';
+import 'package:ecclesiaste/models/member_profile.dart';
+import 'package:ecclesiaste/utils/constants.dart';
+import 'package:ecclesiaste/services/image_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:typed_data';

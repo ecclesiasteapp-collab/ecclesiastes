@@ -13,245 +13,190 @@ class PendingConfirmationPage extends StatelessWidget {
     final entityName = args['entityName'] as String? ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF003366),
+      backgroundColor: const Color(0xFFF0F2F5),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF003366),
+        elevation: 0,
+        title: const Text('Admission Officielle', style: TextStyle(color: Colors.white, fontSize: 18)),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            onPressed: () => AuthService.logout().then((_) => context.go('/')),
+          )
+        ],
+      ),
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              const SizedBox(height: 10),
+              // Logo ou Sceau de l'Église (Filigrane simulé)
+              Opacity(
+                opacity: 0.1,
+                child: Icon(Icons.church, size: 100, color: const Color(0xFF003366)),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(32),
+              const SizedBox(height: 20),
+
+              // CARTE PRINCIPALE : STATUS ET PROGRESSION
+              Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Dossier n° ENA-${DateTime.now().year}-PROV",
+                        style: TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Demande d'Admission",
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF003366)),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "En cours de traitement par le secrétariat",
+                        style: TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // BARRE DE PROGRESSION TEMPORELLE
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text("Progression (3 à 4 jours)", style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                              const Text("25%", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          const ClipRRect(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                            child: LinearProgressIndicator(
+                              value: 0.25,
+                              minHeight: 10,
+                              backgroundColor: Color(0xFFE0E0E0),
+                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF003366)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "Votre demande d'inscription pour la communauté $entityName est en cours de validation par le Responsable ou son Adjoint.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.grey.shade800, height: 1.5),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // SECTION SPIRITUELLE : ACCÈS BIBLE
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF003366), Color(0xFF1B6B9E)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Icône d'attente
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.hourglass_empty,
-                        size: 64,
-                        color: Colors.orange.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Titre
-                    const Text(
-                      'Inscription en attente',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF003366),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Message
-                    Text(
-                      'Votre demande d\'inscription a été envoyée avec succès',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey.shade700,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Email
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.email, color: Colors.grey.shade600, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Email',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            email,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Entité
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.church, color: Colors.grey.shade600, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Communauté',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            entityName,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Délai d'attente
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue.shade200),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 32,
-                            color: Colors.blue.shade700,
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Délai de validation',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF003366),
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Le responsable de votre communauté validera votre inscription sous 3 à 4 jours ouvrables',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.blue.shade900,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Instructions
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.green.shade50,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.green.shade200),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.check_circle, color: Colors.green.shade700, size: 20),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Que faire maintenant ?',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF003366),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          _buildInstruction('1. Vérifiez régulièrement vos emails'),
-                          _buildInstruction('2. Le responsable vous contactera pour confirmation'),
-                          _buildInstruction('3. Une fois validé, vous pourrez vous connecter'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Boutons
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () => context.go('/welcome'),
-                        icon: const Icon(Icons.home),
-                        label: const Text(
-                          'Retour à l\'accueil',
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF003366),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
+                    const Icon(Icons.menu_book, color: Colors.white, size: 40),
                     const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        // Support logic here
-                      },
-                      child: const Text(
-                        'Besoin d\'aide ? Contactez-nous',
-                        style: TextStyle(color: Color(0xFF003366)),
+                    const Text(
+                      "Nourriture Spirituelle",
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      "En attendant votre admission, la Bible TOB est à votre disposition gratuitement.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () => context.push('/bible'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: const Color(0xFF003366),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
+                      child: const Text("LIRE LA SAINTE BIBLE"),
                     ),
                   ],
                 ),
               ),
-            ),
+
+              const SizedBox(height: 20),
+
+              // BOUTONS D'ACTION ET CONTACT
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        // Action de contact secrétariat
+                        showDialog(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            title: const Text('Contacter le Secrétariat'),
+                            content: const Text('Pour toute urgence concernant votre dossier, veuillez contacter le bureau de votre district ou envoyer un message au service technique.'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('FERMER')),
+                              ElevatedButton(onPressed: () => Navigator.pop(ctx), child: const Text('ENVOYER MESSAGE')),
+                            ],
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.support_agent),
+                      label: const Text("SUPPORT"),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => context.go('/'),
+                      icon: const Icon(Icons.home),
+                      label: const Text("ACCUEIL"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey.shade200,
+                        foregroundColor: Colors.black87,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              
+              const SizedBox(height: 30),
+              const Text(
+                "© 2026 Église Néo-Apostolique - Système Ecclésiaste",
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+            ],
           ),
         ),
       ),
     );
+  }
   }
 
   Widget _buildInstruction(String text) {

@@ -44,6 +44,8 @@ class ImageEntity extends HiveObject {
         return 'assets/images/annonces/territoriale/';
       case EntityLevel.champ:
         return 'assets/images/annonces/champ/';
+      case EntityLevel.regionApostolique:
+        return 'assets/images/annonces/region/';
       case EntityLevel.district:
         return 'assets/images/annonces/district/';
       case EntityLevel.communaute:

@@ -1,4 +1,4 @@
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 import 'package:hive/hive.dart';
 import '../models/attachment_model.dart';
 import '../models/news_model.dart';

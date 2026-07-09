@@ -72,11 +72,13 @@ class EntityPrivilegeService {
     // Règles hiérarchiques
     switch (user.entityLevel) {
       case EntityLevel.internationale:
-        return true; // Nomme Territoriaux
+        return true; 
       case EntityLevel.territoriale:
-        return true; // Nomme Districts
+        return true; 
+      case EntityLevel.regionApostolique:
+        return true;
       case EntityLevel.champ:
-        return true; // Nomme Communautés
+        return true;
       default:
         return false;
     }

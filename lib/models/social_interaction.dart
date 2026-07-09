@@ -1,4 +1,7 @@
 import 'package:hive/hive.dart';
+
+part 'social_interaction.g.dart';
+
 /// Modèle pour tracker les interactions utilisateur sur les réseaux sociaux
 /// Enregistre chaque vue, like, partage, etc.
 @HiveType(typeId: 130)

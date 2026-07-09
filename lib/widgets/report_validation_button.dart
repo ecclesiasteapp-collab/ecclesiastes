@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/report_cascading_service.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/report_cascading_service.dart';
 
 /// Bouton intelligent qui gère la validation d'un rapport selon la hiérarchie.
 class ReportValidationButton extends StatefulWidget {

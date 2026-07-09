@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 /// Widget pour afficher les actions rapides adaptées au niveau d'entité
 /// et au rôle (responsable vs suppléant)
@@ -60,6 +60,7 @@ class CommissionQuickActions extends StatelessWidget {
     switch (entityLevel) {
       case EntityLevel.internationale:
       case EntityLevel.territoriale:
+      case EntityLevel.regionApostolique:
       case EntityLevel.champ:
         actions.addAll([
           {

@@ -1,7 +1,7 @@
 {
   "international_church": {
     "id": "international_root",
-    "name": "Ecclésiaste (Direction Mondiale)",
+    "name": "Église Néo-Apostolique Internationale",
     "code": "INTER"
   },
   "territorial_churches": [
@@ -10,40 +10,49 @@
       "name": "Église Territoriale RDC Ouest",
       "code": "RDC-OUEST",
       "parent_id": "international_root",
-      "apostolic_fields": [
+      "apostolic_regions": [
         {
-          "id": "champ_kso",
-          "name": "Champ Apostolique KSO",
-          "code": "KSO",
+          "id": "reg_ouest",
+          "name": "Région Apostolique Ouest",
+          "code": "REG-OUEST",
           "parent_id": "terr_rdc_ouest",
-          "responsible": "Apôtre NGOLO Emmanuel",
-          "districts": [
+          "responsible": "Apôtre Responsable à désigner",
+          "apostolic_fields": [
             {
-              "id": "KSO_01",
-              "name": "District KSO 01",
-              "code": "KSO_01",
-              "parent_id": "champ_kso",
-              "communities_count": 5,
-              "members_count": 1200,
-              "siege": "Lemba"
-            },
-            {
-              "id": "KSO_02",
-              "name": "District KSO 02",
-              "code": "KSO_02",
-              "parent_id": "champ_kso",
-              "communities_count": 4,
-              "members_count": 1000,
-              "siege": "Limete"
-            },
-            {
-              "id": "KSO_03",
-              "name": "District KSO 03",
-              "code": "KSO_03",
-              "parent_id": "champ_kso",
-              "communities_count": 6,
-              "members_count": 1500,
-              "siege": "Ngaba"
+              "id": "champ_kso",
+              "name": "Champ Apostolique KSO",
+              "code": "KSO",
+              "parent_id": "reg_ouest",
+              "responsible": "Apôtre NGOLO Emmanuel",
+              "districts": [
+                {
+                  "id": "KSO_01",
+                  "name": "District KSO 01",
+                  "code": "KSO_01",
+                  "parent_id": "champ_kso",
+                  "communities_count": 5,
+                  "members_count": 1200,
+                  "siege": "Lemba"
+                },
+                {
+                  "id": "KSO_02",
+                  "name": "District KSO 02",
+                  "code": "KSO_02",
+                  "parent_id": "champ_kso",
+                  "communities_count": 4,
+                  "members_count": 1000,
+                  "siege": "Limete"
+                },
+                {
+                  "id": "KSO_03",
+                  "name": "District KSO 03",
+                  "code": "KSO_03",
+                  "parent_id": "champ_kso",
+                  "communities_count": 6,
+                  "members_count": 1500,
+                  "siege": "Ngaba"
+                }
+              ]
             }
           ]
         }

@@ -188,6 +188,8 @@ class EntityAdminService {
         return EntityLevel.internationale;
       case EntiteTypes.egliseTerritoriale:
         return EntityLevel.territoriale;
+      case EntiteTypes.regionApostolique:
+        return EntityLevel.regionApostolique;
       case EntiteTypes.champApostolique:
         return EntityLevel.champ;
       case EntiteTypes.district:

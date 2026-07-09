@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../services/pastoral_analytics_service.dart';
 import '../services/entite_scope_service.dart';
+import '../providers/analytics_provider.dart';
 import '../widgets/dashboard/entite_hierarchy_pills.dart';
 
-class PastoralStatisticsScreen extends StatefulWidget {
+class PastoralStatisticsScreen extends ConsumerStatefulWidget {
   const PastoralStatisticsScreen({super.key});
 
   @override
-  State<PastoralStatisticsScreen> createState() => _PastoralStatisticsScreenState();
+  ConsumerState<PastoralStatisticsScreen> createState() => _PastoralStatisticsScreenState();
 }
 
-class _PastoralStatisticsScreenState extends State<PastoralStatisticsScreen> {
-  final PastoralAnalyticsService _analytics = PastoralAnalyticsService();
-
+class _PastoralStatisticsScreenState extends ConsumerState<PastoralStatisticsScreen> {
   void _refresh() {
     if (mounted) setState(() {});
   }
@@ -21,10 +20,7 @@ class _PastoralStatisticsScreenState extends State<PastoralStatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     final scope = EntiteScopeService.getActiveScope();
-    final overviewStats = _analytics.getGlobalOverview(
-      entityId: scope['id'],
-      level: scope['level'],
-    );
+    final analytics = ref.watch(pastoralAnalyticsProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -40,7 +36,34 @@ class _PastoralStatisticsScreenState extends State<PastoralStatisticsScreen> {
           children: [
             EntiteHierarchyPills(onScopeChanged: _refresh),
             const SizedBox(height: 20),
-            _buildGlobalOverview(overviewStats),
+            
+            FutureBuilder<Map<String, dynamic>>(
+              future: analytics.getGlobalOverview(entityId: scope['id'], level: scope['level']),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+                return _buildGlobalOverview(snapshot.data!);
+              }
+            ),
+
+            const SizedBox(height: 24),
+            _buildSectionTitle('TENDANCE DE PRÉSENCE (Moyenne/Service)'),
+            const SizedBox(height: 12),
+            _buildPresenceChart(scope),
+            
+            const SizedBox(height: 30),
+            _buildSectionTitle('ACTES SACRAMENTELS (Année en cours)'),
+            const SizedBox(height: 12),
+            _buildSacramentsChart(scope),
+            
+            const SizedBox(height: 30),
+            _buildSectionTitle('ÉVOLUTION DES OFFRANDES (FC)'),
+            const SizedBox(height: 12),
+            _buildOfferingsChart(scope),
+          ],
+        ),
+      ),
+    );
+  }
 // ... rest same
 
             const SizedBox(height: 24),
@@ -127,126 +150,139 @@ class _PastoralStatisticsScreenState extends State<PastoralStatisticsScreen> {
     );
   }
 
-  Widget _buildPresenceChart() {
-    final scope = EntiteScopeService.getActiveScope();
-    final data = _analytics.getPresenceTrend(
-      entityId: scope['id'],
-      level: scope['level'],
-    );
-    final spots = <FlSpot>[];
-    final labels = data.keys.toList();
+  Widget _buildPresenceChart(Map<String, dynamic> scope) {
+    final analytics = ref.watch(pastoralAnalyticsProvider);
 
-    for (int i = 0; i < labels.length; i++) {
-      spots.add(FlSpot(i.toDouble(), data[labels[i]]!));
-    }
+    return FutureBuilder<Map<String, double>>(
+      future: analytics.getPresenceTrend(entityId: scope['id'], level: scope['level']),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+        
+        final data = snapshot.data!;
+        final spots = <FlSpot>[];
+        final labels = data.keys.toList();
 
-    return _buildChartContainer(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: _buildTitlesData(labels),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: true,
-              color: Colors.blue,
-              barWidth: 4,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.1)),
+        for (int i = 0; i < labels.length; i++) {
+          spots.add(FlSpot(i.toDouble(), data[labels[i]]!));
+        }
+
+        return _buildChartContainer(
+          height: 200,
+          child: LineChart(
+            LineChartData(
+              gridData: const FlGridData(show: false),
+              titlesData: _buildTitlesData(labels),
+              borderData: FlBorderData(show: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: true,
+                  color: Colors.blue,
+                  barWidth: 4,
+                  isStrokeCapRound: true,
+                  dotData: const FlDotData(show: true),
+                  belowBarData: BarAreaData(show: true, color: Colors.blue.withValues(alpha: 0.1)),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSacramentsChart() {
-    final scope = EntiteScopeService.getActiveScope();
-    final data = _analytics.getYearlySacraments(
-      entityId: scope['id'],
-      level: scope['level'],
-    );
-
-    return _buildChartContainer(
-      height: 250,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 1000, // Ajusté pour le volume global
-
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final keys = data.keys.toList();
-                  if (value.toInt() >= 0 && value.toInt() < keys.length) {
-                    return Text(keys[value.toInt()], style: const TextStyle(fontSize: 10));
-                  }
-                  return const Text('');
-                },
-              ),
-            ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
-          borderData: FlBorderData(show: false),
-          barGroups: [
-            for (int i = 0; i < data.length; i++)
-              BarChartGroupData(
-                x: i,
-                barRods: [
-                  BarChartRodData(
-                    toY: data.values.toList()[i].toDouble(),
-                    color: Colors.orange,
-                    width: 25,
-                    borderRadius: BorderRadius.circular(4),
-                  )
-                ],
-              ),
-          ],
-        ),
-      ),
+        );
+      }
     );
   }
 
-  Widget _buildOfferingsChart() {
-    final scope = EntiteScopeService.getActiveScope();
-    final data = _analytics.getOfferingsTrend(
-      entityId: scope['id'],
-      level: scope['level'],
-    );
-    final spots = <FlSpot>[];
-    final labels = data.keys.toList();
+  Widget _buildSacramentsChart(Map<String, dynamic> scope) {
+    final analytics = ref.watch(pastoralAnalyticsProvider);
 
-    for (int i = 0; i < labels.length; i++) {
-      spots.add(FlSpot(i.toDouble(), data[labels[i]]!));
-    }
-
-    return _buildChartContainer(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: true, drawVerticalLine: false),
-          titlesData: _buildTitlesData(labels),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: spots,
-              isCurved: false,
-              color: Colors.green,
-              barWidth: 3,
-              dotData: const FlDotData(show: true),
-              belowBarData: BarAreaData(show: true, color: Colors.green.withValues(alpha: 0.1)),
+    return FutureBuilder<Map<String, int>>(
+      future: analytics.getYearlySacraments(entityId: scope['id'], level: scope['level']),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox(height: 250, child: Center(child: CircularProgressIndicator()));
+        
+        final data = snapshot.data!;
+        return _buildChartContainer(
+          height: 250,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: 1000, 
+              titlesData: FlTitlesData(
+                show: true,
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final keys = data.keys.toList();
+                      if (value.toInt() >= 0 && value.toInt() < keys.length) {
+                        return Text(keys[value.toInt()], style: const TextStyle(fontSize: 10));
+                      }
+                      return const Text('');
+                    },
+                  ),
+                ),
+                leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30)),
+                topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              ),
+              borderData: FlBorderData(show: false),
+              barGroups: [
+                for (int i = 0; i < data.length; i++)
+                  BarChartGroupData(
+                    x: i,
+                    barRods: [
+                      BarChartRodData(
+                        toY: data.values.toList()[i].toDouble(),
+                        color: Colors.orange,
+                        width: 25,
+                        borderRadius: BorderRadius.circular(4),
+                      )
+                    ],
+                  ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      }
+    );
+  }
+
+  Widget _buildOfferingsChart(Map<String, dynamic> scope) {
+    final analytics = ref.watch(pastoralAnalyticsProvider);
+
+    return FutureBuilder<Map<String, double>>(
+      future: analytics.getOfferingsTrend(entityId: scope['id'], level: scope['level']),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox(height: 200, child: Center(child: CircularProgressIndicator()));
+        
+        final data = snapshot.data!;
+        final spots = <FlSpot>[];
+        final labels = data.keys.toList();
+
+        for (int i = 0; i < labels.length; i++) {
+          spots.add(FlSpot(i.toDouble(), data[labels[i]]!));
+        }
+
+        return _buildChartContainer(
+          height: 200,
+          child: LineChart(
+            LineChartData(
+              gridData: const FlGridData(show: true, drawVerticalLine: false),
+              titlesData: _buildTitlesData(labels),
+              borderData: FlBorderData(show: false),
+              lineBarsData: [
+                LineChartBarData(
+                  spots: spots,
+                  isCurved: false,
+                  color: Colors.green,
+                  barWidth: 3,
+                  dotData: const FlDotData(show: true),
+                  belowBarData: BarAreaData(show: true, color: Colors.green.withValues(alpha: 0.1)),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
     );
   }
 

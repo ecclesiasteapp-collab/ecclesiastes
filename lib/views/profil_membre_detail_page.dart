@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:ecclesiastes/models/member_profile.dart';
+import 'package:ecclesiaste/models/member_profile.dart';
 
 class ProfilMembreDetailPage extends StatelessWidget {
   final String memberId;

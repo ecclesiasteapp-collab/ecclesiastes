@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/church_report.dart';
 import '../widgets/signature_pad_dialog.dart';
 import '../services/auth_service.dart';
 import '../services/report_pdf_generator.dart';
+import '../services/repository_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../services/access_control_service.dart';
+import '../models/hierarchy_models.dart';
+import '../models/user.dart';
+import '../config/report_registry.dart';
 
-class ReportListScreen extends StatefulWidget {
+class ReportListScreen extends ConsumerStatefulWidget {
   const ReportListScreen({super.key});
 
   @override
-  State<ReportListScreen> createState() => _ReportListScreenState();
+  ConsumerState<ReportListScreen> createState() => _ReportListScreenState();
 }
 
-class _ReportListScreenState extends State<ReportListScreen> {
-  late Box<ChurchReport> _reportBox;
+class _ReportListScreenState extends ConsumerState<ReportListScreen> {
   List<ChurchReport> _reports = [];
   bool _isLoading = true;
   ReportTypeExt? _selectedType;
@@ -31,18 +34,35 @@ class _ReportListScreenState extends State<ReportListScreen> {
 
   Future<void> _loadReports() async {
     setState(() => _isLoading = true);
-    _reportBox = Hive.box<ChurchReport>('church_reports');
+    final repo = ref.read(reportRepositoryProvider);
+    final user = AuthService.currentUser;
 
-    // Filtrage par hiérarchie
-    final allReports = _reportBox.values.toList();
+    // Récupération via le repository
+    final allReports = await repo.getAllChurchReports();
     final filteredByHierarchy = AccessControlService.filterByHierarchy<ChurchReport>(
       allReports,
       (r) => r.nomEntite, // En prod, utilisez entityId
       (r) => r.niveauEntite
     );
 
+    // Filtrage par attribution
+    final filteredReports = filteredByHierarchy.where((r) {
+      if (user == null) return false;
+      if (AuthService.isSuperAdmin() || user.role == UserRole.apotrePatriarche) return true;
+
+      final bool isCommissionUser = user.commissionType != CommissionType.none && user.role == UserRole.membre;
+
+      if (isCommissionUser) {
+        // Un utilisateur de commission ne voit que les rapports de sa propre commission
+        return r.type.name.toLowerCase().contains(user.commissionType!.name.toLowerCase());
+      } else {
+        // Un responsable d'entité voit les rapports d'entité et les rapports de commissions de son périmètre
+        return true; 
+      }
+    }).toList();
+
     setState(() {
-      _reports = filteredByHierarchy
+      _reports = filteredReports
         ..sort((a, b) => b.dateRapport.compareTo(a.dateRapport));
       _isLoading = false;
     });
@@ -68,10 +88,9 @@ class _ReportListScreenState extends State<ReportListScreen> {
             )
           : null,
         actions: [
-
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.go('/reports/create'),
+            onPressed: () => _showCreateReportSelector(context),
           ),
         ],
       ),
@@ -93,9 +112,48 @@ class _ReportListScreenState extends State<ReportListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/reports/create'),
+        onPressed: () => _showCreateReportSelector(context),
         backgroundColor: const Color(0xFF003366),
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  void _showCreateReportSelector(BuildContext context) {
+    final user = AuthService.currentUser;
+    final isCommissionUser = user?.commissionType != CommissionType.none && user?.role == UserRole.membre;
+    
+    // Filtrage des rapports selon le rôle
+    final availableReports = ReportRegistry.all.values.where((config) {
+      if (isCommissionUser) {
+        // Un utilisateur de commission (non responsable d'entité) ne voit que les rapports mensuels de commission
+        return config.id.endsWith('_mensuel');
+      } else {
+        // Un responsable d'entité/ministre voit les rapports d'entité (Sacristie, SD) et la Liste de Présence
+        return ['sacristie', 'service_divin', 'presence_reunion', 'communique'].contains(config.id);
+      }
+    }).toList();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Choisir un type de rapport', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 16),
+            ...availableReports.map((config) => ListTile(
+              leading: Icon(config.icon, color: const Color(0xFF1B6B9E)),
+              title: Text(config.title),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/reports/universal/${config.id}');
+              },
+            )),
+          ],
+        ),
       ),
     );
   }
@@ -210,27 +268,43 @@ class _ReportListScreenState extends State<ReportListScreen> {
     );
 
     if (signature != null) {
-      setState(() {
-        report.statut = ReportStatus.valide;
-        // report.signatureBase64 = signature; // Champ déprécié
-        // Enregistrer la signature dans le système de fichiers et stocker le chemin
-        // report.signaturePath = await FileStorageService.saveSignature(report.id, signature); // Supposons un tel service
-        // Pour l'instant, nous allons juste stocker le base64 pour la compatibilité
-        report.signatureBase64 = signature;
-        report.dateValidation = DateTime.now();
-        report.validateur = AuthService.currentUser?.fullName;
-        report.markAsUpdated(AuthService.currentUserId);
-      });
-      await report.save();
+      final repo = ref.read(reportRepositoryProvider);
+      
+      report.statut = ReportStatus.valide;
+      report.signatureBase64 = signature;
+      report.dateValidation = DateTime.now();
+      report.validateur = AuthService.currentUser?.fullName;
+      report.markAsUpdated(AuthService.currentUserId);
+      
+      await repo.saveChurchReport(report);
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rapport validé avec signature numérique.')));
+        _loadReports();
       }
     }
   }
 
   Future<void> _deleteReport(ChurchReport report) async {
-    await report.delete();
-    _loadReports();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirmer la suppression'),
+        content: const Text('Voulez-vous vraiment supprimer ce rapport ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annuler')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true), 
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red))
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(reportRepositoryProvider).deleteReport(report.id);
+      _loadReports();
+    }
   }
 
   Widget _buildEmptyState() {

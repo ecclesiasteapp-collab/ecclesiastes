@@ -1,9 +1,9 @@
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/attachment_model.dart';
 import 'package:uuid/uuid.dart';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 
 class FileAttachmentService {
   static const Uuid _uuid = Uuid();

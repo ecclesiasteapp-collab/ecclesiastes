@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/services/nomination_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/nomination_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
 class NominationPage extends StatefulWidget {
   final EntityLevel targetLevel;
@@ -34,9 +34,11 @@ class _NominationPageState extends State<NominationPage> {
     String typeSearch = '';
     switch (widget.targetLevel) {
       case EntityLevel.territoriale: typeSearch = 'EGLISE_TERRITORIALE'; break;
+      case EntityLevel.regionApostolique: typeSearch = 'REGION_APOSTOLIQUE'; break;
+      case EntityLevel.champ: typeSearch = 'CHAMP_APOSTOLIQUE'; break;
       case EntityLevel.district: typeSearch = 'DISTRICT'; break;
       case EntityLevel.communaute: typeSearch = 'COMMUNAUTE'; break;
-      default: typeSearch = widget.targetLevel.name;
+      case EntityLevel.internationale: typeSearch = 'INTERNATIONALE'; break;
     }
     
     final entities = await DatabaseHelper.instance.getEntitesByType(typeSearch);

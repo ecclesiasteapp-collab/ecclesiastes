@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 /// Widget pour afficher les informations d'une commission
 /// adapté selon le niveau d'entité (Internationale, Territoriale, etc.)
@@ -36,6 +36,8 @@ class CommissionInfoCard extends StatelessWidget {
         return 'Église Territoriale';
       case EntityLevel.champ:
         return 'Champ Apostolique';
+      case EntityLevel.regionApostolique:
+        return 'Région Apostolique';
       case EntityLevel.district:
         return 'District';
       case EntityLevel.communaute:
@@ -49,6 +51,8 @@ class CommissionInfoCard extends StatelessWidget {
         return '$membersCount membres • $districtsCount territoires • $communitiesCount champs';
       case EntityLevel.territoriale:
         return '$membersCount membres • $districtsCount champs • $communitiesCount districts';
+      case EntityLevel.regionApostolique:
+        return '$membersCount membres • $districtsCount districts • $communitiesCount communautés';
       case EntityLevel.champ:
         return '$membersCount membres • $districtsCount districts • $communitiesCount communautés';
       case EntityLevel.district:

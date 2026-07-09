@@ -1,6 +1,6 @@
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
 class NominationService {
   NominationService._();
@@ -21,8 +21,12 @@ class NominationService {
       case EntityLevel.internationale:
         return targetLevel == EntityLevel.territoriale;
       case EntityLevel.territoriale:
-        return targetLevel == EntityLevel.district;
+        return targetLevel == EntityLevel.regionApostolique;
+      case EntityLevel.regionApostolique:
+        return targetLevel == EntityLevel.champ;
       case EntityLevel.champ:
+        return targetLevel == EntityLevel.district;
+      case EntityLevel.district:
         return targetLevel == EntityLevel.communaute;
       default:
         return false;

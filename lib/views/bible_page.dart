@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import '../services/bible_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/social_share_service.dart';
 import '../models/bible_model.dart';
+import '../services/repository_providers.dart';
 
-class BiblePage extends StatefulWidget {
+class BiblePage extends ConsumerStatefulWidget {
   const BiblePage({super.key});
 
   @override
-  State<BiblePage> createState() => _BiblePageState();
+  ConsumerState<BiblePage> createState() => _BiblePageState();
 }
 
-class _BiblePageState extends State<BiblePage> {
-  final BibleService _bibleService = BibleService();
+class _BiblePageState extends ConsumerState<BiblePage> {
   List<BibleBook> _books = [];
   bool _isLoading = true;
 
@@ -22,11 +22,15 @@ class _BiblePageState extends State<BiblePage> {
   }
 
   Future<void> _loadBooks() async {
-    await _bibleService.init();
-    setState(() {
-      _books = _bibleService.getBooks();
-      _isLoading = false;
-    });
+    final repo = ref.read(bibleRepositoryProvider);
+    await repo.initialize();
+    final books = await repo.getBooks();
+    if (mounted) {
+      setState(() {
+        _books = books;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -121,14 +125,14 @@ class BibleChapterListPage extends StatelessWidget {
   }
 }
 
-class BibleVerseListPage extends StatelessWidget {
+class BibleVerseListPage extends ConsumerWidget {
   final BibleBook book;
   final BibleChapter chapter;
 
   const BibleVerseListPage({super.key, required this.book, required this.chapter});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         title: Text('${book.name} ${chapter.number}'),
@@ -141,7 +145,7 @@ class BibleVerseListPage extends StatelessWidget {
         itemBuilder: (context, index) {
           final verse = chapter.verses[index];
           return InkWell(
-            onLongPress: () => _showVerseActions(context, verse),
+            onLongPress: () => _showVerseActions(context, ref, verse),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: RichText(
@@ -165,8 +169,8 @@ class BibleVerseListPage extends StatelessWidget {
     );
   }
 
-  void _showVerseActions(BuildContext context, BibleVerse verse) {
-    final bibleService = BibleService();
+  void _showVerseActions(BuildContext context, WidgetRef ref, BibleVerse verse) {
+    final repo = ref.read(bibleRepositoryProvider);
     final shareService = SocialShareService();
 
     showModalBottomSheet(
@@ -178,10 +182,13 @@ class BibleVerseListPage extends StatelessWidget {
           ListTile(
             leading: Icon(verse.isFavorite ? Icons.star : Icons.star_border, color: Colors.amber),
             title: Text(verse.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'),
-            onTap: () {
-              bibleService.toggleFavorite(book, chapter, verse);
-              Navigator.pop(context);
-              (context as Element).markNeedsBuild(); // Force rafraîchissement
+            onTap: () async {
+              await repo.toggleFavorite(book, verse);
+              if (context.mounted) {
+                Navigator.pop(context);
+                // Utilisation de state locale via un provider si on voulait être 100% pur, 
+                // mais ici on peut simplement forcer le rebuild de la page parente si besoin.
+              }
             },
           ),
           ListTile(
@@ -189,7 +196,7 @@ class BibleVerseListPage extends StatelessWidget {
             title: const Text('Ajouter une note pastorale'),
             onTap: () {
               Navigator.pop(context);
-              _showNoteDialog(context, verse);
+              _showNoteDialog(context, ref, verse);
             },
           ),
           ListTile(
@@ -206,8 +213,10 @@ class BibleVerseListPage extends StatelessWidget {
     );
   }
 
-  void _showNoteDialog(BuildContext context, BibleVerse verse) {
+  void _showNoteDialog(BuildContext context, WidgetRef ref, BibleVerse verse) {
     final controller = TextEditingController();
+    final repo = ref.read(bibleRepositoryProvider);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -221,7 +230,12 @@ class BibleVerseListPage extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           ElevatedButton(
             onPressed: () async {
-              await BibleService().addNote(book.id, chapter.number, verse.number, controller.text);
+              await repo.saveNote(
+                bookId: book.id, 
+                chapterNumber: chapter.number, 
+                verseNumber: verse.number, 
+                content: controller.text
+              );
               if (!context.mounted) return;
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Note sauvegardée avec succès.')));

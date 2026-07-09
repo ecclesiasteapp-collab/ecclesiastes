@@ -5,7 +5,7 @@ import 'programme_model.dart';
 
 part 'entity_model.g.dart';
 
-@HiveType(typeId: 108)
+@HiveType(typeId: 233)
 class EntityModel extends HiveObject {
   @HiveField(0) late String id;
   @HiveField(1) late String nom;

@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
-import 'package:ecclesiastes/views/annonces_page.dart';
-import 'package:ecclesiastes/views/journal_finances_page.dart';
-import 'package:ecclesiastes/views/saisie_finances_page.dart';
-import 'package:ecclesiastes/views/statistiques_page.dart';
-import 'package:ecclesiastes/services/entite_scope_service.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
-import 'package:ecclesiastes/widgets/dashboard/dashboard_shared.dart';
-import 'package:ecclesiastes/widgets/dashboard/entite_hierarchy_pills.dart';
-import 'package:ecclesiastes/widgets/ena_logo.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/views/annonces_page.dart';
+import 'package:ecclesiaste/views/journal_finances_page.dart';
+import 'package:ecclesiaste/views/saisie_finances_page.dart';
+import 'package:ecclesiaste/views/statistiques_page.dart';
+import 'package:ecclesiaste/services/entite_scope_service.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
+import 'package:ecclesiaste/widgets/dashboard/dashboard_shared.dart';
+import 'package:ecclesiaste/widgets/dashboard/entite_hierarchy_pills.dart';
+import 'package:ecclesiaste/widgets/ena_logo.dart';
 
 class DashboardMinistrePage extends StatefulWidget {
   const DashboardMinistrePage({super.key});

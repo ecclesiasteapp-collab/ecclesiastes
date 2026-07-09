@@ -3,14 +3,15 @@ import 'package:hive/hive.dart';
 
 part 'hierarchy_models.g.dart';
 
-// Les 5 niveaux d'entités de l'Église
+// Les 6 niveaux d'entités de l'Église (Conforme au DCG Juillet 2026)
 @HiveType(typeId: 20)
 enum EntityLevel {
-  @HiveField(0) communaute,       // Niveau 1 : Local
-  @HiveField(1) district,         // Niveau 2 : Regroupement
-  @HiveField(2) champ,            // Niveau 3 : Zone de supervision
-  @HiveField(3) territoriale,     // Niveau 4 : Église Territoriale
-  @HiveField(4) internationale,   // Niveau 5 : Église Internationale
+  @HiveField(0) communaute,       // Niveau 6 : Local
+  @HiveField(1) district,         // Niveau 5 : Regroupement
+  @HiveField(2) champ,            // Niveau 4 : Supervision
+  @HiveField(3) regionApostolique, // Niveau 3 : Région Apostolique
+  @HiveField(4) territoriale,     // Niveau 2 : Église Territoriale
+  @HiveField(5) internationale,   // Niveau 1 : Église Internationale
 }
 
 

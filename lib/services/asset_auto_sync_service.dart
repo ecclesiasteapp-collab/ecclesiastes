@@ -1,9 +1,9 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
-import 'package:hive/hive.dart';
 import '../models/image_entity.dart';
 import '../models/library_resource.dart';
 import '../models/hierarchy_models.dart';
+import 'database_service.dart';
 
 class AssetAutoSyncService {
   static Future<void> syncAssetsToHive() async {
@@ -19,7 +19,9 @@ class AssetAutoSyncService {
       // 1. Scanner les ANNONCES (Images)
       final allAnnonces = allAssetPaths.where((path) => path.contains('/annonces/')).toList();
 
-      final imageBox = Hive.box<ImageEntity>('image_entities');
+      final imageBox = await DatabaseService.openBox<ImageEntity>(
+        DatabaseService.imageEntitiesBoxName,
+      );
 
       if (allAnnonces.isNotEmpty) {
         for (var path in allAnnonces) {
@@ -54,7 +56,9 @@ class AssetAutoSyncService {
 
       // 2. Scanner les DOCUMENTS (PDF/Textes)
       final allDocuments = allAssetPaths.where((path) => path.contains('/documents/')).toList();
-      final libraryBox = Hive.box<LibraryResource>('library_resources');
+      final libraryBox = await DatabaseService.openBox<LibraryResource>(
+        DatabaseService.libraryResourcesBoxName,
+      );
 
       if (allDocuments.isNotEmpty) {
         for (var path in allDocuments) {
@@ -86,8 +90,7 @@ class AssetAutoSyncService {
         }
       }
     } catch (e) {
-      // ignore: avoid_print
-      print('Warning: Asset sync skipped: $e');
+      debugPrint('Warning: Asset sync skipped: $e');
     }
   }
 }

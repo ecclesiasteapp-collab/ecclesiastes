@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/core/theme.dart';
 
 class MinistersListView extends StatefulWidget {
   final String? entiteId;
@@ -11,13 +10,19 @@ class MinistersListView extends StatefulWidget {
 }
 
 class _MinistersListViewState extends State<MinistersListView> {
-  // Simulant une liste de ministres pour l'exemple
-  final List<Map<String, String>> _allMinisters = [
-    {'nom': 'MBUYI', 'prenom': 'Nestor', 'ministere': 'Prêtre', 'entite': 'Libanga', 'phone': '+243 812345678'},
-    {'nom': 'LUSIMBA', 'prenom': 'Caroline', 'ministere': 'Conductrice', 'entite': 'Kimbangu', 'phone': '+243 823456789'},
-    {'nom': 'KILUNGI', 'prenom': 'Christian', 'ministere': 'Berger', 'entite': 'District Nord', 'phone': '+243 834567890'},
+  final List<Map<String, String>> _ministers = [
+    {'nom': 'MBUYI', 'prenom': 'Nestor', 'ministere': 'Apôtre Patriarche', 'entite': 'Direction Mondiale', 'phone': '+243 812345678'},
+    {'nom': 'NGOLO', 'prenom': 'Emmanuel', 'ministere': 'Apôtre de District', 'entite': 'RDC Ouest', 'phone': '+243 822345678'},
+    {'nom': 'KIKABA', 'prenom': 'Christian', 'ministere': 'Apôtre', 'entite': 'Champ KSO', 'phone': '+243 833456789'},
+    {'nom': 'BUWEKA', 'prenom': 'Théophile', 'ministere': 'Ancien', 'entite': 'District KSO', 'phone': '+243 844567890'},
+    {'nom': 'LUSIMBA', 'prenom': 'Caroline', 'ministere': 'Conductrice', 'entite': 'Communauté Kimbangu', 'phone': '+243 823456789'},
+    {'nom': 'KILUNGI', 'prenom': 'Christian', 'ministere': 'Berger', 'entite': 'Communauté Libanga', 'phone': '+243 834567890'},
     {'nom': 'NKUNGI', 'prenom': 'Christian', 'ministere': 'Évangéliste', 'entite': 'Centre Ville', 'phone': '+243 845678901'},
-    {'nom': 'DIALUNGI', 'prenom': 'Castalac', 'ministere': 'Ancien', 'entite': 'District KSO', 'phone': '+243 856789012'},
+    {'nom': 'DIALUNGI', 'prenom': 'Castalac', 'ministere': 'Prêtre', 'entite': 'Communauté Ngaba', 'phone': '+243 856789012'},
+    {'nom': 'MBEKU', 'prenom': 'David', 'ministere': 'Diacre', 'entite': 'Communauté Lemba', 'phone': '+243 866789012'},
+    {'nom': 'KAPINGA', 'prenom': 'Jean', 'ministere': 'Sous-Diacre', 'entite': 'Communauté Lemba 02', 'phone': '+243 866789013'},
+    {'nom': 'MUKENDI', 'prenom': 'Paul', 'ministere': 'Frère Chargé', 'entite': 'Communauté Limete', 'phone': '+243 866789014'},
+    {'nom': 'NGOY', 'prenom': 'Marie', 'ministere': 'Lead', 'entite': 'District Centre', 'phone': '+243 866789015'},
   ];
 
   @override
@@ -25,51 +30,41 @@ class _MinistersListViewState extends State<MinistersListView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Column(
-          children: [
-            const Text('Annuaire des Ministres'),
-            if (widget.entiteNom != null)
-              Text(widget.entiteNom!.toUpperCase(), style: const TextStyle(fontSize: 10, color: Colors.grey)),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: AppTheme.primary,
-        elevation: 0,
+        title: const Text('Corps Ministériel'),
+        backgroundColor: const Color(0xFF003366),
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
-          _buildSummaryHeader(),
-          _buildFilterBar(),
+          _buildSummary(),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Rechercher un ministre ou un ministère...',
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF003366)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _allMinisters.length,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: _ministers.length,
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
-                final m = _allMinisters[index];
+                final m = _ministers[index];
                 return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                  leading: Hero(
-                    tag: 'minister_${m['nom']}',
-                    child: CircleAvatar(
-                      radius: 25,
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                      child: Text(m['prenom']![0], style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.bold)),
-                    ),
+                  leading: CircleAvatar(
+                    backgroundColor: const Color(0xFF003366).withValues(alpha: 0.1),
+                    child: Text(m['nom']![0], style: const TextStyle(color: Color(0xFF003366), fontWeight: FontWeight.bold)),
                   ),
-                  title: Text('${m['prenom']} ${m['nom']}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black87)),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(m['ministere']!, style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text('Entité: ${m['entite']}', style: const TextStyle(fontSize: 12)),
-                    ],
-                  ),
-                  trailing: Container(
-                    decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.chevron_right, color: AppTheme.primary),
-                  ),
-                  onTap: () => _showMinisterDetails(m),
+                  title: Text('${m['prenom']} ${m['nom']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text('${m['ministere']} • ${m['entite']}', style: const TextStyle(fontSize: 12, color: Color(0xFF003366))),
+                  trailing: const Icon(Icons.chevron_right, size: 18),
+                  onTap: () {},
                 );
               },
             ),
@@ -79,131 +74,39 @@ class _MinistersListViewState extends State<MinistersListView> {
     );
   }
 
-  Widget _buildFilterBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: 'Rechercher un ministre...',
-          prefixIcon: const Icon(Icons.search, color: AppTheme.primary),
-          filled: true,
-          fillColor: Colors.grey[50],
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSummaryHeader() {
+  Widget _buildSummary() {
     return Container(
+      width: double.infinity,
       margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.primary,
+        color: const Color(0xFF003366),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
         children: [
-          _buildStatItem('Total', _allMinisters.length.toString(), Colors.white),
-          _buildStatItem('Prêtres', '12', Colors.white70),
-          _buildStatItem('Diacres', '8', Colors.white70),
-          _buildStatItem('Conductrices', '5', Colors.white70),
+          const Text('TOTAL MINISTRES', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+          const Text('566', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _summaryItem('Apôtres', '3'),
+              _summaryItem('Prêtres', '342'),
+              _summaryItem('Diacres', '221'),
+            ],
+          )
         ],
       ),
     );
   }
 
-  Widget _buildStatItem(String label, String count, Color textColor) {
+  static Widget _summaryItem(String label, String count) {
     return Column(
       children: [
-        Text(count, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
-        Text(label, style: TextStyle(fontSize: 11, color: textColor.withValues(alpha: 0.8))),
+        Text(count, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 10)),
       ],
     );
   }
-
-  void _showMinisterDetails(Map<String, String> m) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                CircleAvatar(radius: 35, backgroundColor: AppTheme.primary, child: Text(m['prenom']![0], style: const TextStyle(color: Colors.white, fontSize: 30, fontWeight: FontWeight.bold))),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${m['prenom']} ${m['nom']}', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppTheme.primary)),
-                      Text(m['ministere']!, style: const TextStyle(color: Colors.blueGrey, fontSize: 16, fontWeight: FontWeight.w500)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-            _detailCard(Icons.location_city, 'Affectation', m['entite']!),
-            _detailCard(Icons.phone_android, 'Contact direct', m['phone']!),
-            _detailCard(Icons.alternate_email, 'Email professionnel', '${m['nom']!.toLowerCase()}.${m['prenom']!.toLowerCase()}@ena-rdco.org'),
-            const SizedBox(height: 32),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.message_outlined),
-                    label: const Text('SMS'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.call),
-                    label: const Text('Appeler'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _detailCard(IconData icon, String label, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey[100]!)),
-      child: Row(
-        children: [
-          Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: AppTheme.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, color: AppTheme.primary, size: 20)),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold)),
-              Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }
-

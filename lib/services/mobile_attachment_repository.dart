@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:ecclesiastes/models/attachment_model.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 import 'package:uuid/uuid.dart';
 
 import 'attachment_repository.dart';

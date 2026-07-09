@@ -146,12 +146,26 @@ L'application a subi une série de corrections majeures pour garantir son exécu
 3.  **Stockage Web** : Implémentation réelle du stockage dans `file_storage_service_stub.dart` utilisant une box Hive dédiée (`web_file_storage_box`) pour persister les octets (signatures, images) sur le navigateur.
 4.  **Dynamisation des Rapports et Inscriptions** : Suppression des données "hardcoded" dans les formulaires (`CreateReportScreen`, `FundraisingReportScreen`). La `RegisterPage` charge désormais les vrais Champs, Districts et Communautés depuis la base de données locale via `DatabaseHelper`.
 
-### 30 Juin 2026 - Statistiques et Scope Hiérarchique
+### Juillet 2026 - Migration Architecture Repository, Tests & ERP
 
-- **Périmètre Statistique (Scope)** : Toute agrégation de données (KPIs, graphiques) doit désormais passer par le `EntiteScopeService`. Les statistiques ne sont plus globales mais filtrées selon l'entité sélectionnée dans le "pill" du Dashboard.
-- **PastoralAnalyticsService** : Refonte totale pour intégrer le filtrage dynamique. Les méthodes de calcul (`getPresenceTrend`, `getYearlySacraments`, etc.) acceptent désormais un `entityId` et un `level` pour des graphiques fidèles à la réalité de chaque responsable.
-- **Boîte de Réception (Inbox)** : Création de `ReportInboxPage` et intégration dans le routeur. Ce module permet aux responsables de valider les rapports soumis par les entités inférieures de leur périmètre.
-- **EntiteScopeService** : Ajout de la méthode `getActiveScope()` pour simplifier l'accès à l'entité active la plus précise dans toute l'application.
+- **Généralisation du Pattern Repository** :
+    - Migration complète des modules **Annonces**, **Membres**, **Finances** et **Rapports** vers des Repositories abstraits.
+    - Utilisation systématique de `HiveNewsRepository`, `HiveMemberRepository`, `HiveFinanceRepository` et `HiveReportRepository`.
+    - Injection de dépendances via **Riverpod** (`repository_providers.dart`) pour une compatibilité Mobile/Web native.
+- **Module ERP & Consolidation** :
+    - Création du UseCase **`ConsolidateFinance`** pour agréger récursivement les données financières à travers la hiérarchie.
+    - Mise en place du **`activeEntityIdProvider`** permettant au Hub ERP et aux statistiques de se rafraîchir dynamiquement lors d'un changement de scope.
+    - Intégration des "Pills" hiérarchiques dans le Hub Ecclésiaste pour une navigation granulaire.
+- **Statistiques Dynamiques** :
+    - Refonte du `PastoralAnalyticsService` pour utiliser les Repositories au lieu d'accès Hive directs.
+    - Intégration asynchrone dans `PastoralStatisticsScreen` avec gestion du scope à 6 niveaux.
+- **Qualité & Stabilité** :
+    - Mise en place d'une suite de **tests unitaires** pour tous les repositories (`test/*.dart`).
+    - Utilisation de Hive en mémoire pour l'isolation des tests (11 tests validés).
+    - Activation de la couverture de tests (`flutter test --coverage`).
+- **Alignement Hiérarchique** :
+    - Extension du modèle `MemberProfile` pour supporter la chaîne complète des 6 niveaux (Internationale, Territoriale, Région, Champ, District, Communauté).
+    - Mise à jour du `InscriptionMembreStepper` pour capturer ces métadonnées dynamiquement.
 
-*Dernière mise à jour : 30 Juin 2026*
+*Dernière mise à jour : 10 Juillet 2026*
  

@@ -60,13 +60,13 @@ class MemberProfileAdapter extends TypeAdapter<MemberProfile> {
       observations: fields[38] as String?,
       roleEntite: fields[41] as String?,
       roleCommission: fields[42] as String?,
-    );
+    )..personId = fields[43] as String?;
   }
 
   @override
   void write(BinaryWriter writer, MemberProfile obj) {
     writer
-      ..writeByte(43)
+      ..writeByte(44)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -152,7 +152,9 @@ class MemberProfileAdapter extends TypeAdapter<MemberProfile> {
       ..writeByte(41)
       ..write(obj.roleEntite)
       ..writeByte(42)
-      ..write(obj.roleCommission);
+      ..write(obj.roleCommission)
+      ..writeByte(43)
+      ..write(obj.personId);
   }
 
   @override

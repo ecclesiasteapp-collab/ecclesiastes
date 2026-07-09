@@ -39,8 +39,10 @@ class AdminDashboard extends StatelessWidget {
           const NavigationRailDestination(icon: Icon(Icons.home), label: Text('Communautés')),
         if (adminLevel.index >= AdminLevel.champ.index)
           const NavigationRailDestination(icon: Icon(Icons.map), label: Text('Districts')),
+        if (adminLevel.index >= AdminLevel.apostolicRegion.index)
+          const NavigationRailDestination(icon: Icon(Icons.explore), label: Text('Champs')),
         if (adminLevel.index >= AdminLevel.territorial.index)
-          const NavigationRailDestination(icon: Icon(Icons.public), label: Text('Champs')),
+          const NavigationRailDestination(icon: Icon(Icons.public), label: Text('Régions')),
       ],
       selectedIndex: 0,
       onDestinationSelected: (index) {
@@ -57,6 +59,8 @@ class AdminDashboard extends StatelessWidget {
         return _DistrictView(districtId: entityId);
       case AdminLevel.champ:
         return _ChampView(champId: entityId);
+      case AdminLevel.apostolicRegion:
+        return _RegionView(regionId: entityId);
       case AdminLevel.territorial:
         return const _TerritorialView();
       case AdminLevel.superAdmin:
@@ -68,6 +72,7 @@ class AdminDashboard extends StatelessWidget {
     AdminLevel.community => 'Communauté',
     AdminLevel.district => 'District',
     AdminLevel.champ => 'Champ',
+    AdminLevel.apostolicRegion => 'Région Apostolique',
     AdminLevel.territorial => 'Territorial',
     AdminLevel.superAdmin => 'Super Admin',
   };
@@ -96,6 +101,13 @@ class _ChampView extends StatelessWidget {
   const _ChampView({required this.champId});
   @override
   Widget build(BuildContext context) => Center(child: Text('Vue Champ: $champId'));
+}
+
+class _RegionView extends StatelessWidget {
+  final String regionId;
+  const _RegionView({required this.regionId});
+  @override
+  Widget build(BuildContext context) => Center(child: Text('Vue Région Apostolique: $regionId'));
 }
 
 class _TerritorialView extends StatelessWidget {

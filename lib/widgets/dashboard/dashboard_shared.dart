@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
-import 'package:ecclesiastes/views/login_page.dart';
-import 'package:ecclesiastes/screens/about_screen.dart';
-import 'package:ecclesiastes/views/bible_page.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/views/login_page.dart';
+import 'package:ecclesiaste/screens/about_screen.dart';
+import 'package:ecclesiaste/views/bible_page.dart';
 
 class DashboardScaffold extends StatelessWidget {
   final String title;

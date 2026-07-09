@@ -1,22 +1,22 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 import 'dart:typed_data';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:ecclesiastes/models/news_model.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
+import 'package:ecclesiaste/models/news_model.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/repository_providers.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
-class AnnoncesPage extends StatefulWidget {
+class AnnoncesPage extends ConsumerStatefulWidget {
   const AnnoncesPage({super.key});
 
   @override
-  State<AnnoncesPage> createState() => _AnnoncesPageState();
+  ConsumerState<AnnoncesPage> createState() => _AnnoncesPageState();
 }
 
-class _AnnoncesPageState extends State<AnnoncesPage> {
-  late Box<News> _newsBox;
+class _AnnoncesPageState extends ConsumerState<AnnoncesPage> {
   List<News> _annonces = [];
   bool _isLoading = true;
 
@@ -28,11 +28,11 @@ class _AnnoncesPageState extends State<AnnoncesPage> {
 
   Future<void> _fetchAnnonces() async {
     setState(() => _isLoading = true);
-    _newsBox = await Hive.openBox<News>('news');
+    final repo = ref.read(newsRepositoryProvider);
+    final news = await repo.getAllNews();
     if (mounted) {
       setState(() {
-        _annonces = _newsBox.values.toList()
-          ..sort((a, b) => b.date.compareTo(a.date));
+        _annonces = news;
         _isLoading = false;
       });
     }

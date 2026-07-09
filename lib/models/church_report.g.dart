@@ -23,6 +23,7 @@ class ChurchReportAdapter extends TypeAdapter<ChurchReport> {
       nomEntite: fields[3] as String,
       nomChamp: fields[4] as String,
       nomDistrict: fields[5] as String,
+      nomRegion: fields[38] as String,
       dateRapport: fields[6] as DateTime,
       heureDebut: fields[7] as DateTime,
       heureFin: fields[8] as DateTime?,
@@ -51,6 +52,7 @@ class ChurchReportAdapter extends TypeAdapter<ChurchReport> {
       motifRejet: fields[30] as String?,
       champsPersonnalises: (fields[31] as Map).cast<String, String>(),
       signaturePath: fields[35] as String?,
+      signatureBase64: fields[37] as String?,
       version: fields[32] as int,
       updatedAt: fields[33] as DateTime?,
       lastModifiedBy: fields[34] as String?,
@@ -60,7 +62,7 @@ class ChurchReportAdapter extends TypeAdapter<ChurchReport> {
   @override
   void write(BinaryWriter writer, ChurchReport obj) {
     writer
-      ..writeByte(37)
+      ..writeByte(39)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -73,6 +75,8 @@ class ChurchReportAdapter extends TypeAdapter<ChurchReport> {
       ..write(obj.nomChamp)
       ..writeByte(5)
       ..write(obj.nomDistrict)
+      ..writeByte(38)
+      ..write(obj.nomRegion)
       ..writeByte(6)
       ..write(obj.dateRapport)
       ..writeByte(7)
@@ -129,6 +133,8 @@ class ChurchReportAdapter extends TypeAdapter<ChurchReport> {
       ..write(obj.champsPersonnalises)
       ..writeByte(35)
       ..write(obj.signaturePath)
+      ..writeByte(37)
+      ..write(obj.signatureBase64)
       ..writeByte(32)
       ..write(obj.version)
       ..writeByte(33)

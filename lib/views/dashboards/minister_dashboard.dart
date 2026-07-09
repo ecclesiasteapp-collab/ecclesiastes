@@ -1,8 +1,7 @@
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../widgets/dashboard_modulaire.dart';
-import '../../services/auth_service.dart';
-import '../../core/theme.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
 class MinisterDashboard extends StatelessWidget {
   const MinisterDashboard({super.key});
@@ -10,146 +9,191 @@ class MinisterDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final String userName = user?.fullName ?? 'Ministre';
 
-    return DashboardModulaire(
-      title: 'Dashboard Ministre',
-      headerSubtitle: 'Bienvenue, $userName',
-      carouselItems: [
-        _buildInfoCard(context, 'Prochain Culte', 'Dimanche 09:00', Icons.church, '/calendar'),
-        _buildInfoCard(context, 'Visites Pastorales', '3 visites à planifier', Icons.home, '/members'),
-        _buildInfoCard(context, 'Rapports en attente', '1 rapport à soumettre', Icons.assignment_turned_in, '/reports/create'),
-      ],
-      navigationTabs: [
-        {'icon': Icons.description, 'label': 'Rapports', 'route': '/reports'},
-        {'icon': Icons.people, 'label': 'Membres', 'route': '/members'},
-        {'icon': Icons.event_note, 'label': 'Programmes', 'route': '/programmes'},
-        {'icon': Icons.auto_stories, 'label': 'Manuels', 'route': '/library'},
-      ],
-      bottomSection: [
-        _buildSectionTitle('RAPPORTS RÉCENTS', Icons.history),
-        const SizedBox(height: 16),
-        _buildRecentReports(),
-        const SizedBox(height: 20),
-        _buildSectionTitle('ACTIONS RAPIDES', Icons.flash_on),
-        const SizedBox(height: 16),
-        _buildQuickActions(context),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildInfoCard(BuildContext context, String title, String subtitle, IconData icon, String route) {
-    return GestureDetector(
-      onTap: () => context.go(route),
-      child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1B6B9E),
+        elevation: 0,
+        title: Row(
+          children: [
+            Image.asset('assets/logos/Logo.png', height: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Espace Ministre', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(user?.fullName ?? 'Ministre', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                ],
+              ),
+            ),
+          ],
         ),
+        actions: [
+          IconButton(icon: const Icon(Icons.logout, color: Colors.white, size: 22), onPressed: () => AuthService.logout()),
+        ],
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: AppTheme.accent, size: 28),
-            const Spacer(),
-            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
+            _buildSectionTitle('SERVICES & ACTES PASTORAUX'),
+            const SizedBox(height: 12),
+            _buildNavigationCompass(context),
+            const SizedBox(height: 24),
+            _buildSectionTitle('CHARGE PASTORALE DU TRIMESTRE'),
+            const SizedBox(height: 12),
+            _buildPastoralWorkload(),
+            const SizedBox(height: 24),
+            _buildSectionTitle('VOTRE BIBLIOTHÈQUE MINISTÉRIELLE'),
+            const SizedBox(height: 12),
+            _buildMinisterLibrary(context),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            )
-          )
-        ],
-      ),
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        const Icon(Icons.church, color: Color(0xFF1B6B9E), size: 20),
+        const SizedBox(width: 8),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B6B9E))),
+      ],
     );
   }
 
-  Widget _buildRecentReports() {
+  Widget _buildNavigationCompass(BuildContext context) {
+    final List<Map<String, dynamic>> items = [
+      {'label': 'Rapports SD', 'icon': Icons.description, 'color': Colors.blue, 'route': '/reports'},
+      {'label': 'Visites', 'icon': Icons.home_work, 'color': Colors.green, 'route': '/members'},
+      {'label': 'Calendrier', 'icon': Icons.calendar_today, 'color': Colors.orange, 'route': '/calendar'},
+      {'label': 'Ministres', 'icon': Icons.groups, 'color': Colors.purple, 'route': '/ministers'},
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.3),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return GestureDetector(
+          onTap: () => context.push(item['route']),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: (item['color'] as Color).withOpacity(0.3)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)]),
+            child: Row(children: [
+                Icon(item['icon'] as IconData, color: item['color'] as Color, size: 22),
+                const SizedBox(width: 10),
+                Text(item['label'] as String, style: const TextStyle(color: Color(0xFF1B6B9E), fontSize: 13, fontWeight: FontWeight.bold)),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPastoralWorkload() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+          )
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildReportItem('Rapport Service Divin', 'Validé', Colors.green),
-          const Divider(color: Colors.white10),
-          _buildReportItem('Rapport Visite Pastorale', 'En attente', Colors.orange),
-          const Divider(color: Colors.white10),
-          _buildReportItem('Rapport Réunion de Frères', 'Validé', Colors.green),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildReportItem(String title, String status, Color color) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(5)),
-            child: Text(status, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Suivi des Visites Familles',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF1B6B9E)),
+                  ),
+                  Text(
+                    'Objectif Trimestre 1 (Jan-Mar)',
+                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1B6B9E).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '12 / 45',
+                  style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1B6B9E), fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: 12 / 45,
+              backgroundColor: Colors.grey.shade100,
+              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF1B6B9E)),
+              minHeight: 10,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              Icon(Icons.info_outline, size: 14, color: Colors.orange),
+              SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Il vous reste 33 familles à visiter pour clore votre objectif trimestriel.',
+                  style: TextStyle(fontSize: 11, color: Colors.black54),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
+  Widget _buildMinisterLibrary(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+      child: Column(
         children: [
-          _buildQuickActionButton(context, 'Nouveau Rapport', Icons.add_chart, '/reports/create'),
-          _buildQuickActionButton(context, 'Gérer Membres', Icons.group_add, '/members'),
-          _buildQuickActionButton(context, 'Voir Calendrier', Icons.calendar_today, '/calendar'),
-          _buildQuickActionButton(context, 'Ma Bibliothèque', Icons.menu_book, '/library'),
+          _libItem('Pensées Directrices 2026', Icons.auto_stories, Colors.purple),
+          const Divider(),
+          _libItem('Directives à l\'usage des Ministres', Icons.gavel, Colors.brown),
+          const Divider(),
+          _libItem('Recueil de Cantiques', Icons.music_note, Colors.teal),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActionButton(BuildContext context, String label, IconData icon, String route) {
-    return ElevatedButton.icon(
-      onPressed: () => context.go(route),
-      icon: Icon(icon, color: Colors.white),
-      label: Text(label, style: const TextStyle(color: Colors.white)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      ),
+  Widget _libItem(String title, IconData icon, Color color) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: color),
+      title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      trailing: const Icon(Icons.chevron_right, size: 18),
     );
   }
 }
-

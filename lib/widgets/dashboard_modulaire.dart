@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
-import '../core/theme.dart';
 import '../models/hierarchy_models.dart';
 import '../models/user.dart';
 
@@ -32,23 +31,28 @@ class DashboardModulaire extends StatelessWidget {
     final user = AuthService.currentUser;
 
     return Scaffold(
-      backgroundColor: AppTheme.primaryDark, // Fond sombre conforme au nouveau style
+      backgroundColor: Colors.white, // Fond blanc demandé
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(user), // Utiliser le nouveau header
-              if (topSection != null) topSection!,
-              if (topSection != null) const SizedBox(height: 20),
+              _buildHeader(context, user),
+              if (topSection != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: topSection!,
+                ),
+                const SizedBox(height: 20),
+              ],
 
-              _buildSectionTitle('À la Une', Icons.bookmark), // Section À la Une
+              _buildSectionTitle('À la Une', Icons.bookmark), 
               const SizedBox(height: 12),
               _buildCarousel(),
               const SizedBox(height: 24),
 
-              _buildNavigationTabs(context), // Navigation Rapide
+              _buildNavigationTabs(context), 
               const SizedBox(height: 24),
 
               ...bottomSection,
@@ -59,25 +63,34 @@ class DashboardModulaire extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader(User? user) {
+  Widget _buildHeader(BuildContext context, User? user) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: const Color(0xFF003366), // En-tête garde le bleu institutionnel
       child: Row(
         children: [
-          headerLeading ?? _buildDefaultAvatar(user), // Avatar ou widget personnalisé
+          headerLeading ?? _buildDefaultAvatar(user), 
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                Row(
+                  children: [
+                    Image.asset('assets/logos/Logo.png', height: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 if (headerSubtitle != null) ...[
                   const SizedBox(height: 2),
@@ -92,7 +105,43 @@ class DashboardModulaire extends StatelessWidget {
               ],
             ),
           ),
-          headerTrailing ?? _buildDefaultNotification(), // Cloche ou widget personnalisé
+          headerTrailing ?? _buildDefaultActions(context), 
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDefaultActions(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _buildDefaultNotification(),
+        IconButton(
+          icon: const Icon(Icons.logout, color: Colors.white, size: 22),
+          tooltip: 'Déconnexion',
+          onPressed: () => _handleLogout(context),
+        ),
+      ],
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Déconnexion'),
+        content: const Text('Voulez-vous vraiment vous déconnecter ?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Annuler')),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await AuthService.logout();
+              if (context.mounted) context.go('/login');
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Déconnecter', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );
@@ -103,46 +152,33 @@ class DashboardModulaire extends StatelessWidget {
     if (user?.role == UserRole.superAdmin) {
       icon = Icons.security;
     } else if (user?.commissionType != null) {
-      icon = _getCommissionIcon(user!.commissionType!); // Assurez-vous que cette fonction existe
+      icon = _getCommissionIcon(user!.commissionType!);
     }
     return Hero(
       tag: 'user_icon',
       child: CircleAvatar(
-        radius: 24, // Taille augmentée pour correspondre au nouveau style
-        backgroundColor: Colors.grey.shade300,
-        child: Icon(icon, color: AppTheme.primaryDark, size: 28),
+        radius: 24,
+        backgroundColor: Colors.white24,
+        child: Icon(icon, color: Colors.white, size: 28),
       ),
     );
   }
 
   IconData _getCommissionIcon(CommissionType type) {
     switch (type) {
-      case CommissionType.ecodim:
-        return Icons.child_care;
-      case CommissionType.jeunesse:
-        return Icons.emoji_people;
-      case CommissionType.econfi:
-        return Icons.account_balance;
-      case CommissionType.medicale:
-        return Icons.local_hospital;
-      case CommissionType.aines:
-        return Icons.elderly;
-      case CommissionType.construction:
-        return Icons.build;
-      case CommissionType.securiteProtocole:
-        return Icons.security;
-      case CommissionType.presseMediasSonorisation:
-        return Icons.camera_alt;
-      case CommissionType.papas:
-        return Icons.man;
-      case CommissionType.mamans:
-        return Icons.woman;
-      case CommissionType.josephArimathee:
-        return Icons.volunteer_activism;
-      case CommissionType.musique:
-        return Icons.music_note;
-      default:
-        return Icons.group;
+      case CommissionType.ecodim: return Icons.child_care;
+      case CommissionType.jeunesse: return Icons.emoji_people;
+      case CommissionType.econfi: return Icons.account_balance;
+      case CommissionType.medicale: return Icons.local_hospital;
+      case CommissionType.aines: return Icons.elderly;
+      case CommissionType.construction: return Icons.build;
+      case CommissionType.securiteProtocole: return Icons.security;
+      case CommissionType.presseMediasSonorisation: return Icons.camera_alt;
+      case CommissionType.papas: return Icons.man;
+      case CommissionType.mamans: return Icons.woman;
+      case CommissionType.josephArimathee: return Icons.volunteer_activism;
+      case CommissionType.musique: return Icons.music_note;
+      default: return Icons.group;
     }
   }
 
@@ -154,27 +190,17 @@ class DashboardModulaire extends StatelessWidget {
           onPressed: () {},
         ),
         Positioned(
-          right: 0,
-          top: 0,
+          right: 5,
+          top: 5,
           child: Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
               color: Colors.red,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
+              border: Border.all(color: const Color(0xFF003366), width: 1.5),
             ),
-            constraints: const BoxConstraints(
-              minWidth: 18,
-              minHeight: 18,
-            ),
-            child: const Text(
-              '3', // Nombre de notifications
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 10,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+            child: const Text('3', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           ),
         )
       ],
@@ -186,14 +212,14 @@ class DashboardModulaire extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
-          Icon(icon, color: Colors.white, size: 20),
+          Icon(icon, color: const Color(0xFF003366), size: 20),
           const SizedBox(width: 8),
           Text(
             title,
             style: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Color(0xFF003366),
             )
           )
         ],
@@ -203,7 +229,7 @@ class DashboardModulaire extends StatelessWidget {
 
   Widget _buildCarousel() {
     return SizedBox(
-      height: 180, // Hauteur respectée
+      height: 160,
       child: ListView(
         scrollDirection: Axis.horizontal,
         physics: const BouncingScrollPhysics(),
@@ -214,8 +240,14 @@ class DashboardModulaire extends StatelessWidget {
   }
 
   Widget _buildNavigationTabs(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: navigationTabs.map((tab) => _buildTabItem(context, tab)).toList(),
@@ -224,19 +256,18 @@ class DashboardModulaire extends StatelessWidget {
   }
 
   Widget _buildTabItem(BuildContext context, Map<String, dynamic> tab) {
-    return GestureDetector(
+    return InkWell(
       onTap: () => context.push(tab['route'] as String),
       child: Column(
         children: [
-          Icon(tab['icon'] as IconData, color: Colors.white70, size: 24),
-          const SizedBox(height: 4),
+          Icon(tab['icon'] as IconData, color: const Color(0xFF003366), size: 28),
+          const SizedBox(height: 6),
           Text(
             tab['label'] as String,
-            style: const TextStyle(color: Colors.white70, fontSize: 11)
+            style: const TextStyle(color: Color(0xFF003366), fontSize: 11, fontWeight: FontWeight.w500)
           )
         ],
       ),
     );
   }
 }
-

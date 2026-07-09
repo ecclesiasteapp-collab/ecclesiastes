@@ -1,30 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-class SaisieFinancesPage extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/repository_providers.dart';
+import 'package:ecclesiaste/domain/entities/finance/transaction.dart';
+import 'package:uuid/uuid.dart';
+
+class SaisieFinancesPage extends ConsumerStatefulWidget {
   const SaisieFinancesPage({super.key});
 
   @override
-  State<SaisieFinancesPage> createState() => _SaisieFinancesPageState();
+  ConsumerState<SaisieFinancesPage> createState() => _SaisieFinancesPageState();
 }
 
-class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
+class _SaisieFinancesPageState extends ConsumerState<SaisieFinancesPage> {
   final _formKey = GlobalKey<FormState>();
   final _montantController = TextEditingController();
   final _recuController = TextEditingController();
   
-  String _typeOffrande = 'OFFRANDE NORMALE';
+  TransactionType _typeTransaction = TransactionType.offering;
   String _devise = 'USD';
   DateTime _selectedDate = DateTime.now();
-
-  final List<String> _types = [
-    'OFFRANDE NORMALE',
-    'DIME',
-    'ACTION DE GRACE',
-    'CONSTRUCTION',
-    'OEUVRE DE CHARITE',
-    'AUTRE'
-  ];
 
   final List<String> _devisesList = ['USD', 'FC', 'EUR'];
 
@@ -32,16 +27,21 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
     if (_formKey.currentState!.validate()) {
       final user = AuthService.currentUser;
       final entiteId = user?.entityId ?? 'COMM_01';
-      final financeData = {
-        'type_offrande': _typeOffrande,
-        'montant': double.parse(_montantController.text),
-        'devise': _devise,
-        'numero_recu': _recuController.text.trim().isEmpty ? 'N/A' : _recuController.text.trim(),
-        'date_saisie': _selectedDate.toIso8601String().split('T').first,
-        'entite_id': entiteId,
-      };
+      final repo = ref.read(financeRepositoryProvider);
 
-      await DatabaseHelper.instance.insertFinances(financeData);
+      final transaction = FinanceTransaction(
+        id: const Uuid().v4(),
+        entityId: entiteId,
+        personId: user?.id ?? 'ANONYMOUS',
+        amount: double.parse(_montantController.text),
+        currency: _devise,
+        type: _typeTransaction,
+        method: PaymentMethod.cash, // Par défaut dans ce formulaire simple
+        date: _selectedDate,
+        description: 'Reçu n° ${_recuController.text.trim()}',
+      );
+
+      await repo.recordTransaction(transaction);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,14 +62,17 @@ class _SaisieFinancesPageState extends State<SaisieFinancesPage> {
           child: ListView(
             children: [
               // Type d'offrande
-              DropdownButtonFormField<String>(
-                initialValue: _typeOffrande,
+              DropdownButtonFormField<TransactionType>(
+                value: _typeTransaction,
                 decoration: const InputDecoration(
-                  labelText: 'Type d\'Offrande',
+                  labelText: 'Type de Transaction',
                   border: OutlineInputBorder(),
                 ),
-                items: _types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                onChanged: (v) => setState(() => _typeOffrande = v!),
+                items: TransactionType.values.map((t) => DropdownMenuItem(
+                  value: t, 
+                  child: Text(t.name[0].toUpperCase() + t.name.substring(1))
+                )).toList(),
+                onChanged: (v) => setState(() => _typeTransaction = v!),
               ),
               const SizedBox(height: 20),
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 import 'dart:typed_data';
 import '../models/attachment_model.dart';
 import '../services/file_attachment_service.dart';

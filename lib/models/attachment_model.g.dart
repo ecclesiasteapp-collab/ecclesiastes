@@ -21,7 +21,7 @@ class AttachmentAdapter extends TypeAdapter<Attachment> {
       fileName: fields[1] as String,
       mimeType: fields[2] as String,
       relativePath: fields[3] as String,
-      fileSize: fields[5] as int,
+      fileSize: fields[5] as int?,
       fileExtension: fields[6] as String?,
       thumbnailUrl: fields[7] as String?,
     );

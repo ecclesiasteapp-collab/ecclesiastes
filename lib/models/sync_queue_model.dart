@@ -11,7 +11,9 @@ class SyncQueueItem extends HiveObject {
   
   @HiveField(5) String status = 'pending'; // 'pending', 'syncing', 'synced', 'failed'
   @HiveField(6) int retryCount = 0;
-  // @HiveField(7) est maintenant obsolète et ne doit pas être réutilisé.
+  
+  @HiveField(9) DateTime? syncedAt;
+  @HiveField(10) String? lastError;
 
   @HiveField(8)
   String priority; // ex: 'normal', 'high'
@@ -25,6 +27,8 @@ class SyncQueueItem extends HiveObject {
     this.status = 'pending',
     this.retryCount = 0,
     this.priority = 'normal',
+    this.syncedAt,
+    this.lastError,
   });
 }
 

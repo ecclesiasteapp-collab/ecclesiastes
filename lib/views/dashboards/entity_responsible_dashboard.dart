@@ -396,6 +396,7 @@ class _EntityResponsibleDashboardState extends State<EntityResponsibleDashboard>
       case EntityLevel.communaute: return 'Communauté';
       case EntityLevel.district: return 'District';
       case EntityLevel.champ: return 'Champ Apostolique';
+      case EntityLevel.regionApostolique: return 'Région Apostolique';
       case EntityLevel.territoriale: return 'Église Territoriale';
       case EntityLevel.internationale: return 'Église Internationale';
     }

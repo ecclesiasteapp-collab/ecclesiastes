@@ -1,24 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/member_profile.dart';
+import '../services/repository_providers.dart';
 
-class GestionMembresPage extends StatefulWidget {
+class GestionMembresPage extends ConsumerStatefulWidget {
   final String? commissionName;
   final String? entiteId;
+  final String? initialSearch;
 
   const GestionMembresPage({
     super.key,
     this.commissionName,
     this.entiteId,
+    this.initialSearch,
   });
 
   @override
-  State<GestionMembresPage> createState() => _GestionMembresPageState();
+  ConsumerState<GestionMembresPage> createState() => _GestionMembresPageState();
 }
 
-class _GestionMembresPageState extends State<GestionMembresPage> {
-  late Box<MemberProfile> _memberBox;
+class _GestionMembresPageState extends ConsumerState<GestionMembresPage> {
   List<MemberProfile> _members = [];
   List<MemberProfile> _filteredMembers = [];
   bool _isLoading = true;
@@ -27,6 +29,9 @@ class _GestionMembresPageState extends State<GestionMembresPage> {
   @override
   void initState() {
     super.initState();
+    if (widget.initialSearch != null) {
+      _searchController.text = widget.initialSearch!;
+    }
     _loadMembers();
     _searchController.addListener(_filterMembers);
   }
@@ -39,18 +44,13 @@ class _GestionMembresPageState extends State<GestionMembresPage> {
 
   Future<void> _loadMembers() async {
     setState(() => _isLoading = true);
-    _memberBox = Hive.box<MemberProfile>('member_profiles');
+    final repo = ref.read(memberRepositoryProvider);
 
-    List<MemberProfile> list = _memberBox.values.toList();
-
-    // Application des filtres initiaux (Commission / Entité)
-    if (widget.commissionName != null) {
-      // Note: On suppose que le profil membre a un champ commission ou similaire
-      // Si ce n'est pas le cas, on ignore ou on adapte.
-    }
-
+    List<MemberProfile> list;
     if (widget.entiteId != null) {
-      list = list.where((m) => m.communauteId == widget.entiteId).toList();
+      list = await repo.getMembersByEntity(widget.entiteId!);
+    } else {
+      list = await repo.getAllMembers();
     }
 
     setState(() {
@@ -216,7 +216,7 @@ class _GestionMembresPageState extends State<GestionMembresPage> {
     );
 
     if (confirmed == true && mounted) {
-      await _memberBox.delete(member.id);
+      await ref.read(memberRepositoryProvider).deleteMember(member.id);
       _loadMembers();
     }
   }

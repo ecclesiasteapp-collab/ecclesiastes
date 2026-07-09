@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import 'package:ecclesiastes/models/report_config.dart';
-import 'package:ecclesiastes/core/theme.dart';
-import 'package:ecclesiastes/widgets/header_officiel.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/models/report_config.dart';
+import 'package:ecclesiaste/core/theme.dart';
+import 'package:ecclesiaste/widgets/header_officiel.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
 class UniversalMonthlyReportScreen extends StatefulWidget {
   final ReportConfig reportConfig;

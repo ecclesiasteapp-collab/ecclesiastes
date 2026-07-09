@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../widgets/dashboard_modulaire.dart';
-import '../../services/auth_service.dart';
-import '../../core/theme.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 
 class MemberDashboard extends StatelessWidget {
   const MemberDashboard({super.key});
@@ -10,148 +8,113 @@ class MemberDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
-    final String userName = user?.fullName ?? 'Membre';
 
-    return DashboardModulaire(
-      title: 'Dashboard Membre',
-      headerSubtitle: 'Bienvenue, $userName',
-      carouselItems: [
-        _buildInfoCard(context, 'Mon Profil', 'Mettre à jour mes informations', Icons.person, '/profile'),
-        _buildInfoCard(context, 'Ma Bibliothèque', 'Accéder aux ressources', Icons.menu_book, '/library'),
-        _buildInfoCard(context, 'Mon Calendrier', 'Voir les événements', Icons.calendar_today, '/calendar'),
-      ],
-      navigationTabs: [
-        {'icon': Icons.book, 'label': 'Bible', 'route': '/bible'},
-        {'icon': Icons.menu_book, 'label': 'Bibliothèque', 'route': '/library'},
-        {'icon': Icons.calendar_today, 'label': 'Calendrier', 'route': '/calendar'},
-        {'icon': Icons.share, 'label': 'Social Hub', 'route': '/social-hub'},
-      ],
-      bottomSection: [
-        _buildSectionTitle('MES ACTIVITÉS RÉCENTES', Icons.history),
-        const SizedBox(height: 16),
-        _buildRecentActivities(),
-        const SizedBox(height: 20),
-        _buildSectionTitle('ACTIONS RAPIDES', Icons.flash_on),
-        const SizedBox(height: 16),
-        _buildQuickActions(context),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  Widget _buildInfoCard(BuildContext context, String title, String subtitle, IconData icon, String route) {
-    return GestureDetector(
-      onTap: () => context.go(route),
-      child: Container(
-        width: 180,
-        margin: const EdgeInsets.only(right: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1B6B9E),
+        elevation: 0,
+        title: Row(
+          children: [
+            Image.asset('assets/logos/Logo.png', height: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Espace Fidèle', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  Text(user?.fullName ?? 'Membre', style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.7))),
+                ],
+              ),
+            ),
+          ],
         ),
+        actions: [
+          IconButton(icon: const Icon(Icons.logout, color: Colors.white, size: 22), onPressed: () => AuthService.logout()),
+        ],
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: AppTheme.accent, size: 28),
-            const Spacer(),
-            Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-            Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11)),
+            _buildSectionTitle('MA VIE DE FOI'),
+            const SizedBox(height: 12),
+            _buildNavigationCompass(context),
+            const SizedBox(height: 24),
+            _buildSectionTitle('MA BIBLIOTHÈQUE SPIRITUELLE'),
+            const SizedBox(height: 12),
+            _buildMemberLibrary(context),
+            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            )
-          )
-        ],
-      ),
+  Widget _buildSectionTitle(String title) {
+    return Row(
+      children: [
+        const Icon(Icons.favorite, color: Color(0xFF1B6B9E), size: 20),
+        const SizedBox(width: 8),
+        Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1B6B9E))),
+      ],
     );
   }
 
-  Widget _buildRecentActivities() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildActivityItem('Participation au culte', 'Dimanche 23 Juin', Icons.church),
-          const Divider(color: Colors.white10),
-          _buildActivityItem('Lecture biblique', 'Genèse 1-3', Icons.book_outlined),
-          const Divider(color: Colors.white10),
-          _buildActivityItem('Visite pastorale', '15 Juin', Icons.home_work),
-        ],
-      ),
-    );
-  }
+  Widget _buildNavigationCompass(BuildContext context) {
+    final List<Map<String, dynamic>> items = [
+      {'label': 'Ma Bible', 'icon': Icons.book, 'color': Colors.blue, 'route': '/bible'},
+      {'label': 'Cantiques', 'icon': Icons.music_note, 'color': Colors.teal, 'route': '/library'},
+      {'label': 'Calendrier', 'icon': Icons.calendar_month, 'color': Colors.orange, 'route': '/calendar'},
+      {'label': 'Profil', 'icon': Icons.person, 'color': Colors.purple, 'route': '/profile'},
+    ];
 
-  Widget _buildActivityItem(String title, String subtitle, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.accent, size: 20),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 14)),
-              Text(subtitle, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 12)),
-            ],
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 2.3),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return GestureDetector(
+          onTap: () => context.push(item['route']),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: (item['color'] as Color).withOpacity(0.3)), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8)]),
+            child: Row(children: [
+                Icon(item['icon'] as IconData, color: item['color'] as Color, size: 22),
+                const SizedBox(width: 10),
+                Text(item['label'] as String, style: const TextStyle(color: Color(0xFF1B6B9E), fontSize: 13, fontWeight: FontWeight.bold)),
+            ]),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildQuickActions(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
+  Widget _buildMemberLibrary(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.grey.shade200)),
+      child: Column(
         children: [
-          _buildQuickActionButton(context, 'Ma Bible', Icons.menu_book, '/bible'),
-          _buildQuickActionButton(context, 'Mes Annonces', Icons.campaign, '/announcements'),
-          _buildQuickActionButton(context, 'Mon Profil', Icons.person, '/profile'),
-          _buildQuickActionButton(context, 'Aide', Icons.help_outline, '/help'),
+          _libItem('Recueil de Cantiques', Icons.music_note, Colors.teal),
+          const Divider(),
+          _libItem('Catéchisme en questions et réponses', Icons.help_outline, Colors.blue),
+          const Divider(),
+          _libItem('Guide de l\'enfant (Ecodim)', Icons.child_care, Colors.orange),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActionButton(BuildContext context, String label, IconData icon, String route) {
-    return ElevatedButton.icon(
-      onPressed: () => context.go(route),
-      icon: Icon(icon, color: Colors.white),
-      label: Text(label, style: const TextStyle(color: Colors.white)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.primary.withValues(alpha: 0.8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      ),
+  Widget _libItem(String title, IconData icon, Color color) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: color),
+      title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+      trailing: const Icon(Icons.chevron_right, size: 18),
     );
   }
 }
-

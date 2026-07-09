@@ -1,5 +1,5 @@
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/attachment_storage_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/attachment_storage_service.dart';
 import 'package:hive/hive.dart';
 
 class GovernanceReportService {

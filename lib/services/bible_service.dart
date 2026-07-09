@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:ecclesiastes/services/logging_service.dart';
+import 'package:ecclesiaste/services/logging_service.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import '../models/bible_model.dart';

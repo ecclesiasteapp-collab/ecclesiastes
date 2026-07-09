@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
 
 /// Widget pour afficher une statistique clé avec indicateur visuel
 class StatisticTile extends StatelessWidget {

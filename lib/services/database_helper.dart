@@ -199,10 +199,18 @@ class DatabaseHelper {
     return box.values.where((e) => e['type'] == 'EGLISE_TERRITORIALE').map((e) => Map<String, dynamic>.from(e)).toList();
   }
 
-  Future<List<Map<String, dynamic>>> getChampsApostoliques([String? territorialId]) async {
+  Future<List<Map<String, dynamic>>> getRegionsApostoliques([String? territorialId]) async {
     final box = await Hive.openBox<Map>('entites');
     return box.values
-        .where((e) => e['type'] == 'CHAMP_APOSTOLIQUE' && (territorialId == null || e['parent_id'] == territorialId))
+        .where((e) => e['type'] == 'REGION_APOSTOLIQUE' && (territorialId == null || e['parent_id'] == territorialId))
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getChampsApostoliques([String? regionId]) async {
+    final box = await Hive.openBox<Map>('entites');
+    return box.values
+        .where((e) => e['type'] == 'CHAMP_APOSTOLIQUE' && (regionId == null || e['parent_id'] == regionId))
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
   }
@@ -223,9 +231,12 @@ class DatabaseHelper {
         .toList();
   }
 
-  Future<List<Map<String, dynamic>>> getCommunautesAvecChemin() async {
-    final box = await Hive.openBox<Map>('entites');
-    return box.values.where((e) => e['type'] == 'COMMUNAUTE').map((e) => Map<String, dynamic>.from(e)).toList();
+  Future<List<Map<String, dynamic>>> getCommissionsByEntity(String entityId) async {
+    final box = await Hive.openBox<Map>('commissions_map');
+    return box.values
+        .where((c) => c['entite_id'] == entityId)
+        .map((c) => Map<String, dynamic>.from(c))
+        .toList();
   }
 
   // --- BIBLIOTHEQUE ---
@@ -631,6 +642,14 @@ class DatabaseHelper {
       updatedReport['validationDate'] = DateTime.now().toIso8601String();
       await box.put(reportId, updatedReport);
     }
+  }
+
+  Future<void> insertReport(Map<String, dynamic> data) async {
+    final box = await Hive.openBox<Map>('rapports');
+    final id = data['id'] ?? DateTime.now().millisecondsSinceEpoch.toString();
+    final payload = Map<String, dynamic>.from(data);
+    payload['id'] = id;
+    await box.put(id, payload);
   }
 
   // --- NOTIFICATIONS ---

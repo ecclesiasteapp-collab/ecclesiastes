@@ -1,5 +1,5 @@
-import 'package:ecclesiastes/services/youtube_integration_service.dart';
-import 'package:ecclesiastes/services/facebook_integration_service.dart';
+import 'package:ecclesiaste/services/youtube_integration_service.dart';
+import 'package:ecclesiaste/services/facebook_integration_service.dart';
 import 'package:logger/logger.dart';
 
 /// Service agrégateur pour centraliser toutes les données sociales

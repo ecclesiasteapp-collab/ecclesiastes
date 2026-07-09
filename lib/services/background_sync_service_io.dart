@@ -3,11 +3,11 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
-import 'package:ecclesiastes/config/app_config.dart';
-import 'package:ecclesiastes/models/church_report.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/services/notification_service.dart';
-import 'package:ecclesiastes/services/report_persistence_service.dart';
+import 'package:ecclesiaste/config/app_config.dart';
+import 'package:ecclesiaste/models/church_report.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/notification_service.dart';
+import 'package:ecclesiaste/services/report_persistence_service.dart';
 
 const String syncTaskName = 'com.ecclesiastes.sync_reports_task';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ecclesiastes/views/reports/my_reports_screen.dart';
-import 'package:ecclesiastes/views/create_report_screen.dart';
+import 'package:ecclesiaste/views/reports/my_reports_screen.dart';
+import 'package:ecclesiaste/views/create_report_screen.dart';
 import '../models/notification_model.dart';
 import '../services/auth_service.dart';
 import '../services/database_helper.dart';

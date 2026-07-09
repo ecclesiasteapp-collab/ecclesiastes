@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/views/saisie_programme_page.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/views/saisie_programme_page.dart';
 import 'package:intl/intl.dart';
 
 class CalendrierPage extends StatefulWidget {

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:ecclesiastes/models/attachment_model.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
 
 /// Interface abstraite pour la gestion du stockage des pièces jointes.
 ///

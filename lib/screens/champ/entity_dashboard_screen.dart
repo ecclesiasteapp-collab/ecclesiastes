@@ -1,7 +1,8 @@
 // lib/screens/champ/kso_dashboard_screen.dart
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
 
 
 class EntityDashboardScreen extends StatelessWidget {
@@ -176,10 +177,7 @@ class EntityDashboardScreen extends StatelessWidget {
                                 subtitle: Text(subtitleText),
                                 trailing:
                                     const Icon(Icons.chevron_right, color: Colors.grey),
-                                onTap: () {
-                                  // Naviguer vers le détail de la sous-entité
-                                  // Exemple: GoRouter.of(context).push('/dashboard/${subEntity['id']}');
-                                },
+                                onTap: () => context.push('/entity/${subEntity['id']}'),
                               ),
                             );
                           },

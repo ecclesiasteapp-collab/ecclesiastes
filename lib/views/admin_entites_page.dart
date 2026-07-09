@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
 
 class AdminEntitesPage extends StatefulWidget {
   const AdminEntitesPage({super.key});
@@ -163,6 +164,8 @@ class _AdminEntitesPageState extends State<AdminEntitesPage> {
                     leading: const Icon(Icons.account_tree),
                     title: Text(e['nom']?.toString() ?? ''),
                     subtitle: Text(EntiteTypes.label(type)),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/entity/${e['id']}'),
                   );
                 },
               ),

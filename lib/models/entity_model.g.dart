@@ -8,7 +8,7 @@ part of 'entity_model.dart';
 
 class EntityModelAdapter extends TypeAdapter<EntityModel> {
   @override
-  final int typeId = 108;
+  final int typeId = 233;
 
   @override
   EntityModel read(BinaryReader reader) {

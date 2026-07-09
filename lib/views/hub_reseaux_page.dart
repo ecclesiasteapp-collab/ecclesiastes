@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/social_media_aggregator_service.dart';
-import 'package:ecclesiastes/services/social_interaction_tracker_service.dart';
-import 'package:ecclesiastes/services/youtube_integration_service.dart';
-import 'package:ecclesiastes/services/facebook_integration_service.dart';
-import 'package:ecclesiastes/widgets/social/youtube_video_card.dart';
-import 'package:ecclesiastes/widgets/social/facebook_post_card.dart';
+import 'package:ecclesiaste/services/social_media_aggregator_service.dart';
+import 'package:ecclesiaste/services/social_interaction_tracker_service.dart';
+import 'package:ecclesiaste/services/youtube_integration_service.dart';
+import 'package:ecclesiaste/services/facebook_integration_service.dart';
+import 'package:ecclesiaste/widgets/social/youtube_video_card.dart';
+import 'package:ecclesiaste/widgets/social/facebook_post_card.dart';
 import 'package:logger/logger.dart';
 
 /// Page complète du Hub Réseaux avec intégration YouTube et Facebook

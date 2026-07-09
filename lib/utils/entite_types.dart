@@ -1,9 +1,11 @@
-/// Hiérarchie officielle : Internationale → Église territoriale → Champ apostolique → District → Communauté.
+/// Hiérarchie officielle conforme au DCG Juillet 2026 : 
+/// Internationale → Église territoriale → Région apostolique → Champ apostolique → District → Communauté.
 class EntiteTypes {
   EntiteTypes._();
 
   static const String internationale = 'INTERNATIONALE';
   static const String egliseTerritoriale = 'EGLISE_TERRITORIALE';
+  static const String regionApostolique = 'REGION_APOSTOLIQUE';
   static const String champApostolique = 'CHAMP_APOSTOLIQUE';
   static const String district = 'DISTRICT';
   static const String communaute = 'COMMUNAUTE';
@@ -14,6 +16,7 @@ class EntiteTypes {
   static const List<String> hierarchie = [
     internationale,
     egliseTerritoriale,
+    regionApostolique,
     champApostolique,
     district,
     communaute,
@@ -27,6 +30,8 @@ class EntiteTypes {
         return 'Église internationale';
       case egliseTerritoriale:
         return 'Église territoriale';
+      case regionApostolique:
+        return 'Région apostolique';
       case champApostolique:
         return 'Champ apostolique';
       case district:
@@ -46,6 +51,8 @@ class EntiteTypes {
       case internationale:
         return egliseTerritoriale;
       case egliseTerritoriale:
+        return regionApostolique;
+      case regionApostolique:
         return champApostolique;
       case champApostolique:
         return district;
@@ -56,7 +63,7 @@ class EntiteTypes {
     }
   }
 
-  /// Convertit les anciens codes (CHAMP, TERRITOIRE) vers le nouveau modèle.
+  /// Convertit les anciens codes vers le nouveau modèle.
   static String normalize(String? type) {
     if (type == null || type.isEmpty) return type ?? '';
     switch (type.toUpperCase()) {
@@ -65,8 +72,13 @@ class EntiteTypes {
         return internationale;
       case 'TERRITOIRE':
       case 'EGLISE':
+      case 'EGLISE_TERRITORIALE':
         return egliseTerritoriale;
+      case 'REGION':
+      case 'REGION_APOSTOLIQUE':
+        return regionApostolique;
       case 'CHAMP':
+      case 'CHAMP_APOSTOLIQUE':
         return champApostolique;
       case 'DISTRICT':
         return district;
@@ -79,7 +91,5 @@ class EntiteTypes {
     }
   }
 
-
   static bool peutNaviguerVersEnfants(String type) => type != communaute;
 }
-

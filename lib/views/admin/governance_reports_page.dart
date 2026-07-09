@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/governance_report_service.dart';
+import 'package:ecclesiaste/services/governance_report_service.dart';
 import 'package:intl/intl.dart';
 
 class GovernanceReportsPage extends StatefulWidget {

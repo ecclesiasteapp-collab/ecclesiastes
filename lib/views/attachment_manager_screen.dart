@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/attachment_model.dart';
-import 'package:ecclesiastes/services/attachment_storage_service.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/services/attachment_storage_service.dart';
 
 class AttachmentManagerScreen extends StatefulWidget {
   const AttachmentManagerScreen({super.key});

@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
-import 'package:ecclesiastes/models/user.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/user.dart';
 import '../models/library_document.dart';
 
 class LibraryAccessService {

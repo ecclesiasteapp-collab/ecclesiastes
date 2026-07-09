@@ -1,14 +1,15 @@
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
-/// Périmètre actif du tableau de bord (champ / district / communauté sélectionnés).
+/// Périmètre actif du tableau de bord (conforme aux 6 niveaux du DCG Juillet 2026).
 class EntiteScopeService {
   EntiteScopeService._();
 
   static String? internationaleId;
   static String? territorialeId;
+  static String? regionApostoliqueId;
   static String? champId;
   static String? districtId;
   static String? communauteId;
@@ -21,12 +22,14 @@ class EntiteScopeService {
   static void setScope({
     String? internationale,
     String? territoriale,
+    String? region,
     String? champ,
     String? district,
     String? communaute,
   }) {
     internationaleId = internationale;
     territorialeId = territoriale;
+    regionApostoliqueId = region;
     champId = champ;
     districtId = district;
     communauteId = communaute;
@@ -35,6 +38,7 @@ class EntiteScopeService {
   static void clear() {
     internationaleId = null;
     territorialeId = null;
+    regionApostoliqueId = null;
     champId = null;
     districtId = null;
     communauteId = null;
@@ -50,6 +54,9 @@ class EntiteScopeService {
     }
     if (champId != null && champId!.isNotEmpty) {
       return {'id': champId, 'level': EntityLevel.champ};
+    }
+    if (regionApostoliqueId != null && regionApostoliqueId!.isNotEmpty) {
+      return {'id': regionApostoliqueId, 'level': EntityLevel.regionApostolique};
     }
     if (territorialeId != null && territorialeId!.isNotEmpty) {
       return {'id': territorialeId, 'level': EntityLevel.territoriale};
@@ -74,20 +81,22 @@ class EntiteScopeService {
     final chain = await DatabaseHelper.instance.getChaineAncestres(communauteIdParam);
     String? internationale;
     String? territoriale;
+    String? region;
     String? champ;
     String? district;
 
-    // La chaîne est retournée de l'entité actuelle vers la racine, donc nous la parcourons pour trouver les ancêtres.
     for (final e in chain) {
       final t = EntiteTypes.normalize(e['type']?.toString());
       if (t == EntiteTypes.internationale) internationale = e['id']?.toString();
       if (t == EntiteTypes.egliseTerritoriale) territoriale = e['id']?.toString();
+      if (t == EntiteTypes.regionApostolique) region = e['id']?.toString();
       if (t == EntiteTypes.champApostolique) champ = e['id']?.toString();
       if (t == EntiteTypes.district) district = e['id']?.toString();
     }
     setScope(
       internationale: internationale,
       territoriale: territoriale,
+      region: region,
       champ: champ,
       district: district,
       communaute: communauteIdParam,
@@ -107,16 +116,23 @@ class EntiteScopeService {
     }
     final territoriale = territoriales.first['id'].toString();
 
-    final champs = await DatabaseHelper.instance.getSubEntites(territoriale, EntiteTypes.champApostolique);
-    if (champs.isEmpty) {
+    final regions = await DatabaseHelper.instance.getSubEntites(territoriale, EntiteTypes.regionApostolique);
+    if (regions.isEmpty) {
       setScope(internationale: internationale, territoriale: territoriale);
+      return;
+    }
+    final region = regions.first['id'].toString();
+
+    final champs = await DatabaseHelper.instance.getSubEntites(region, EntiteTypes.champApostolique);
+    if (champs.isEmpty) {
+      setScope(internationale: internationale, territoriale: territoriale, region: region);
       return;
     }
     final champ = champs.first['id'].toString();
 
     final districts = await DatabaseHelper.instance.getSubEntites(champ, EntiteTypes.district);
     if (districts.isEmpty) {
-      setScope(internationale: internationale, territoriale: territoriale, champ: champ);
+      setScope(internationale: internationale, territoriale: territoriale, region: region, champ: champ);
       return;
     }
     final district = districts.first['id'].toString();
@@ -125,10 +141,10 @@ class EntiteScopeService {
     setScope(
       internationale: internationale,
       territoriale: territoriale,
+      region: region,
       champ: champ,
       district: district,
       communaute: comms.isNotEmpty ? comms.first['id'].toString() : null,
     );
   }
 }
-

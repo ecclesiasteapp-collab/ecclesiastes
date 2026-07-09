@@ -62,11 +62,30 @@ class MemberDetailPage extends StatelessWidget {
                     _buildInfoRow(Icons.star, 'Dons / Compétences', member.donsCompetences ?? 'N/A'),
                   ]),
                   const SizedBox(height: 30),
+                  _buildDossierButton(context, member),
+                  const SizedBox(height: 12),
                   _buildActionButtons(context, member),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDossierButton(BuildContext context, MemberProfile member) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => context.push('/member/dossier/${member.id}'),
+        icon: const Icon(Icons.badge_outlined),
+        label: const Text('VOIR LE DOSSIER ECCLÉSIASTIQUE UNIQUE'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.amber.shade800,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/config/organization_config.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/utils/entite_types.dart';
+import 'package:ecclesiaste/config/organization_config.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/utils/entite_types.dart';
 import 'package:intl/intl.dart';
-import 'package:ecclesiastes/models/attachment_model.dart';
-import 'package:ecclesiastes/widgets/attachment_picker_widget.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/widgets/attachment_picker_widget.dart';
 
 class SaisieProgrammePage extends StatefulWidget {
   const SaisieProgrammePage({super.key});

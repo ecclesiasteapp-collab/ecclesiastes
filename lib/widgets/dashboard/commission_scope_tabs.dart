@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
 
 /// Widget réutilisable pour les onglets de sélection de niveau d'entité
 /// adapté aux responsables et suppléants de commissions
@@ -34,6 +34,11 @@ class CommissionScopeTabs extends StatelessWidget {
         'icon': Icons.map,
       },
       {
+        'label': 'Région Apostolique',
+        'level': EntityLevel.regionApostolique,
+        'icon': Icons.public, // Or another suitable icon
+      },
+      {
         'label': 'Champ (KSO)',
         'level': EntityLevel.champ,
         'icon': Icons.location_on,
@@ -65,12 +70,14 @@ class CommissionScopeTabs extends StatelessWidget {
         return 0;
       case EntityLevel.territoriale:
         return 1;
-      case EntityLevel.champ:
+      case EntityLevel.regionApostolique:
         return 2;
-      case EntityLevel.district:
+      case EntityLevel.champ:
         return 3;
-      case EntityLevel.communaute:
+      case EntityLevel.district:
         return 4;
+      case EntityLevel.communaute:
+        return 5;
     }
   }
 

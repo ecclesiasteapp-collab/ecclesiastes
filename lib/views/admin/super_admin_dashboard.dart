@@ -137,9 +137,9 @@ class SuperAdminDashboard extends StatelessWidget {
         runSpacing: 12,
         children: [
           _buildQuickActionButton(context, 'Gérer Entités', Icons.corporate_fare, '/admin/panel'),
+          _buildQuickActionButton(context, 'Gouvernance', Icons.account_balance, '/admin/governance'),
           _buildQuickActionButton(context, 'Gérer Utilisateurs', Icons.manage_accounts, '/admin/users'),
           _buildQuickActionButton(context, 'Paramètres App', Icons.settings, '/settings'),
-          _buildQuickActionButton(context, 'Journal d\'Audit', Icons.receipt_long, '/audit_log'), // Assurez-vous que cette route existe
         ],
       ),
     );

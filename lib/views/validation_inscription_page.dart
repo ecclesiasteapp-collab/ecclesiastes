@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/admin_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
+import 'package:ecclesiaste/services/admin_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
 
 class ValidationInscriptionPage extends StatefulWidget {
   final bool isSuperAdmin;

@@ -1,4 +1,4 @@
-import 'package:ecclesiastes/services/file_service.dart';
+import 'package:ecclesiaste/services/file_service.dart';
 import 'package:flutter/material.dart';
 import '../config/organization_config.dart';
 import '../models/library_document.dart';
@@ -377,6 +377,8 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
         return 'District';
       case EntityLevel.champ:
         return 'Champ';
+      case EntityLevel.regionApostolique:
+        return 'Région Apostolique';
       case EntityLevel.territoriale:
         return 'Territoriale';
       case EntityLevel.internationale:

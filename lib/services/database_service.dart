@@ -1,20 +1,33 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import '../models/app_settings.dart';
-import '../models/attachment_model.dart';
-import '../models/church_report.dart';
-import '../models/ecodim_lesson.dart';
-import '../models/event.dart';
-import '../models/event_models.dart';
-import '../models/fundraising_report.dart';
-import '../models/hierarchy_models.dart';
-import '../models/library_document.dart';
-import '../models/member_profile.dart';
-import '../models/news_model.dart';
-import '../models/sacristy_report.dart';
-import '../models/sync_queue_model.dart';
-import '../models/user.dart';
+import 'package:ecclesiaste/models/app_settings.dart';
+import 'package:ecclesiaste/models/attachment_model.dart';
+import 'package:ecclesiaste/models/audit_log.dart';
+import 'package:ecclesiaste/models/church_report.dart';
+import 'package:ecclesiaste/models/ecodim_lesson.dart';
+import 'package:ecclesiaste/models/event.dart';
+import 'package:ecclesiaste/models/event_models.dart';
+import 'package:ecclesiaste/models/fundraising_report.dart';
+import 'package:ecclesiaste/models/hierarchy_models.dart';
+import 'package:ecclesiaste/models/image_entity.dart';
+import 'package:ecclesiaste/models/library_document.dart';
+import 'package:ecclesiaste/models/library_resource.dart';
+import 'package:ecclesiaste/models/member_profile.dart';
+import 'package:ecclesiaste/models/news_model.dart';
+import 'package:ecclesiaste/models/notification_model.dart';
+import 'package:ecclesiaste/models/sacristy_report.dart';
+import 'package:ecclesiaste/models/social_link.dart';
+import 'package:ecclesiaste/models/sync_queue_model.dart';
+import 'package:ecclesiaste/models/user.dart';
+import 'package:ecclesiaste/models/district_model.dart';
+import 'package:ecclesiaste/models/commission_node.dart';
+import 'package:ecclesiaste/models/app_config_model.dart';
+import 'package:ecclesiaste/models/person_model.dart';
+import 'package:ecclesiaste/models/sacrament_model.dart';
+import 'package:ecclesiaste/models/ordination_model.dart';
+import 'package:ecclesiaste/models/nomination_model.dart';
+import 'package:ecclesiaste/models/entity_model.dart';
 import 'database_helper.dart';
 
 /// Service centralisé pour l'initialisation et la gestion des boîtes Hive.
@@ -26,12 +39,23 @@ class DatabaseService {
   static const churchReportsBoxName = 'church_reports';
   static const attachmentsBoxName = 'attachments_box';
   static const newsBoxName = 'news';
+  static const districtsBoxName = 'districts';
+  static const eventsTypedBoxName = 'events_box';
   static const eventsBoxName = 'evenements_map';
+  static const imageEntitiesBoxName = 'image_entities';
+  static const libraryResourcesBoxName = 'library_resources';
   static const membersBoxName = 'member_profiles';
+  static const notificationsBoxName = 'notifications';
   static const lessonsBoxName = 'eco_lessons';
   static const fundraisingBoxName = 'fundraising_reports';
+  static const syncQueueBoxName = 'sync_queue';
   static const libraryBoxName = 'library_box';
   static const pendingUsersBoxName = 'pending_users';
+  static const commissionsBoxName = 'commissions_box';
+  static const personsBoxName = 'persons';
+  static const sacramentsBoxName = 'sacraments';
+  static const ordinationsBoxName = 'ordinations';
+  static const nominationsBoxName = 'nominations';
 
   /// Initialise Hive et enregistre tous les adaptateurs de type.
   /// C'est la seule méthode à appeler dans `main.dart`.
@@ -50,8 +74,32 @@ class DatabaseService {
     // Ouverture des boîtes critiques pour le démarrage
     await Hive.openBox<User>(usersBoxName);
     await Hive.openBox<AppSettings>(settingsBoxName);
+    await Hive.openBox<MemberProfile>(membersBoxName);
+    await Hive.openBox<ChurchReport>(churchReportsBoxName);
+    await Hive.openBox<Attachment>(attachmentsBoxName);
+    await Hive.openBox<News>(newsBoxName);
+    await Hive.openBox<DistrictModel>(districtsBoxName);
+    await Hive.openBox<Event>(eventsTypedBoxName);
     await Hive.openBox<Map>(eventsBoxName);
+    await Hive.openBox<ImageEntity>(imageEntitiesBoxName);
+    await Hive.openBox<LibraryResource>(libraryResourcesBoxName);
+    await Hive.openBox<FundraisingReport>(fundraisingBoxName);
+    await Hive.openBox<SyncQueueItem>(syncQueueBoxName);
+    await Hive.openBox<LibraryDocument>(libraryBoxName);
+    await Hive.openBox<EcodimLesson>(lessonsBoxName);
+    await Hive.openBox<User>(pendingUsersBoxName);
+    await Hive.openBox<SocialLink>('social_links');
+    await Hive.openBox<AuditLog>('audit_logs');
+    await Hive.openBox<AppNotification>(notificationsBoxName);
+    await Hive.openBox<CommissionNode>(commissionsBoxName);
+    await Hive.openBox<Person>(personsBoxName);
+    await Hive.openBox<Sacrament>(sacramentsBoxName);
+    await Hive.openBox<Ordination>(ordinationsBoxName);
+    await Hive.openBox<Nomination>(nominationsBoxName);
+    await Hive.openBox<Map>('entites');
+    await Hive.openBox<Map>('commissions_map');
     await Hive.openBox<Map>('rapports');
+    await Hive.openBox<DistrictModel>('districts');
   }
 
   /// Ouvre une boîte de manière paresseuse. Si elle est déjà ouverte, la retourne simplement.
@@ -78,21 +126,39 @@ class DatabaseService {
       Hive.registerAdapter(ReportTypeExtAdapter());
       Hive.registerAdapter(ReportStatusAdapter());
       Hive.registerAdapter(AttachmentAdapter());
+      Hive.registerAdapter(AuditLogAdapter());
       Hive.registerAdapter(NewsAdapter());
       Hive.registerAdapter(ChurchEventAdapter());
       Hive.registerAdapter(CivilStatusAdapter());
       Hive.registerAdapter(MemberStatusAdapter());
       Hive.registerAdapter(AvailabilityAdapter());
       Hive.registerAdapter(MemberProfileAdapter());
+      Hive.registerAdapter(DistrictModelAdapter());
+      Hive.registerAdapter(ImageEntityAdapter());
+      Hive.registerAdapter(LibraryResourceAdapter());
+      Hive.registerAdapter(LibraryCategoryAdapter());
+      Hive.registerAdapter(ResourceTypeAdapter());
+      Hive.registerAdapter(AppNotificationAdapter());
       Hive.registerAdapter(SacristyReportAdapter());
       Hive.registerAdapter(EcodimLessonAdapter());
       Hive.registerAdapter(UserCategoryAdapter());
       Hive.registerAdapter(DocumentTypeAdapter());
       Hive.registerAdapter(LibraryDocumentAdapter());
       Hive.registerAdapter(EntityResponsibleRoleAdapter());
+      Hive.registerAdapter(SocialLinkAdapter());
       Hive.registerAdapter(SyncQueueItemAdapter());
       Hive.registerAdapter(FundraisingReportAdapter());
-      // ... Ajoutez ici TOUS les autres adaptateurs de votre application
+      Hive.registerAdapter(CommissionNodeAdapter());
+      
+      // Configuration Data-Driven
+      Hive.registerAdapter(HierarchyLevelConfigAdapter());
+      Hive.registerAdapter(OrganisationTypeConfigAdapter());
+      Hive.registerAdapter(MinistryConfigAdapter());
+      Hive.registerAdapter(EntityModelAdapter());
+      Hive.registerAdapter(PersonAdapter());
+      Hive.registerAdapter(SacramentAdapter());
+      Hive.registerAdapter(OrdinationAdapter());
+      Hive.registerAdapter(NominationAdapter());
     }
   }
 
@@ -109,8 +175,15 @@ class DatabaseService {
   }
 
   static List<Event> getAllEvents() {
+    if (Hive.isBoxOpen(eventsTypedBoxName)) {
+      final typedEvents = Hive.box<Event>(eventsTypedBoxName).values.toList();
+      if (typedEvents.isNotEmpty) {
+        return typedEvents;
+      }
+    }
+
     if (!Hive.isBoxOpen(eventsBoxName)) {
-      return const [];
+      return const <Event>[];
     }
 
     final box = Hive.box<Map>(eventsBoxName);
@@ -120,6 +193,9 @@ class DatabaseService {
   }
 
   static Future<void> insertEvent(Event event) async {
+    final typedBox = await openBox<Event>(eventsTypedBoxName);
+    await typedBox.put(event.id, event);
+
     final box = await openBox<Map>(eventsBoxName);
     await box.put(event.id, {
       'id': event.id,
@@ -158,7 +234,7 @@ class DatabaseService {
       description: map['description']?.toString() ?? '',
       type: eventType,
       dateTime: date,
-      responsiblePerson: map['responsable_type']?.toString(),
+      responsiblePerson: map['responsible_type']?.toString(),
       category: map['niveau']?.toString(),
       location: map['entite_nom']?.toString(),
     );

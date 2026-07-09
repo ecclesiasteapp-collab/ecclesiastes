@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/youtube_integration_service.dart';
-import 'package:ecclesiastes/services/social_interaction_tracker_service.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
+import 'package:ecclesiaste/services/youtube_integration_service.dart';
+import 'package:ecclesiaste/services/social_interaction_tracker_service.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Widget pour afficher une vidéo YouTube avec tracking des interactions

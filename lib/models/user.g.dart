@@ -36,13 +36,13 @@ class UserAdapter extends TypeAdapter<User> {
       validatedAt: fields[18] as DateTime?,
       createdAt: fields[8] as DateTime?,
       lastLogin: fields[9] as DateTime?,
-    );
+    )..personId = fields[19] as String?;
   }
 
   @override
   void write(BinaryWriter writer, User obj) {
     writer
-      ..writeByte(19)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -80,7 +80,9 @@ class UserAdapter extends TypeAdapter<User> {
       ..writeByte(17)
       ..write(obj.pendingSince)
       ..writeByte(18)
-      ..write(obj.validatedAt);
+      ..write(obj.validatedAt)
+      ..writeByte(19)
+      ..write(obj.personId);
   }
 
   @override

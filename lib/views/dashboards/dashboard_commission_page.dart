@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/constants.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
-import 'package:ecclesiastes/views/calendrier_page.dart';
-import 'package:ecclesiastes/views/gestion_membres_page.dart';
-import 'package:ecclesiastes/widgets/dashboard/dashboard_shared.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/constants.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/views/calendrier_page.dart';
+import 'package:ecclesiaste/views/gestion_membres_page.dart';
+import 'package:ecclesiaste/widgets/dashboard/dashboard_shared.dart';
 
 class DashboardCommissionPage extends StatefulWidget {
   const DashboardCommissionPage({super.key});

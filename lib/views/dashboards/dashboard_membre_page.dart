@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ecclesiastes/services/auth_service.dart';
-import 'package:ecclesiastes/services/database_helper.dart';
-import 'package:ecclesiastes/utils/dashboard_theme.dart';
-import 'package:ecclesiastes/views/annonces_page.dart';
-import 'package:ecclesiastes/views/bibliotheque_page.dart';
-import 'package:ecclesiastes/views/calendrier_page.dart';
-import 'package:ecclesiastes/widgets/dashboard/dashboard_shared.dart';
+import 'package:ecclesiaste/services/auth_service.dart';
+import 'package:ecclesiaste/services/database_helper.dart';
+import 'package:ecclesiaste/utils/dashboard_theme.dart';
+import 'package:ecclesiaste/views/annonces_page.dart';
+import 'package:ecclesiaste/views/bibliotheque_page.dart';
+import 'package:ecclesiaste/views/calendrier_page.dart';
+import 'package:ecclesiaste/widgets/dashboard/dashboard_shared.dart';
 
 /// Vue simplifiée : actualités, calendrier, bibliothèque — sans gestion ni finances.
 class DashboardMembrePage extends StatefulWidget {

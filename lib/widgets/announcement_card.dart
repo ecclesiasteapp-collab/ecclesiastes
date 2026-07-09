@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ecclesiastes/models/news_model.dart';
-import 'package:ecclesiastes/services/file_storage_service.dart';
+import 'package:ecclesiaste/models/news_model.dart';
+import 'package:ecclesiaste/services/file_storage_service.dart';
 import 'dart:typed_data';
 
 class AnnouncementCard extends StatelessWidget {
