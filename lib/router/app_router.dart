@@ -94,6 +94,7 @@ import '../models/official_report.dart';
 import '../views/advanced_statistics_page.dart';
 
 import '../views/reports/official_reports_pages.dart';
+import '../features/workflow/presentation/screens/workflow_center_screen.dart';
 
 // Page de secours
 class _ComingSoonPage extends StatelessWidget {
@@ -246,6 +247,7 @@ final List<RouteBase> _routes = [
     GoRoute(path: '/erp/construction', builder: (context, state) => const ConstructionPage()),
 
     GoRoute(path: '/dashboard', builder: (context, state) => const DashboardPage()),
+    GoRoute(path: '/workflow', builder: (context, state) => const WorkflowCenterScreen()),
 
     GoRoute(path: '/organization', builder: (context, state) => const OrganizationOverviewPage()),
     GoRoute(path: '/hierarchie', builder: (context, state) => const HierarchiePage()),

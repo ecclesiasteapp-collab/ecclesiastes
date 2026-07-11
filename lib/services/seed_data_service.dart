@@ -4,6 +4,7 @@ import '../models/district_model.dart';
 import '../models/hierarchy_models.dart';
 import '../models/user.dart';
 import '../models/news_model.dart';
+import '../features/workflow/domain/models/workflow_models.dart';
 import '../utils/password_utils.dart';
 
 class SeedDataService {

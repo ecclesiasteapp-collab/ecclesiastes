@@ -28,6 +28,7 @@ import 'package:ecclesiaste/models/sacrament_model.dart';
 import 'package:ecclesiaste/models/ordination_model.dart';
 import 'package:ecclesiaste/models/nomination_model.dart';
 import 'package:ecclesiaste/models/entity_model.dart';
+import 'package:ecclesiaste/features/workflow/domain/models/workflow_models.dart';
 import 'database_helper.dart';
 
 /// Service centralisé pour l'initialisation et la gestion des boîtes Hive.
@@ -56,6 +57,8 @@ class DatabaseService {
   static const sacramentsBoxName = 'sacraments';
   static const ordinationsBoxName = 'ordinations';
   static const nominationsBoxName = 'nominations';
+  static const workflowDefinitionsBoxName = 'workflow_definitions';
+  static const workflowInstancesBoxName = 'workflow_instances';
 
   /// Initialise Hive et enregistre tous les adaptateurs de type.
   /// C'est la seule méthode à appeler dans `main.dart`.
@@ -96,6 +99,8 @@ class DatabaseService {
     await Hive.openBox<Sacrament>(sacramentsBoxName);
     await Hive.openBox<Ordination>(ordinationsBoxName);
     await Hive.openBox<Nomination>(nominationsBoxName);
+    await Hive.openBox<WorkflowDefinition>(workflowDefinitionsBoxName);
+    await Hive.openBox<WorkflowInstance>(workflowInstancesBoxName);
     await Hive.openBox<Map>('entites');
     await Hive.openBox<Map>('commissions_map');
     await Hive.openBox<Map>('rapports');
@@ -159,6 +164,13 @@ class DatabaseService {
       Hive.registerAdapter(SacramentAdapter());
       Hive.registerAdapter(OrdinationAdapter());
       Hive.registerAdapter(NominationAdapter());
+      
+      // Workflow Engine
+      Hive.registerAdapter(WorkflowStatusAdapter());
+      Hive.registerAdapter(WorkflowDefinitionAdapter());
+      Hive.registerAdapter(WorkflowStepDefinitionAdapter());
+      Hive.registerAdapter(WorkflowInstanceAdapter());
+      Hive.registerAdapter(WorkflowHistoryEntryAdapter());
     }
   }
 

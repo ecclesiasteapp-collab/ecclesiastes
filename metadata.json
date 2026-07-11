@@ -1,0 +1,8 @@
+{
+  "name": "Ecclesiaste",
+  "description": "Plateforme de gestion et d'administration ERP pour l'Église Néo-Apostolique, intégrant une boussole hiérarchique à 6 niveaux, la consolidation récursive des finances, l'inscription des fidèles et le moteur de rapports d'activité.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
